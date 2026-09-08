@@ -1,0 +1,139 @@
+================================================================================
+OPPSS GENERATOR v13.9 CLI - Uputstvo za instalaciju na Ubuntu Server
+================================================================================
+
+================================================================================
+1. PREUZIMANJE FAJLOVA
+================================================================================
+
+# Klonirajte repozitorijum
+git clone https://github.com/cuparac/OPPSS-test.git
+
+# Uđite u direktorijum
+cd OPPSS-test
+
+# ILI ako nemate git, preuzmite ručno:
+wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps_generator_cli.py
+wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps.xsd
+
+
+================================================================================
+2. INSTALACIJA PYTHON-A (ako nije instaliran)
+================================================================================
+
+# Proverite da li je Python instaliran
+python3 --version
+
+# Ako nije, instalirajte:
+sudo -S -p '' apt update
+sudo -S -p '' apt install -y python3 python3-pip
+
+
+================================================================================
+3. INSTALACIJA lxml PAKETA
+================================================================================
+
+# Opcija A - preko pip (preporučeno):
+pip3 install lxml
+
+# Opcija B - preko apt (ako pip ne radi):
+sudo -S -p '' apt install -y python3-lxml
+
+# Proverite instalaciju:
+python3 -c "from lxml import etree; print('lxml OK')"
+
+
+================================================================================
+4. POKRETANJE APLIKACIJE
+================================================================================
+
+# Pokrenite CLI verziju
+python3 opps_generator_cli.py
+
+
+================================================================================
+5. KORIŠĆENJE APLIKACIJE
+================================================================================
+
+Glavni meni:
+  1. Prikazi tabelu unosa
+  2. Dodaj novi unos
+  3. Izmeni unos
+  4. Obrisi unos
+  5. Podaci o podnosiocu
+  6. Generisi XML
+  7. Promeni godinu
+  0. Izlaz
+
+Koraci:
+  1. Prvo unesite podatke o podnosiocu (opcija 5)
+  2. Zatim dodajte unose (opcija 2)
+  3. Na kraju generišite XML (opcija 6)
+
+
+================================================================================
+6. FAJLOVI KOJI SE KREIRAJU
+================================================================================
+
+baza_2026.json          - JSON baza podataka
+OPPS_prijava_2026.xml   - Generisani XML fajl (za upload na ePorezi)
+
+
+================================================================================
+7. REŠAVANJE PROBLEMA
+================================================================================
+
+Problem: "ModuleNotFoundError: No module named 'lxml'"
+Resenje:  pip3 install lxml
+
+Problem: "ModuleNotFoundError: No module named 'pip'"
+Resenje:  sudo apt install -y python3-pip
+
+Problem: "Permission denied"
+Resenje:  python3 opps_generator_cli.py (bez sudo)
+
+Problem: "No space left on device"
+Resenje:  df -h (proverite prostor)
+
+
+================================================================================
+8. AUTOMATSKO POKRETANJE (opciono)
+================================================================================
+
+# Dodate li aplikaciju u PATH?
+sudo -S -p '' cp opps_generator_cli.py /usr/local/bin/oppss
+sudo -S -p '' chmod +x /usr/local/bin/oppss
+
+# Sada možete pokrenuti sa bilo mesta:
+oppss
+
+
+================================================================================
+9. PREUZIMANJE SA SERVERA
+================================================================================
+
+# Kopirajte XML fajl na lokalni računar:
+scp korisnik@server:~/OPPSS-test/OPPS_prijava_2026.xml ./
+
+# ILI koristite SFTP klijent (FileZilla, WinSCP)
+
+
+================================================================================
+10. BRISANJE PODATAKA
+================================================================================
+
+# Obrišite JSON bazu:
+rm baza_2026.json
+
+# Obrišite generisani XML:
+rm OPPS_prijava_2026.xml
+
+
+================================================================================
+KONTAKT
+================================================================================
+
+GitHub: https://github.com/cuparac/OPPSS-test
+Verzija: 13.9 CLI
+
+================================================================================
