@@ -178,11 +178,12 @@ Pogledajte `kreiranje_exe_uputstvo.txt` za detaljna uputstva.
 
 | Verzija | Datum | Opis | Release |
 |---------|-------|------|---------|
-| v14.0 | 08.09.2026 | Standalone verzija, XSD šema ugrađena, .exe kompatibilnost | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v14.0) |
-| v13.9 | 08.09.2026 | CLI verzija, prečice tastature, about dijalog | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.9) |
-| v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva, email osobe | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.8) |
-| v13.7 | 08.09.2026 | Cross-platform file lock, assert→if, datum provere | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.7) |
-| v13.6 | 08.09.2026 | JMBG validacija, tree.index, datum OD/DO, file lock | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.6) |
+| v15.0 | 08.09.2026 | SQLite baza, CSV export, pretraga, izveštaji, migracija | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v15.0) |
+| v14.0 | 08.09.2026 | Standalone verzije (CLI + GUI) | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v14.0) |
+| v13.9 | 08.09.2026 | CLI verzija, prečice tastature | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.9) |
+| v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.8) |
+| v13.7 | 08.09.2026 | Cross-platform, assert→if | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.7) |
+| v13.6 | 08.09.2026 | JMBG validacija, tree.index | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.6) |
 | v13.5 | 08.09.2026 | Originalna verzija | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.5) |
 
 ---
