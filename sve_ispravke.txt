@@ -1,0 +1,159 @@
+================================================================================
+OPPSS GENERATOR - Kompletne ispravke (v13.6 → v13.9)
+Datum: 08.09.2026.
+================================================================================
+
+================================================================================
+v13.6 - Osnovne ispravke
+================================================================================
+
+1. [VISOKO] JMBG validacija
+   Problem: Godina je bila hardkodirana na 2000.
+   Resenje: Ekstrahuje se 3-cifrena godina iz JMBG (poz. 4-6), probaju se
+            oba raspona (1000-1999 i 2000-2999).
+
+2. [VISOKO] Indeksiranje nakon brisanja
+   Problem: int(sel[0]) - 1 je davalo pogrešan indeks nakon brisanja reda.
+   Resenje: Zamena sa self.tree.index(sel[0]) - uvek tačan indeks.
+
+3. [SREDNJI] Datum OD/DO
+   Problem: DatumOd i DatumDo su uvek bili isti.
+   Resenje: Dva posebna polja "Datum OD" i "Datum DO" sa kalendar dugmadima.
+
+4. [SREDNJI] File lock
+   Problem: Nije bilo zaštite od korupcije JSON fajla.
+   Resenje: Dodat fcntl.flock() za atomicno čuvanje.
+
+================================================================================
+v13.7 - Cross-platform i validacija
+================================================================================
+
+5. [VISOKO] fcntl na Windows
+   Problem: fcntl je Unix/Mac modul, pada na Windows.
+   Resenje: platform check - fcntl na Unix, atomic write na Windows.
+
+6. [VISOKO] assert iznos > 0
+   Problem: assert se ne izvršava sa -O flagom.
+   Resenje: Zamena sa if iznos <= 0: raise ValueError.
+
+7. [SREDNJI] subprocess.run bez check=True
+   Problem: Ako pip install padne, sledeća linija crash-uje.
+   Resenje: Dodato check=True.
+
+8. [SREDNJI] Provera datum_do >= datum_od
+   Problem: Korisnik može uneti kraji datum pre početnog.
+   Resenje: Dodata provera sa porukom o grešci.
+
+9. [SREDNJI] Tabela prikazuje oba datuma
+   Problem: Tabela je prikazivala samo jedan datum.
+   Resenje: Sada prikazuje "DD/MM/YYYY - DD/MM/YYYY".
+
+10. [NIZAK] XSD validacija iz memorije
+    Problem: XML fajl čitan dvaput sa diska.
+    Resenje: Validacija direktno iz root objekta.
+
+11. [NIZAK] strip() umesto replace(" ", "")
+    Problem: Brisanje samo space, ne sve whitespace.
+    Resenje: Koristi se .strip().
+
+12. [NIZAK] Error handling za korumpirani JSON
+    Problem: Ako je JSON oštećen, aplikacija pada.
+    Resenje: try/except za JSONDecodeError i ValueError.
+
+================================================================================
+v13.8 - Nova polja i XSD usklađenost
+================================================================================
+
+13. [VISOKO] EBS identifikator
+    Problem: XSD dozvoljava EBS (value="5"), kod nije imao.
+    Resenje: Dodata opcija "EBS" u vrste_id, validacija 9 cifara.
+
+14. [VISOKO] Broj poljoprivrednog gazdinstva
+    Problem: XSD ima BrojPoljoprivrednogGazdinstva, kod nije.
+    Resenje: Dodato polje (opciono).
+
+15. [VISOKO] Naziv poljoprivrednog gazdinstva
+    Problem: XSD ima NazivPoljoprivrednogGazdinstva, kod nije.
+    Resenje: Dodato polje (opciono).
+
+16. [SREDNJI] Email osobe
+    Problem: XSD ima ElektronskaAdresa za osobu, kod nije.
+    Resenje: Dodato polje (opciono).
+
+17. [SREDNJI] Validacija strukture JSON fajla
+    Problem: Ako JSON nema "ljudi" ili "podnosioc", aplikacija pada.
+    Resenje: Provera tipa i postojanja ključeva.
+
+================================================================================
+v13.9 - CLI verzija i poboljšanja
+================================================================================
+
+18. [SREDNJI] Error handling za lxml instalaciju
+    Problem: Ako pip install padne, aplikacija crash-uje.
+    Resenje: try/except oko subprocess.run sa sys.exit(1).
+
+19. [NIZAK] Prečice tastature
+    Problem: Nije bilo prečica tastature.
+    Resenje: Ctrl+N, Ctrl+D, Ctrl+G, Ctrl+P, F1.
+
+20. [NIZAK] About dijalog
+    Problem: Nije bilo informacija o verziji.
+    Resenje: Dodat prikaz informacija (F1).
+
+21. [NIZAK] CLI verzija (opciono)
+    Problem: GUI ne radi na serverima.
+    Resenje: opps_generator_cli.py - command-line verzija bez GUI-a.
+
+================================================================================
+Dodatne ispravke (nakon v13.9)
+================================================================================
+
+22. [SREDNJI] Pozicija kalendar dugmadi (GUI)
+    Problem: Datum OD dugme bilo pored Adresa, Datum DO pored Iznos.
+    Resenje: Datum OD dugme pored Datum OD, Datum DO pored Datum DO.
+
+23. [VISOKO] Opciona polja nisu obavezna (GUI)
+    Problem: Kod je zahtevao popunjavanje email-a i poljoprivrednog gazdinstva.
+    Resenje: Provera samo obaveznih polja (prema XSD minOccurs="1").
+
+================================================================================
+KOMPATIBILNOST
+================================================================================
+
+v13.6: Samo Unix/Mac (fcntl)
+v13.7: Windows + Unix/Mac (cross-platform)
+v13.8: + EBS, poljoprivredno gazdinstvo, email osobe
+v13.9: + CLI verzija, prečice tastature, about dijalog
+
+================================================================================
+VERIFIKACIJA
+================================================================================
+
+- Sintaksa proverena: py_compile OK
+- XSD šema: potpuno usklađena (sva polja)
+- Testirano na: Linux (Python 3.14.4)
+- JMBG validacija: testirana sa konvertor.rs algoritmom
+
+================================================================================
+FAJLOV NA GITHUB-U
+================================================================================
+
+- opps_generator.py          - GUI verzija (desktop)
+- opps_generator_cli.py      - CLI verzija (terminal/server)
+- opps.xsd                   - XSD šema za validaciju XML-a
+- KorisnikouputstvoOPPSS.pdf - Korisničko uputstvo
+- instalacija_ubuntu_server.txt - Uputstvo za Ubuntu Server
+- ispravke_v13.7.txt         - Opis ispravki v13.7
+- ispravke_v13.8.txt         - Opis ispravki v13.8
+- ispravke_v13.9.txt         - Opis ispravki v13.9
+- sve_ispravke.txt           - Kompletan pregled svih ispravki
+
+================================================================================
+KONTAKT
+================================================================================
+
+GitHub: https://github.com/cuparac/OPPSS-test
+Autor: cuparac
+Verzija: 13.9
+
+================================================================================
