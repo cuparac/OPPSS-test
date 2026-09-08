@@ -7,6 +7,9 @@ import json, os, sys, datetime, calendar as _cal, platform, sqlite3, csv
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
+if getattr(sys, 'frozen', False):
+    os.chdir(os.path.dirname(sys.executable))
+
 # XSD šema je ugrađena u kod - ne treba poseban fajl
 XSD_CONTENT = '''<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema elementFormDefault="qualified" targetNamespace="http://pid.purs.gov.rs" version="1.0.0"
@@ -119,9 +122,6 @@ XSD_CONTENT = '''<?xml version="1.0" encoding="UTF-8"?>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>'''
-
-if getattr(sys, 'frozen', False):
-    os.chdir(os.path.dirname(sys.executable))
 
 try:
     from lxml import etree
@@ -768,8 +768,10 @@ class App(tk.Tk):
         self.title("OPPSS Generator v15.0 GUI STANDALONE - ePorezi prijava")
         self.geometry("1000x700")
         
-        self.godina = str(datetime.date.today().year)
-        self.db = Database(self.godina)
+        # Prvo kreiraj godina_var, pa tek onda koristi property
+        self._godina = str(datetime.date.today().year)
+        self.godina_var = tk.StringVar(value=self._godina)
+        self.db = Database(self._godina)
         
         # Provera za migraciju
         self.proveri_migraciju()
@@ -920,8 +922,8 @@ class App(tk.Tk):
     def promeni_godinu(self):
         """Menja godinu."""
         self.db.zatvori()
-        self.godina = self.godina_var.get()
-        self.db = Database(self.godina)
+        self._godina = self.godina_var.get()
+        self.db = Database(self._godina)
         self.osvezi_sve()
     
     @property
