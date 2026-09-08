@@ -8,7 +8,7 @@
 
 ---
 
-## 📋 Sadržaj
+## Sadržaj
 
 - [O projektu](#o-projektu)
 - [Funkcionalnosti](#funkcionalnosti)
@@ -20,13 +20,13 @@
 
 ---
 
-## 📖 O projektu
+## O projektu
 
 OPPSS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
 ---
 
-## ✅ Funkcionalnosti
+## Funkcionalnosti
 
 ### Validacija podataka
 - **JMBG** (13 cifara) - provera datuma i kontrolne cifre
@@ -66,7 +66,7 @@ OPPSS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjeni
 
 ---
 
-## 🚀 Instalacija
+## Instalacija
 
 ### Preduvodi
 - Python 3.6 ili noviji
@@ -96,7 +96,7 @@ pip install lxml
 
 ---
 
-## 💻 Korišćenje
+## Korišćenje
 
 ### GUI verzija (desktop)
 
@@ -130,7 +130,7 @@ python opps_generator_cli.py
 
 ---
 
-## 📁 Struktura projekta
+## Struktura projekta
 
 ```
 OPPSS-test/
@@ -139,16 +139,12 @@ OPPSS-test/
 ├── opps.xsd                       # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf     # Korisničko uputstvo
 ├── instalacija_ubuntu_server.txt  # Uputstvo za Ubuntu Server
-├── sve_ispravke.txt               # Kompletan pregled svih ispravki
-├── ispravke_v13.7.txt             # Ispravke v13.7
-├── ispravke_v13.8.txt             # Ispravke v13.8
-├── ispravke_v13.9.txt             # Ispravke v13.9
 └── README.md                      # Ovaj fajl
 ```
 
 ---
 
-## 📦 Generisani fajlovi
+## Generisani fajlovi
 
 | Fajl | Opis |
 |------|------|
@@ -157,7 +153,7 @@ OPPSS-test/
 
 ---
 
-## 🔄 Istorija verzija
+## Istorija verzija
 
 | Verzija | Datum | Opis | Release |
 |---------|-------|------|---------|
@@ -169,7 +165,7 @@ OPPSS-test/
 
 ---
 
-## ❓ Rešavanje problema
+## Rešavanje problema
 
 ### "externally-managed-environment"
 ```bash
@@ -193,13 +189,13 @@ python opps_generator.py  # bez sudo
 
 ---
 
-## 📝 Licence
+## Licenca
 
 MIT License - slobodno korišćenje i modifikacija.
 
 ---
 
-## 📞 Kontakt
+## Kontakt
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
@@ -207,6 +203,6 @@ MIT License - slobodno korišćenje i modifikacija.
 
 ---
 
-## ⚠️ Napomena
+## Napomena
 
 Ova aplikacija nije zvanični alat Poreske uprave Republike Srbije. Korisnik je odgovoran za ispravnost unetih podataka.
