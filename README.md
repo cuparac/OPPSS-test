@@ -159,13 +159,13 @@ OPPSS-test/
 
 ## 🔄 Istorija verzija
 
-| Verzija | Datum | Opis |
-|---------|-------|------|
-| v13.9 | 08.09.2026 | CLI verzija, prečice tastature, about dijalog |
-| v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva, email osobe |
-| v13.7 | 08.09.2026 | Cross-platform file lock, assert→if, datum provere |
-| v13.6 | 08.09.2026 | JMBG validacija, tree.index, datum OD/DO, file lock |
-| v13.5 | 08.09.2026 | Originalna verzija |
+| Verzija | Datum | Opis | Release |
+|---------|-------|------|---------|
+| v13.9 | 08.09.2026 | CLI verzija, prečice tastature, about dijalog | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.9) |
+| v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva, email osobe | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.8) |
+| v13.7 | 08.09.2026 | Cross-platform file lock, assert→if, datum provere | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.7) |
+| v13.6 | 08.09.2026 | JMBG validacija, tree.index, datum OD/DO, file lock | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.6) |
+| v13.5 | 08.09.2026 | Originalna verzija | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.5) |
 
 ---
 
