@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OOPSS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-14.0-blue)
+![Version](https://img.shields.io/badge/verzija-15.0-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -23,6 +23,8 @@
 ## O projektu
 
 OPPSS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
+
+**Verzija 15.0** koristi **SQLite bazu** umesto JSON, sa mogućnošću CSV exporta, pretrage i izveštaja.
 
 ---
 
@@ -64,6 +66,13 @@ OPPSS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjeni
 - Broj poljoprivrednog gazdinstva
 - Naziv poljoprivrednog gazdinstva
 
+### Dodatne funkcionalnosti (v15)
+- **SQLite baza** - brža i sigurnija od JSON
+- **CSV export** - izvoz u Excel format
+- **Pretraga** - po opštini, imenu, identifikatoru, iznosu
+- **Statistika** - ukupno po godini, vrsti prometa, opštini
+- **Migracija** - automatska konverzija JSON → SQLite
+
 ---
 
 ## Instalacija
@@ -101,7 +110,7 @@ pip install lxml
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator.py
+python opps_generator_gui_v15.py
 ```
 
 **Glavni meni:**
@@ -120,12 +129,13 @@ python opps_generator.py
 | Ctrl+D | Obriši unos |
 | Ctrl+G | Generiši XML |
 | Ctrl+P | Podaci o podnosioca |
+| Ctrl+F | Pretraga |
 | F1 | O aplikaciji |
 
 ### CLI verzija (terminal/server)
 
 ```bash
-python opps_generator_cli.py
+python opps_generator_cli_v15.py
 ```
 
 ---
@@ -149,8 +159,9 @@ OPPSS-test/
 
 | Fajl | Opis |
 |------|------|
-| `baza_2026.json` | JSON baza podataka |
+| `baza_2026.db` | SQLite baza podataka |
 | `OPPS_prijava_2026.xml` | Generisani XML fajl (za upload na ePorezi) |
+| `OPPS_2026.csv` | CSV izveštaj (za Excel) |
 
 ---
 
@@ -162,6 +173,7 @@ Portable verzija znači da je **sve ugrađeno u jedan fajl**. Ne treba:
 - .NET Framework
 - Visual C++ Redistributable
 - lxml paketi
+- Poseban .xsd fajl
 - Bilo koja druga zavisnost
 
 Samo pokrenite `.exe` fajl i radi odmah.
@@ -176,7 +188,6 @@ Pogledajte `kreiranje_exe_uputstvo.txt` za detaljna uputstva.
 | Verzija | Datum | Opis | Release |
 |---------|-------|------|---------|
 | v15.0 | 08.09.2026 | SQLite baza, CSV export, pretraga, izveštaji, migracija | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v15.0) |
-| v14.0 | 08.09.2026 | Standalone verzije (CLI + GUI) | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v14.0) |
 | v13.9 | 08.09.2026 | CLI verzija, prečice tastature | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.9) |
 | v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.8) |
 | v13.7 | 08.09.2026 | Cross-platform, assert→if | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.7) |
@@ -204,7 +215,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator.py  # bez sudo
+python opps_generator_gui_v15.py  # bez sudo
 ```
 
 ---
@@ -219,7 +230,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 14.0
+- **Verzija:** 15.0
 
 ---
 
