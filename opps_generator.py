@@ -626,14 +626,14 @@ class App(tk.Tk):
 
         # Kalendar dugme za DATUM OD
         btn_kal_od = ttk.Button(okvir, text="\U0001F4C5", width=3)
-        btn_kal_od.grid(row=11, column=2, sticky="w", padx=(5, 0))
+        btn_kal_od.grid(row=10, column=2, sticky="w", padx=(5, 0))
         def otvori_kalendar_od():
             Kalendar(entries["datum_unos"], win.winfo_rootx() + 350, win.winfo_rooty() + 250)
         btn_kal_od.configure(command=otvori_kalendar_od)
 
         # Kalendar dugme za DATUM DO
         btn_kal_do = ttk.Button(okvir, text="\U0001F4C5", width=3)
-        btn_kal_do.grid(row=12, column=2, sticky="w", padx=(5, 0))
+        btn_kal_do.grid(row=11, column=2, sticky="w", padx=(5, 0))
         def otvori_kalendar_do():
             Kalendar(entries["datum_do"], win.winfo_rootx() + 350, win.winfo_rooty() + 300)
         btn_kal_do.configure(command=otvori_kalendar_do)
