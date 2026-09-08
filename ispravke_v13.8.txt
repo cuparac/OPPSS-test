@@ -1,0 +1,87 @@
+================================================================================
+OPPSS GENERATOR - Ispravke v13.8 (od v13.7)
+Datum: 08.09.2026.
+================================================================================
+
+KRATAK PREGLED:
+U odnosu na v13.7, u v13.8 je dodato novih 5 polja i poboljsana validacija.
+Sada je kod potpuno uskladjen sa XSD semom i korisnickim uputstvom.
+
+================================================================================
+NOVE ISPRAVKE:
+================================================================================
+
+1. [VISOKO] EBS identifikator  (linija ~443)
+   Problem: XSD sema dozvoljava EBS (value="5"), ali kod nije imao tu opciju.
+   Resenje: Dodata opcija "EBS" u vrste_id. Validacija: 9 cifara.
+   Status: ✅ DODATO
+
+2. [VISOKO] Broj poljoprivrednog gazdinstva  (linija ~452)
+   Problem: XSD sema ima BrojPoljoprivrednogGazdinstva, ali kod nije imao ovo polje.
+   Resenje: Dodato polje "Broj poljoprivrednog gazdinstva" (opciono).
+   Status: ✅ DODATO
+
+3. [VISOKO] Naziv poljoprivrednog gazdinstva  (linija ~453)
+   Problem: XSD sema ima NazivPoljoprivrednogGazdinstva, ali kod nije imao ovo polje.
+   Resenje: Dodato polje "Naziv poljoprivrednog gazdinstva" (opciono).
+   Status: ✅ DODATO
+
+4. [SREDNJI] Email osobe  (linija ~449)
+   Problem: XSD sema ima ElektronskaAdresa za osobu, ali kod nije imao ovo polje.
+   Resenje: Dodato polje "E-posta osobe" (opciono, minOccur=0 po XSD).
+   Status: ✅ DODATO
+
+5. [SREDNJI] Validacija strukture JSON fajla  (linija ~93)
+   Problem: Ako JSON fajl postoji ali nema "ljudi" ili "podnosioc" kljuc, aplikacija pada.
+   Resenje: Dodata provera tipa i postojanja kljuceva. Ako fajl nije validan, kreira se prazna baza.
+   Status: ✅ DODATO
+
+================================================================================
+PROMENE U KODU:
+================================================================================
+
+- Dodata funkcija validan_ebs(): provera da li EBS ima 9 cifara
+- Dodat import: platform (vec bio)
+- vrste_id: {"JMBG": "1", "PIB": "0", "EBS": "5"} (pre samo JMBG i PIB)
+- limit_za_tip(): sva tri tipa imaju 9 cifara osim JMBG (13)
+- proveri_identifikator(): dodata provera za EBS
+- sacuvaj(): dodata validacija za EBS
+- generisi_xml(): dodata opciona polja (email, broj/naziv gazdinstva)
+- ucitaj_bazu(): dodata validacija strukture JSON fajla
+- forma_osobe(): dodata nova polja (email, broj/naziv gazdinstva)
+- auto-popunjavanje: sada popunjava i nova polja
+
+================================================================================
+KOMPATIBILNOST:
+================================================================================
+
+v13.7: Windows + Unix/Mac (cross-platform)
+v13.7: Windows + Unix/Mac + EBS + poljoprivredno gazdinstvo + email osobe
+
+================================================================================
+VERIFIKACIJA:
+================================================================================
+
+- Sintaksa proverena: py_compile OK
+- XSD sema: potpuno uskladjena (sva polja)
+- Testirano na: Linux (Python 3.14.4)
+
+================================================================================
+NAPOMENA:
+================================================================================
+
+Pre pokretanja na novom sistemu instalirajte zavisnost:
+    pip install lxml
+
+Ako op.ps.xsd fajl ne postoji, XML ce biti kreiran ali NECE biti validiran.
+XSD fajl je sada deo repozitorijuma.
+
+================================================================================
+KONTAKT:
+================================================================================
+
+GitHub: https://github.com/cuparac/OPPSS-test
+Autor: cuparac
+Verzija: 13.8
+
+================================================================================

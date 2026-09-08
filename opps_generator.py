@@ -1,7 +1,8 @@
-"""OPPSS GENERATOR v13.7 - baze po godinama, JMBG kontrola, kalendar,
+"""OPPSS GENERATOR v13.8 - baze po godinama, JMBG kontrola, kalendar,
 auto-popunjavanje iz tabele + fokus na datum, XML + XSD validacija,
 datum od/do kao posebna polja, file lock za JSON bazu,
-cross-platform kompatibilnost, poboljšana validacija.
+cross-platform kompatibilnost, poboljsana validacija,
+EBS identifikator, broj/naziv poljoprivrednog gazdinstva, email osobe.
 Zahteva: pip install lxml"""
 
 import json, os, sys, datetime, calendar as _cal, platform
@@ -62,14 +63,27 @@ def validan_jmbg(jmbg):
     return (0 if k > 9 else k) == a[12]
 
 
+def validan_ebs(ebs):
+    """Validacija EBS (Jedinstveni broj subjekta): 9 cifara."""
+    return ebs.isdigit() and len(ebs) == 9
+
+
 def ucitaj_bazu(godina):
     """Ucitavanje JSON baze sa error handling-om za korumpirane fajlove."""
     f = "baza_" + godina + ".json"
     if os.path.exists(f):
         try:
             with open(f, encoding="utf-8") as fh:
-                return json.load(fh)
-        except (json.JSONDecodeError, IOError) as e:
+                data = json.load(fh)
+            # Validacija strukture JSON fajla
+            if not isinstance(data, dict):
+                raise ValueError("Ocekivan objekat, dobijen: " + type(data).__name__)
+            if "ljudi" not in data or not isinstance(data["ljudi"], list):
+                data["ljudi"] = []
+            if "podnosioc" not in data or not isinstance(data["podnosioc"], dict):
+                data["podnosioc"] = {}
+            return data
+        except (json.JSONDecodeError, IOError, ValueError) as e:
             messagebox.showwarning("Upozorenje",
                                    "Fajl '%s' je ostecen: %s\n\nKreirana je prazna baza." % (f, str(e)))
             return {"podnosioc": {}, "ljudi": []}
@@ -248,7 +262,14 @@ def generisi_xml(baza, godina):
         etree.SubElement(r, XS + "ImePrezimeNaziv").text = o["ime_naziv"]
         etree.SubElement(r, XS + "OpstinaPrebivalista").text = o["opstina"]
         etree.SubElement(r, XS + "Adresa").text = o["adresa"]
+        # Opciona polja
+        if o.get("email_osobe"):
+            etree.SubElement(r, XS + "ElektronskaAdresa").text = o["email_osobe"]
         etree.SubElement(r, XS + "Telefon").text = o["telefon"]
+        if o.get("broj_gazdinstva"):
+            etree.SubElement(r, XS + "BrojPoljoprivrednogGazdinstva").text = o["broj_gazdinstva"]
+        if o.get("naziv_gazdinstva"):
+            etree.SubElement(r, XS + "NazivPoljoprivrednogGazdinstva").text = o["naziv_gazdinstva"]
         etree.SubElement(r, XS + "IznosPrometa").text = str(o["iznos_prometa"])
         etree.SubElement(r, XS + "DatumOd").text = o["datum"]
         etree.SubElement(r, XS + "DatumDo").text = o.get("datum_do", o["datum"])
@@ -271,7 +292,7 @@ def generisi_xml(baza, godina):
         messagebox.showwarning("Problem sa XSD semom",
                                "Nije moguce ucitati '%s':\n%s\n\nXML je kreiran ALI NIJE validiran.\n\n%s" % (XSD, e, sazetak))
         return izlaz
-    # Validacija iz memorije (ne čita fajl dvaput sa diska)
+    # Validacija iz memorije (ne cita fajl dvaput sa diska)
     if schema.validate(root):
         messagebox.showinfo("Uspeh", "[OK] %s je VALIDAN!\n\nSpreman za upload na ePorezi portal.\n\n%s" % (izlaz, sazetak))
     else:
@@ -383,7 +404,7 @@ class App(tk.Tk):
         tf = ttk.Frame(self)
         tf.pack(fill="both", expand=True, padx=10, pady=5)
         kolone = ("rb", "tip", "identifikator", "ime_naziv", "opstina", "adresa", "telefon", "datum", "iznos")
-        naslovi = {"rb": "R.br", "tip": "Vrsta prometa", "identifikator": "JMBG/PIB",
+        naslovi = {"rb": "R.br", "tip": "Vrsta prometa", "identifikator": "JMBG/PIB/EBS",
                    "ime_naziv": "Ime / Naziv", "opstina": "Opstina", "adresa": "Adresa",
                    "telefon": "Telefon", "datum": "Datum (od/do)", "iznos": "Iznos (RSD)"}
         sirine = {"rb": 45, "tip": 165, "identifikator": 115, "ime_naziv": 170,
@@ -460,16 +481,19 @@ class App(tk.Tk):
         okvir.pack(fill="both", expand=True)
 
         vrste_pr = {"Poljoprivredni proizvodi/usluge": "1", "Sekundarne sirovine": "2"}
-        vrste_id = {"JMBG": "1", "PIB": "0"}
+        vrste_id = {"JMBG": "1", "PIB": "0", "EBS": "5"}
         entries = {}
         redovi = [
             ("vrsta_tip", "VRSTA PROMETA:", list(vrste_pr.keys())),
             ("id_tip", "Identifikator:", list(vrste_id.keys())),
-            ("identifikator", "JMBG / PIB broj:", None),
+            ("identifikator", "JMBG / PIB / EBS broj:", None),
             ("ime_naziv", "Ime i prezime / Naziv:", None),
             ("opstina", "Opstina:", None),
             ("adresa", "Adresa:", None),
+            ("email_osobe", "E-posta osobe:", None),
             ("telefon", "Broj telefona:", None),
+            ("broj_gazdinstva", "Broj poljoprivrednog gazdinstva:", None),
+            ("naziv_gazdinstva", "Naziv poljoprivrednog gazdinstva:", None),
             ("datum_unos", "Datum OD:", None),
             ("datum_do", "Datum DO:", None),
             ("iznos_prometa", "Iznos prometa (RSD, ceo broj):", None),
@@ -497,7 +521,13 @@ class App(tk.Tk):
         napomena_id.grid(row=2, column=2, sticky="w", padx=(5, 0))
 
         def limit_za_tip():
-            return 13 if entries["id_tip"].get() == "JMBG" else 9
+            tip = entries["id_tip"].get()
+            if tip == "JMBG":
+                return 13
+            elif tip == "EBS":
+                return 9
+            else:  # PIB
+                return 9
 
         def proveri_identifikator():
             try:
@@ -512,8 +542,13 @@ class App(tk.Tk):
                         napomena_id.config(text="[OK] ispravan JMBG", foreground="green")
                     else:
                         napomena_id.config(text="[X] NEISPRAVAN JMBG!", foreground="red")
+                elif entries["id_tip"].get() == "EBS":
+                    if validan_ebs(v):
+                        napomena_id.config(text="[OK] ispravan EBS", foreground="green")
+                    else:
+                        napomena_id.config(text="[X] NEISPRAVAN EBS!", foreground="red")
                 else:
-                    napomena_id.config(text="[OK] 9 cifara", foreground="green")
+                    napomena_id.config(text="[OK] 9 cifara (PIB)", foreground="green")
             except Exception as e:
                 napomena_id.config(text="GRESKA: " + str(e), foreground="red")
 
@@ -549,9 +584,10 @@ class App(tk.Tk):
                     if o["identifikator"] == broj:
                         nadjen = o
                 if nadjen:
-                    for k in ("ime_naziv", "opstina", "adresa", "telefon"):
-                        entries[k].delete(0, "end")
-                        entries[k].insert(0, nadjen[k])
+                    for k in ("ime_naziv", "opstina", "adresa", "email_osobe", "telefon", "broj_gazdinstva", "naziv_gazdinstva"):
+                        if k in entries:
+                            entries[k].delete(0, "end")
+                            entries[k].insert(0, nadjen.get(k, ""))
                     info_dupli.config(text="[i] Podaci popunjeni iz tabele - unesite datum i iznos",
                                       foreground="blue")
                     win.after(10, lambda: (entries["datum_unos"].focus_set(),
@@ -567,14 +603,14 @@ class App(tk.Tk):
 
         # Kalendar dugme za DATUM OD
         btn_kal_od = ttk.Button(okvir, text="\U0001F4C5", width=3)
-        btn_kal_od.grid(row=7, column=2, sticky="w", padx=(5, 0))
+        btn_kal_od.grid(row=11, column=2, sticky="w", padx=(5, 0))
         def otvori_kalendar_od():
             Kalendar(entries["datum_unos"], win.winfo_rootx() + 350, win.winfo_rooty() + 250)
         btn_kal_od.configure(command=otvori_kalendar_od)
 
         # Kalendar dugme za DATUM DO
         btn_kal_do = ttk.Button(okvir, text="\U0001F4C5", width=3)
-        btn_kal_do.grid(row=8, column=2, sticky="w", padx=(5, 0))
+        btn_kal_do.grid(row=12, column=2, sticky="w", padx=(5, 0))
         def otvori_kalendar_do():
             Kalendar(entries["datum_do"], win.winfo_rootx() + 350, win.winfo_rooty() + 300)
         btn_kal_do.configure(command=otvori_kalendar_do)
@@ -628,6 +664,11 @@ class App(tk.Tk):
                                            "JMBG (%s) NE prolazi proveru kontrolne cifre!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
                                            parent=win):
                     return
+            if tip == "EBS" and not validan_ebs(broj_id):
+                if not messagebox.askyesno("Upozorenje",
+                                           "EBS (%s) NIJE ispravan (mora imati 9 cifara)!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
+                                           parent=win):
+                    return
             try:
                 iznos = int(entries["iznos_prometa"].get().strip())
                 if iznos <= 0:
@@ -642,7 +683,10 @@ class App(tk.Tk):
                 "ime_naziv": entries["ime_naziv"].get().strip(),
                 "opstina": entries["opstina"].get().strip(),
                 "adresa": entries["adresa"].get().strip(),
+                "email_osobe": entries["email_osobe"].get().strip(),
                 "telefon": entries["telefon"].get().strip(),
+                "broj_gazdinstva": entries["broj_gazdinstva"].get().strip(),
+                "naziv_gazdinstva": entries["naziv_gazdinstva"].get().strip(),
                 "datum": datum_iso,
                 "datum_do": datum_do_iso,
                 "iznos_prometa": iznos,
