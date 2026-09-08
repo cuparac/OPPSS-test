@@ -1,0 +1,103 @@
+================================================================================
+KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit)
+================================================================================
+
+================================================================================
+1. PREUZIMANJE FAJLOVA NA WINDOWS
+================================================================================
+
+# Klonirajte repozitorijum ili preuzmite fajl:
+https://github.com/cuparac/OPPSS-test
+
+# Preuzmite fajl:
+opps_generator_standalone.py
+
+
+================================================================================
+2. INSTALACIJA PYTHON-A NA WINDOWS
+================================================================================
+
+# Preuzmite Python 3.8+ (32-bit ili 64-bit):
+https://www.python.org/downloads/
+
+# PRILIKOM INSTALACIJE OBAVEZNO OZNACITE:
+# [x] Add Python to PATH
+
+
+================================================================================
+3. INSTALACIJA POTREBNIH PAKETA
+================================================================================
+
+# Otvorite Command Prompt (cmd) ili PowerShell i ukucajte:
+
+pip install lxml pyinstaller
+
+
+================================================================================
+4. KREIRANJE .exe FAJLA
+================================================================================
+
+# Otvorite Command Prompt (cmd) i ukucajte:
+
+cd C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test
+
+# Za 32-bit Windows:
+pyinstaller --onefile --windowed --name "OPPSS_Generator" opps_generator_standalone.py
+
+# Za 64-bit Windows:
+pyinstaller --onefile --console --name "OPPSS_Generator" opps_generator_standalone.py
+
+
+================================================================================
+5. PRONALAŽENJE .exe FAJLA
+================================================================================
+
+# Kreirani .exe fajl nalazi se u:
+C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test\dist\OPPSS_Generator.exe
+
+
+================================================================================
+6. UPOTREBA
+================================================================================
+
+# Pokrenite .exe fajl dvoklikom
+# Aplikacija će otvoriti command prompt prozor
+# Sledite uputstva na ekranu
+
+# Generisani fajlovi (XML, JSON) nalaze se u istom direktorijumu gde je .exe
+
+
+================================================================================
+7. REŠAVANJE PROBLEMA
+================================================================================
+
+Problem: "pip nije prepoznat"
+Resenje:  Ponovo instalirajte Python sa "Add to PATH"
+
+Problem: "lxml se ne instalira"
+Resenje:  pip install lxml --only-binary :all:
+
+Problem: "pyinstaller nije pronađen"
+Resenje:  python -m pyinstaller --onefile opps_generator_standalone.py
+
+Problem: "Antivirus blokira .exe"
+Resenje:  Dodajte .exe u izuzetke antivirusa
+
+
+================================================================================
+8. INFORMACIJE O IZVRŠNOM FAJLU
+================================================================================
+
+# Veličina: ~15-25 MB (zavisi od Python verzije)
+# Platforma: Windows 7/8/10/11 (32/64 bit)
+# Zavisnosti: Nisu potrebne (sve je ugrađeno u .exe)
+
+
+================================================================================
+KONTAKT
+================================================================================
+
+GitHub: https://github.com/cuparac/OPPSS-test
+Verzija: 13.9 STANDALONE
+
+================================================================================
