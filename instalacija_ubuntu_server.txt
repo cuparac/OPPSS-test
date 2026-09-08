@@ -33,11 +33,16 @@ sudo -S -p '' apt install -y python3 python3-pip
 3. INSTALACIJA lxml PAKETA
 ================================================================================
 
-# Opcija A - preko pip (preporučeno):
-pip3 install lxml
-
-# Opcija B - preko apt (ako pip ne radi):
+# Opcija A - preko apt (PREPORUČENO na Ubuntu Server):
 sudo -S -p '' apt install -y python3-lxml
+
+# Opcija B - virtualni environment:
+python3 -m venv venv
+source venv/bin/activate
+pip install lxml
+
+# Opcija C - override (ako ništa drugo ne radi):
+pip3 install lxml --break-system-packages
 
 # Proverite instalaciju:
 python3 -c "from lxml import etree; print('lxml OK')"
@@ -83,8 +88,11 @@ OPPS_prijava_2026.xml   - Generisani XML fajl (za upload na ePorezi)
 7. REŠAVANJE PROBLEMA
 ================================================================================
 
+Problem: "externally-managed-environment"
+Resenje:  sudo apt install -y python3-lxml
+
 Problem: "ModuleNotFoundError: No module named 'lxml'"
-Resenje:  pip3 install lxml
+Resenje:  sudo apt install -y python3-lxml
 
 Problem: "ModuleNotFoundError: No module named 'pip'"
 Resenje:  sudo apt install -y python3-pip
