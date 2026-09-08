@@ -134,14 +134,15 @@ python opps_generator_cli.py
 
 ```
 OPPSS-test/
-├── opps_generator.py              # GUI verzija (desktop)
-├── opps_generator_cli.py          # CLI verzija (terminal/server)
-├── opps_generator_standalone.py   # Standalone (XSD ugrađen, za .exe)
-├── opps.xsd                       # XSD šema za validaciju XML-a
-├── KorisnikouputstvoOPPSS.pdf     # Korisničko uputstvo
-├── instalacija_ubuntu_server.txt  # Uputstvo za Ubuntu Server
-├── kreiranje_exe_uputstvo.txt     # Uputstvo za kreiranje .exe
-└── README.md                      # Ovaj fajl
+├── opps_generator.py                  # GUI verzija (desktop, za razvoj)
+├── opps_generator_cli.py              # CLI verzija (terminal, za razvoj)
+├── opps_generator_standalone.py       # CLI STANDALONE (XSD ugrađen, za .exe)
+├── opps_generator_gui_standalone.py   # GUI STANDALONE (XSD ugrađen, za .exe)
+├── opps.xsd                           # XSD šema za validaciju XML-a
+├── KorisnikouputstvoOPPSS.pdf         # Korisničko uputstvo
+├── instalacija_ubuntu_server.txt      # Uputstvo za Ubuntu Server
+├── kreiranje_exe_uputstvo.txt         # Uputstvo za kreiranje .exe
+└── README.md                          # Ovaj fajl
 ```
 
 ---
