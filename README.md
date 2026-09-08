@@ -155,6 +155,23 @@ OPPSS-test/
 
 ---
 
+## Kreiranje .exe fajla (portable)
+
+### Šta je "portable"?
+Portable verzija znači da je **sve ugrađeno u jedan fajl**. Ne treba:
+- Instalacija
+- .NET Framework
+- Visual C++ Redistributable
+- lxml paketi
+- Bilo koja druga zavisnost
+
+Samo pokrenite `.exe` fajl i radi odmah.
+
+### Uputstvo za kreiranje
+Pogledajte `kreiranje_exe_uputstvo.txt` za detaljna uputstva.
+
+---
+
 ## Istorija verzija
 
 | Verzija | Datum | Opis | Release |
