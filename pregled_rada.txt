@@ -1,0 +1,218 @@
+================================================================================
+OPPSS GENERATOR - PREGLED RADA (za nastavak)
+Datum: 08.09.2026.
+================================================================================
+
+================================================================================
+1. INFORMACIJE O PROJEKTU
+================================================================================
+
+Korisnik: Milan Jankovic (Telegram: @cuparac)
+GitHub: https://github.com/cuparac/OPPSS-test
+Repozitorijum: OPPSS-test
+
+Projekat: Aplikacija za generisanje OPPS prijava za portal ePorezi (PURS RS)
+Jezik: Python 3.6+
+Platforme: Windows, Mac, Linux (cross-platform)
+
+================================================================================
+2. VERZJE APLIKACIJE
+================================================================================
+
+| Fajl | Opis |
+|------|------|
+| opps_generator_gui_v15.py | GUI verzija v15 (SQLite, CSV, pretraga) |
+| opps_generator_cli_v15.py | CLI verzija v15 (SQLite, CSV, pretraga) |
+| opps.xsd | XSD šema (opciono - ugrađena u kod) |
+| KorisnikouputstvoOPPSS.pdf | Korisničko uputstvo |
+| instalacija_ubuntu_server.txt | Uputstvo za Ubuntu Server |
+| kreiranje_exe_uputstvo.txt | Uputstvo za .exe |
+| README.md | Dokumentacija |
+
+================================================================================
+3. GIT TAGOVI
+================================================================================
+
+| Tag | Opis |
+|-----|------|
+| v13.5 | Originalna verzija |
+| v13.6 | JMBG validacija, tree.index, datum OD/DO |
+| v13.7 | Cross-platform, assert→if |
+| v13.8 | EBS, poljoprivredno gazdinstva |
+| v13.9 | CLI verzija, prečice tastature |
+| v14.0 | Standalone verzije (CLI + GUI) |
+| v15.0 | SQLite baza, CSV, pretraga, izveštaji |
+
+================================================================================
+4. ISTORIJA UNAPREĐENJA (DETALJNO)
+================================================================================
+
+v13.5 - Originalna verzija
+- GUI aplikacija (tkinter)
+- JMBG validacija (osnovna)
+- JSON baza
+- XML generisanje sa XSD validacijom
+- Kalendar widget
+
+v13.6 - Ispravke validacije
+- JMBG: ekstrahuje godinu iz JMBG-a, probava oba raspona
+- tree.index() umesto int(sel[0]) - 1
+- Datum OD/DO kao posebna polja
+- File lock (fcntl)
+
+v13.7 - Cross-platform
+- fcntl zaštićen za Windows (atomic write)
+- assert → if za iznos
+- Provera datum_do >= datum_od
+- Tabela prikazuje oba datuma
+- XSD validacija iz memorije
+- strip() umesto replace(" ", "")
+- Error handling za korumpirani JSON
+
+v13.8 - Nova polja
+- EBS identifikator (9 cifara)
+- Poljoprivredno gazdinstva (opciono)
+- Email osobe (opciono)
+- Validacija JSON strukture
+
+v13.9 - CLI verzija
+- CLI interfejs za terminal/server
+- Prečice tastature (Ctrl+N, Ctrl+D, Ctrl+G, Ctrl+P, F1)
+- About dijalog
+- Error handling za lxml
+
+v14.0 - Standalone verzije
+- CLI standalone (XSD ugrađen)
+- GUI standalone (XSD ugrađen)
+- .exe kompatibilnost
+
+v15.0 - SQLite baza
+- SQLite baza umesto JSON
+- CSV export (Excel format)
+- Pretraga (opština, ime, identifikator, iznos, datum)
+- Statistika (po godini, vrsti prometa, opštini)
+- Migracija JSON → SQLite
+- Meni (Datoteka, Unos, Alat, Pomoć)
+- Property ispravke (redosled inicijalizacije)
+
+================================================================================
+5. FUNKCIONALNOSTI v15
+================================================================================
+
+Validacija:
+- JMBG (13 cifara) - datum + kontrolna cifra
+- PIB (9 cifara)
+- EBS (9 cifara)
+- Datumi (ispravnost + redosled)
+- Iznos (pozitivan ceo broj)
+
+Baza:
+- SQLite (baza_2026.db)
+- Migracija JSON → SQLite
+- ACID kompatibilnost
+
+Export:
+- XML (za ePorezi portal)
+- CSV (za Excel)
+
+Pretraga:
+- Po opštini
+- Po imenu
+- Po identifikatoru
+- Po iznosu (od/do)
+- Po datumu (od/do)
+
+Statistika:
+- Ukupno po godini
+- Po vrsti prometa
+- Po opštini
+
+================================================================================
+6. KORIŠĆENE TEHNOLOGIJE
+================================================================================
+
+- Python 3.6+
+- tkinter (GUI)
+- lxml (XML/XSD)
+- sqlite3 (baza)
+- csv (export)
+- platform (cross-platform)
+- fcntl (Unix file lock)
+
+================================================================================
+7. KREIRANJE .exe
+================================================================================
+
+```bash
+# GUI .exe
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v15" opps_generator_gui_v15.py
+
+# CLI .exe
+pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15" opps_generator_cli_v15.py
+```
+
+================================================================================
+8. TESTIRANJE
+================================================================================
+
+Testirano na serveru (Linux):
+- JMBG validacija ✅
+- EBS validacija ✅
+- Datum konverzija ✅
+- SQLite baza ✅
+- Pretraga ✅
+- Statistika ✅
+- CSV export ✅
+- Migracija ✅
+- XSD šema ✅
+
+Nije testirano (zahteva Windows/GUI):
+- GUI (tkinter)
+- Kreiranje .exe
+
+================================================================================
+9. REŠENI PROBLEMI
+================================================================================
+
+1. JMBG godina hardkodirana na 2000 → Ekstrahuje se iz JMBG-a
+2. int(sel[0]) - 1 → tree.index(sel[0])
+3. fcntl na Windows → atomic write
+4. assert iznos > 0 → if iznos <= 0
+5. externally-managed-environment → apt install python3-lxml
+6. godina property → ispravan redosled inicijalizacije
+
+================================================================================
+10. ŠTA JE OSTALO ZA URADITI
+================================================================================
+
+- [ ] Testirati GUI na Windowsu
+- [ ] Kreirati .exe fajlove
+- [ ] Testirati .exe na čistom Windowsu
+- [ ] Dodati mogućnost izmene postojećeg unosa u GUI
+- [ ] Proveriti sve edge case-ove
+
+================================================================================
+11. KOMANDE ZA NASTAVAK
+================================================================================
+
+```bash
+# Kloniranje
+git clone https://github.com/cuparac/OPPSS-test.git
+cd OPPSS-test
+
+# Pokretanje GUI
+python opps_generator_gui_v15.py
+
+# Pokretanje CLI
+python opps_generator_cli_v15.py
+
+# Instalacija zavisnosti
+pip install lxml
+
+# Kreiranje .exe
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v15" opps_generator_gui_v15.py
+```
+
+================================================================================
+KRAJ DOKUMENTA
+================================================================================
