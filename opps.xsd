@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Verzija 1.0.0 - Inicijalna verzija
+-->
+<xs:schema elementFormDefault="qualified" targetNamespace="http://pid.purs.gov.rs" version="1.0.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://pid.purs.gov.rs">
+
+    <xs:element name="PoreskaDeklaracija" type="tns:PoreskaDeklaracijaType"/>
+
+    <xs:complexType name="PoreskaDeklaracijaType">
+        <xs:sequence>
+            <xs:element name="OPPPSSPrijava" maxOccurs="1" minOccurs="1" type="tns:OPPPSSPrijavaType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OPPPSSPrijavaType">
+        <xs:sequence>
+            <xs:element name="PodaciOPrijavi" maxOccurs="1" minOccurs="1" type="tns:PodaciOPrijaviType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PodaciOPrijaviType">
+        <xs:sequence>
+            <xs:element name="KlijentskaOznakaDeklaracije" maxOccurs="1" minOccurs="0" type="tns:String255Type"/>
+            <xs:element name="PortalOznakaDeklaracije" maxOccurs="1" minOccurs="0" type="tns:String255Type"/>
+            <xs:element name="PodaciOObrascu" maxOccurs="1" minOccurs="1" type="tns:PodaciOObrascuType"/>
+            <xs:element name="PodaciOPodnosiocu" maxOccurs="1" minOccurs="1" type="tns:PodaciOPodnosiocuType"/>
+            <xs:element name="PodaciOPrometu" minOccurs="1" maxOccurs="unbounded" type="tns:PodaciOPrometuType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="PodaciOObrascuType">
+        <xs:sequence>
+            <!-- P.1 -->
+            <xs:element name="PoreskiPeriod" type="xs:positiveInteger" maxOccurs="1" minOccurs="1"/>
+            <!-- P.2 -->
+            <xs:element name="IspravkaObavestenja" type="xs:boolean" maxOccurs="1" minOccurs="0"/>
+            <!-- P.3 -->
+            <xs:element name="JBIPKojaSeMenja" type="xs:long" maxOccurs="1" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="PodaciOPodnosiocuType">
+        <xs:sequence>
+            <!-- P.4 -->
+            <xs:element name="PIBJMBG" type="tns:PIBJMBGTip" minOccurs="1" maxOccurs="1"/>
+            <!-- P.5 -->
+            <xs:element name="EPostaPodnosioca" type="tns:eMailAdresaType" minOccurs="1" maxOccurs="1"/>
+            <!-- P.6 -->
+            <xs:element name="TelefonPodnosioca" type="tns:String255Type" maxOccurs="1" minOccurs="1" />
+            <!-- P.7 -->
+            <xs:element name="JMBGPodnosioca" type="tns:JMBGType" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PodaciOPrometuType">
+        <xs:sequence>
+            <!-- P.8 -->
+            <xs:element name="RedniBroj" type="xs:positiveInteger" maxOccurs="1" minOccurs="1"/>
+            <!-- P.9 -->
+            <xs:element name="VrstaPrometa" maxOccurs="1" minOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:int">
+                        <!-- Unos prometa poljoprivrednih proizvoda i usluga -->
+                        <xs:enumeration value="1"/>
+                        <!-- Unos prometa sekundarnih sirovina -->
+                        <xs:enumeration value="2"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="VrstaIdentifikatora" maxOccurs="1" minOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:int">
+                        <!-- PIB -->
+                        <xs:enumeration value="0"/>
+                        <!-- JMBG -->
+                        <xs:enumeration value="1"/>
+                        <!-- EBS -->
+                        <xs:enumeration value="5"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <!-- P.10 -->
+            <xs:element name="IdentifikatorIzvrsiocaPrometa" type="tns:String255Type" minOccurs="1" maxOccurs="1"/>
+            <!-- P.11 -->
+            <xs:element name="ImePrezimeNaziv" type="tns:String255Type" minOccurs="1" maxOccurs="1"/>
+            <!-- P.12 -->
+            <xs:element name="OpstinaPrebivalista" type="tns:String255Type" minOccurs="1" maxOccurs="1"/>
+            <!-- P.13 -->
+            <xs:element name="Adresa" type="tns:String255Type" minOccurs="1" maxOccurs="1"/>
+            <!-- P.14 -->
+            <xs:element name="ElektronskaAdresa" type="tns:eMailAdresaType" minOccurs="0" maxOccurs="1"/>
+            <!-- P.15 -->
+            <xs:element name="Telefon" maxOccurs="1" minOccurs="1" type="tns:String255Type"/>
+            <!-- P.16 -->
+            <xs:element name="BrojPoljoprivrednogGazdinstva" maxOccurs="1" minOccurs="0" type="tns:String255Type"/>
+            <!-- P.17 -->
+            <xs:element name="NazivPoljoprivrednogGazdinstva" maxOccurs="1" minOccurs="0" type="tns:String2000Type"/>
+            <!-- P.18 -->
+            <xs:element name="IznosPrometa" maxOccurs="1" minOccurs="1" type="xs:positiveInteger"/>
+            <!-- P.19 -->
+            <xs:element name="DatumOd" maxOccurs="1" minOccurs="1" type="tns:DatumType"/>
+            <!-- P.20 -->
+            <xs:element name="DatumDo" maxOccurs="1" minOccurs="1" type="tns:DatumType"/>
+
+        </xs:sequence>
+    </xs:complexType>
+    <!-- Datum u formatu YYYY-MM-DD. -->
+    <xs:simpleType name="DatumType">
+        <xs:restriction base="xs:date">
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="eMailAdresaType">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="512"/>
+            <xs:minLength value="3"/>
+            <xs:pattern
+                    value="[A-Za-z0-9_]+([-+.&#39;][A-Za-z0-9_]+)*@[A-Za-z0-9_]+([-.][A-Za-z0-9_]+)*\.[A-Za-z0-9_]+([-.][A-Za-z0-9_]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="PIBType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{9}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="PIBJMBGTip">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{9}"/>
+            <xs:pattern value="[0-9]{13}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="MBRType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{8}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="String2000Type">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="2000"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="String255Type">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="255"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="String16Type">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="16"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="String5Type">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="5"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="String9Type">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="9"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="JMBGType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{13}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="DecimalPozitivNulaType">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+            <xs:fractionDigits value="2"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
