@@ -138,6 +138,7 @@ OPPSS-test/
 ├── opps_generator_cli.py              # CLI verzija (terminal, za razvoj)
 ├── opps_generator_standalone.py       # CLI STANDALONE (XSD ugrađen, za .exe)
 ├── opps_generator_gui_standalone.py   # GUI STANDALONE (XSD ugrađen, za .exe)
+├── opps_generator_gui_v15.py          # GUI v15 (SQLite, CSV, pretraga, izveštaji)
 ├── opps.xsd                           # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf         # Korisničko uputstvo
 ├── instalacija_ubuntu_server.txt      # Uputstvo za Ubuntu Server
