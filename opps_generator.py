@@ -1,8 +1,9 @@
-"""OPPSS GENERATOR v13.5 - baze po godinama, JMBG kontrola, kalendar,
-auto-popunjavanje iz tabele + fokus na datum, XML + XSD validacija.
+"""OPPSS GENERATOR v13.6 - baze po godinama, JMBG kontrola, kalendar,
+auto-popunjavanje iz tabele + fokus na datum, XML + XSD validacija,
+datum od/do kao posebna polja, file lock za JSON bazu.
 Zahteva: pip install lxml"""
 
-import json, os, sys, datetime, calendar as _cal
+import json, os, sys, datetime, calendar as _cal, fcntl
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -19,13 +20,38 @@ except ImportError:
 
 
 def validan_jmbg(jmbg):
+    """Validacija JMBG-a: provera datuma i kontrolne cifre.
+    JMBG format: DDMMYYYRRBBBK
+    - DD: dan (01-31)
+    - MM: mesec (01-12)
+    - YYY: 3-cifrena godina (000-999 -> 1000-1999 ili 2000-2999)
+    - RR: region
+    - BBB: serijski broj
+    - K: kontrolna cifra
+    """
     if not jmbg.isdigit() or len(jmbg) != 13:
         return False
     a = [int(c) for c in jmbg]
-    try:
-        datetime.date(2000, int(jmbg[2:4]), int(jmbg[0:2]))
-    except ValueError:
+
+    # Ekstrahuj datum iz JMBG-a
+    dan = int(jmbg[0:2])
+    mesec = int(jmbg[2:4])
+    godina_3 = int(jmbg[4:7])  # 3-cifrena godina
+
+    # Probaj oba raspona: 1000-1999 i 2000-2999
+    datum_ok = False
+    for godina in [1000 + godina_3, 2000 + godina_3]:
+        try:
+            datetime.date(godina, mesec, dan)
+            datum_ok = True
+            break
+        except ValueError:
+            continue
+
+    if not datum_ok:
         return False
+
+    # Kontrolna cifra
     tezine = [7, 6, 5, 4, 3, 2] * 2
     k = 11 - (sum(c * t for c, t in zip(a[:12], tezine)) % 11)
     return (0 if k > 9 else k) == a[12]
@@ -40,8 +66,14 @@ def ucitaj_bazu(godina):
 
 
 def sacuvaj_bazu(baza, godina):
-    with open("baza_" + godina + ".json", "w", encoding="utf-8") as fh:
-        json.dump(baza, fh, ensure_ascii=False, indent=2)
+    """Cuvanje JSON baze sa file lock-om protiv korupcije."""
+    f = "baza_" + godina + ".json"
+    with open(f, "w", encoding="utf-8") as fh:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            json.dump(baza, fh, ensure_ascii=False, indent=2)
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def konvertuj_datum(t):
@@ -201,7 +233,7 @@ def generisi_xml(baza, godina):
         etree.SubElement(r, XS + "Telefon").text = o["telefon"]
         etree.SubElement(r, XS + "IznosPrometa").text = str(o["iznos_prometa"])
         etree.SubElement(r, XS + "DatumOd").text = o["datum"]
-        etree.SubElement(r, XS + "DatumDo").text = o["datum"]
+        etree.SubElement(r, XS + "DatumDo").text = o.get("datum_do", o["datum"])
 
     etree.indent(root, space="  ")
     izlaz = "OPPS_prijava_" + godina + ".xml"
@@ -312,7 +344,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("OPPSS Generator - ePorezi prijava")
-        self.geometry("950x620")
+        self.geometry("950x650")
 
         traka = ttk.Frame(self, padding=10)
         traka.pack(fill="x")
@@ -417,7 +449,8 @@ class App(tk.Tk):
             ("opstina", "Opstina:", None),
             ("adresa", "Adresa:", None),
             ("telefon", "Broj telefona:", None),
-            ("datum_unos", "Datum prometa:", None),
+            ("datum_unos", "Datum OD:", None),
+            ("datum_do", "Datum DO:", None),
             ("iznos_prometa", "Iznos prometa (RSD, ceo broj):", None),
         ]
         for row, (key, label, opcije) in enumerate(redovi):
@@ -427,7 +460,7 @@ class App(tk.Tk):
                 cb.current(0)
                 cb.grid(row=row, column=1, padx=10, pady=4)
                 entries[key] = cb
-            elif key == "datum_unos":
+            elif key in ("datum_unos", "datum_do"):
                 de = DatumEntry(okvir, width=40)
                 de.grid(row=row, column=1, padx=10, pady=4)
                 entries[key] = de
@@ -437,6 +470,7 @@ class App(tk.Tk):
                 entries[key] = e
 
         entries["datum_unos"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
+        entries["datum_do"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
 
         napomena_id = ttk.Label(okvir, text="", foreground="gray", font=("Segoe UI", 9))
         napomena_id.grid(row=2, column=2, sticky="w", padx=(5, 0))
@@ -510,13 +544,19 @@ class App(tk.Tk):
         entries["id_tip"].bind("<<ComboboxSelected>>", lambda e: azuriraj_limit())
         proveri_identifikator()
 
-        btn_kal = ttk.Button(okvir, text="\U0001F4C5", width=3)
-        btn_kal.grid(row=7, column=2, sticky="w", padx=(5, 0))
-
-        def otvori_kalendar():
+        # Kalendar dugme za DATUM OD
+        btn_kal_od = ttk.Button(okvir, text="\U0001F4C5", width=3)
+        btn_kal_od.grid(row=7, column=2, sticky="w", padx=(5, 0))
+        def otvori_kalendar_od():
             Kalendar(entries["datum_unos"], win.winfo_rootx() + 350, win.winfo_rooty() + 250)
+        btn_kal_od.configure(command=otvori_kalendar_od)
 
-        btn_kal.configure(command=otvori_kalendar)
+        # Kalendar dugme za DATUM DO
+        btn_kal_do = ttk.Button(okvir, text="\U0001F4C5", width=3)
+        btn_kal_do.grid(row=8, column=2, sticky="w", padx=(5, 0))
+        def otvori_kalendar_do():
+            Kalendar(entries["datum_do"], win.winfo_rootx() + 350, win.winfo_rooty() + 300)
+        btn_kal_do.configure(command=otvori_kalendar_do)
 
         ttk.Label(okvir, text="(kucajte samo cifre - kose crte se dodaju same: 01012026)",
                   foreground="gray").grid(row=len(redovi), column=1, sticky="w", padx=10)
@@ -527,12 +567,12 @@ class App(tk.Tk):
                     "id_tip": next((k for k, v in vrste_id.items()
                                     if v == podrazumevano.get("vrsta_identifikatora")), list(vrste_id)[0])}
             for key, w in entries.items():
-                if key == "datum_unos":
+                if key in ("datum_unos", "datum_do"):
                     w.delete(0, "end")
-                    if podrazumevano.get("datum"):
+                    if podrazumevano.get(key):
                         try:
                             w.insert(0, datetime.datetime.strptime(
-                                podrazumevano["datum"], "%Y-%m-%d").strftime("%d/%m/%Y"))
+                                podrazumevano[key], "%Y-%m-%d").strftime("%d/%m/%Y"))
                         except ValueError:
                             pass
                     continue
@@ -546,7 +586,11 @@ class App(tk.Tk):
         def sacuvaj():
             datum_iso = konvertuj_datum(entries["datum_unos"].get())
             if not datum_iso or not entries["datum_unos"].dobar_datum():
-                messagebox.showerror("Greska", "Neispravan datum!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
+                messagebox.showerror("Greska", "Neispravan datum OD!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
+                return
+            datum_do_iso = konvertuj_datum(entries["datum_do"].get())
+            if not datum_do_iso or not entries["datum_do"].dobar_datum():
+                messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
                 return
             broj_id = entries["identifikator"].get().strip()
             tip = entries["id_tip"].get()
@@ -574,6 +618,7 @@ class App(tk.Tk):
                 "adresa": entries["adresa"].get().strip(),
                 "telefon": entries["telefon"].get().strip(),
                 "datum": datum_iso,
+                "datum_do": datum_do_iso,
                 "iznos_prometa": iznos,
             }
             if any(not r[k] for k in r):
@@ -586,7 +631,7 @@ class App(tk.Tk):
             sacuvaj_bazu(self.baza, self.godina)
             self.osvezi_tabelu()
             for key, w in entries.items():
-                if key == "datum_unos":
+                if key in ("datum_unos", "datum_do"):
                     w.delete(0, "end")
                     w.insert(0, datetime.date.today().strftime("%d/%m/%Y"))
                 elif not hasattr(w, "set"):
@@ -645,7 +690,8 @@ class App(tk.Tk):
         if not sel:
             messagebox.showwarning("Upozorenje", "Izaberite unos u tabeli!")
             return
-        idx = int(sel[0]) - 1
+        # Koristi stvarni indeks umesto int(sel[0]) - 1
+        idx = self.tree.index(sel[0])
         self.forma_osobe(self.baza["ljudi"][idx], indeks_izmene=idx)
 
     def obrisi_osobu(self):
@@ -653,7 +699,8 @@ class App(tk.Tk):
         if not sel:
             messagebox.showwarning("Upozorenje", "Izaberite unos u tabeli!")
             return
-        idx = int(sel[0]) - 1
+        # Koristi stvarni indeks umesto int(sel[0]) - 1
+        idx = self.tree.index(sel[0])
         ime = self.baza["ljudi"][idx]["ime_naziv"]
         if messagebox.askyesno("Brisanje", "Obrisati unos: " + ime + "?"):
             del self.baza["ljudi"][idx]
