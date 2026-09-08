@@ -1,9 +1,10 @@
-"""OPPSS GENERATOR v13.6 - baze po godinama, JMBG kontrola, kalendar,
+"""OPPSS GENERATOR v13.7 - baze po godinama, JMBG kontrola, kalendar,
 auto-popunjavanje iz tabele + fokus na datum, XML + XSD validacija,
-datum od/do kao posebna polja, file lock za JSON bazu.
+datum od/do kao posebna polja, file lock za JSON bazu,
+cross-platform kompatibilnost, poboljšana validacija.
 Zahteva: pip install lxml"""
 
-import json, os, sys, datetime, calendar as _cal, fcntl
+import json, os, sys, datetime, calendar as _cal, platform
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -15,8 +16,12 @@ try:
     from lxml import etree
 except ImportError:
     import subprocess
-    subprocess.run([sys.executable, "-m", "pip", "install", "lxml"])
+    subprocess.run([sys.executable, "-m", "pip", "install", "lxml"], check=True)
     from lxml import etree
+
+# Import fcntl samo na Unix/Mac (ne radi na Windows)
+if platform.system() != "Windows":
+    import fcntl
 
 
 def validan_jmbg(jmbg):
@@ -58,22 +63,35 @@ def validan_jmbg(jmbg):
 
 
 def ucitaj_bazu(godina):
+    """Ucitavanje JSON baze sa error handling-om za korumpirane fajlove."""
     f = "baza_" + godina + ".json"
     if os.path.exists(f):
-        with open(f, encoding="utf-8") as fh:
-            return json.load(fh)
+        try:
+            with open(f, encoding="utf-8") as fh:
+                return json.load(fh)
+        except (json.JSONDecodeError, IOError) as e:
+            messagebox.showwarning("Upozorenje",
+                                   "Fajl '%s' je ostecen: %s\n\nKreirana je prazna baza." % (f, str(e)))
+            return {"podnosioc": {}, "ljudi": []}
     return {"podnosioc": {}, "ljudi": []}
 
 
 def sacuvaj_bazu(baza, godina):
-    """Cuvanje JSON baze sa file lock-om protiv korupcije."""
+    """Cuvanje JSON baze sa file lock-om protiv korupcije (cross-platform)."""
     f = "baza_" + godina + ".json"
-    with open(f, "w", encoding="utf-8") as fh:
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        try:
+    if platform.system() != "Windows":
+        with open(f, "w", encoding="utf-8") as fh:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            try:
+                json.dump(baza, fh, ensure_ascii=False, indent=2)
+            finally:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+    else:
+        # Windows: koristi atomic write (write to temp, then rename)
+        f_tmp = f + ".tmp"
+        with open(f_tmp, "w", encoding="utf-8") as fh:
             json.dump(baza, fh, ensure_ascii=False, indent=2)
-        finally:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        os.replace(f_tmp, f)
 
 
 def konvertuj_datum(t):
@@ -253,7 +271,8 @@ def generisi_xml(baza, godina):
         messagebox.showwarning("Problem sa XSD semom",
                                "Nije moguce ucitati '%s':\n%s\n\nXML je kreiran ALI NIJE validiran.\n\n%s" % (XSD, e, sazetak))
         return izlaz
-    if schema.validate(etree.parse(izlaz)):
+    # Validacija iz memorije (ne čita fajl dvaput sa diska)
+    if schema.validate(root):
         messagebox.showinfo("Uspeh", "[OK] %s je VALIDAN!\n\nSpreman za upload na ePorezi portal.\n\n%s" % (izlaz, sazetak))
     else:
         greske = "\n".join(e.message for e in schema.error_log)
@@ -315,7 +334,7 @@ class ProzorPodnosioca(tk.Toplevel):
                                        "JMBG podnosioca (%s) NE prolazi proveru kontrolne cifre!\n\nDa li ipak zelite da sacuvate?" % d["jmbg"],
                                        parent=self):
                 return
-        broj = d["pib_jmbg"].replace(" ", "")
+        broj = d["pib_jmbg"].strip()
         if not (len(broj) in (9, 13) and broj.isdigit()):
             messagebox.showerror("Greska", "Polje 'PIB ili JMBG' mora imati TACNO 9 cifara (PIB) ili TACNO 13 cifara (JMBG)!", parent=self)
             return
@@ -415,7 +434,9 @@ class App(tk.Tk):
             prikaz = ""
             if o.get("datum"):
                 try:
-                    prikaz = datetime.datetime.strptime(o["datum"], "%Y-%m-%d").strftime("%d/%m/%Y")
+                    datum_od = datetime.datetime.strptime(o["datum"], "%Y-%m-%d").strftime("%d/%m/%Y")
+                    datum_do = datetime.datetime.strptime(o.get("datum_do", o["datum"]), "%Y-%m-%d").strftime("%d/%m/%Y")
+                    prikaz = datum_od + " - " + datum_do
                 except ValueError:
                     prikaz = o["datum"]
             self.tree.insert("", "end", iid=str(i), values=(
@@ -592,6 +613,10 @@ class App(tk.Tk):
             if not datum_do_iso or not entries["datum_do"].dobar_datum():
                 messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
                 return
+            # Provera: datum DO mora biti >= datum OD
+            if datum_do_iso < datum_iso:
+                messagebox.showerror("Greska", "Datum DO ne moze biti pre datuma OD!", parent=win)
+                return
             broj_id = entries["identifikator"].get().strip()
             tip = entries["id_tip"].get()
             ocekivano = 13 if tip == "JMBG" else 9
@@ -605,8 +630,9 @@ class App(tk.Tk):
                     return
             try:
                 iznos = int(entries["iznos_prometa"].get().strip())
-                assert iznos > 0
-            except (ValueError, AssertionError):
+                if iznos <= 0:
+                    raise ValueError
+            except ValueError:
                 messagebox.showerror("Greska", "Iznos mora biti pozitivan ceo broj!", parent=win)
                 return
             r = {
