@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OOPSS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-13.9-blue)
+![Version](https://img.shields.io/badge/verzija-14.0-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -136,9 +136,11 @@ python opps_generator_cli.py
 OPPSS-test/
 ├── opps_generator.py              # GUI verzija (desktop)
 ├── opps_generator_cli.py          # CLI verzija (terminal/server)
+├── opps_generator_standalone.py   # Standalone (XSD ugrađen, za .exe)
 ├── opps.xsd                       # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf     # Korisničko uputstvo
 ├── instalacija_ubuntu_server.txt  # Uputstvo za Ubuntu Server
+├── kreiranje_exe_uputstvo.txt     # Uputstvo za kreiranje .exe
 └── README.md                      # Ovaj fajl
 ```
 
@@ -157,6 +159,7 @@ OPPSS-test/
 
 | Verzija | Datum | Opis | Release |
 |---------|-------|------|---------|
+| v14.0 | 08.09.2026 | Standalone verzija, XSD šema ugrađena, .exe kompatibilnost | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v14.0) |
 | v13.9 | 08.09.2026 | CLI verzija, prečice tastature, about dijalog | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.9) |
 | v13.8 | 08.09.2026 | EBS identifikator, poljoprivredno gazdinstva, email osobe | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.8) |
 | v13.7 | 08.09.2026 | Cross-platform file lock, assert→if, datum provere | [Release](https://github.com/cuparac/OPPSS-test/releases/tag/v13.7) |
@@ -199,7 +202,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 13.9
+- **Verzija:** 14.0
 
 ---
 
