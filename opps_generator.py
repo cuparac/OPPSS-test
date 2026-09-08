@@ -714,9 +714,16 @@ class App(tk.Tk):
                 "datum_do": datum_do_iso,
                 "iznos_prometa": iznos,
             }
-            if any(not r[k] for k in r):
-                messagebox.showwarning("Upozorenje", "Popunite sva polja!", parent=win)
-                return
+
+            # Provera obaveznih polja (prema XSD: minOccurs="1")
+            obavezna = ["vrsta_prometa", "vrsta_identifikatora", "identifikator",
+                        "ime_naziv", "opstina", "adresa", "telefon",
+                        "datum", "datum_do", "iznos_prometa"]
+            for k in obavezna:
+                if not r[k]:
+                    messagebox.showwarning("Upozorenje", "Popunite sva obavezna polja!", parent=win)
+                    return
+
             if indeks_izmene is None:
                 self.baza["ljudi"].append(r)
             else:
