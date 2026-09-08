@@ -1,8 +1,9 @@
-"""OPPSS GENERATOR v13.8 - baze po godinama, JMBG kontrola, kalendar,
+"""OPPSS GENERATOR v13.9 - baze po godinama, JMBG kontrola, kalendar,
 auto-popunjavanje iz tabele + fokus na datum, XML + XSD validacija,
 datum od/do kao posebna polja, file lock za JSON bazu,
 cross-platform kompatibilnost, poboljsana validacija,
-EBS identifikator, broj/naziv poljoprivrednog gazdinstva, email osobe.
+EBS identifikator, broj/naziv poljoprivrednog gazdinstva, email osobe,
+error handling za lxml instalaciju, preccice tastature.
 Zahteva: pip install lxml"""
 
 import json, os, sys, datetime, calendar as _cal, platform
@@ -17,8 +18,13 @@ try:
     from lxml import etree
 except ImportError:
     import subprocess
-    subprocess.run([sys.executable, "-m", "pip", "install", "lxml"], check=True)
-    from lxml import etree
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "lxml"], check=True)
+        from lxml import etree
+    except (subprocess.CalledProcessError, ImportError) as e:
+        print(f"GREŠKA: Ne mogu da instaliram lxml: {e}")
+        print("Molimo, instalirajte rucno: pip install lxml")
+        sys.exit(1)
 
 # Import fcntl samo na Unix/Mac (ne radi na Windows)
 if platform.system() != "Windows":
@@ -26,25 +32,13 @@ if platform.system() != "Windows":
 
 
 def validan_jmbg(jmbg):
-    """Validacija JMBG-a: provera datuma i kontrolne cifre.
-    JMBG format: DDMMYYYRRBBBK
-    - DD: dan (01-31)
-    - MM: mesec (01-12)
-    - YYY: 3-cifrena godina (000-999 -> 1000-1999 ili 2000-2999)
-    - RR: region
-    - BBB: serijski broj
-    - K: kontrolna cifra
-    """
+    """Validacija JMBG-a: provera datuma i kontrolne cifre."""
     if not jmbg.isdigit() or len(jmbg) != 13:
         return False
     a = [int(c) for c in jmbg]
-
-    # Ekstrahuj datum iz JMBG-a
     dan = int(jmbg[0:2])
     mesec = int(jmbg[2:4])
-    godina_3 = int(jmbg[4:7])  # 3-cifrena godina
-
-    # Probaj oba raspona: 1000-1999 i 2000-2999
+    godina_3 = int(jmbg[4:7])
     datum_ok = False
     for godina in [1000 + godina_3, 2000 + godina_3]:
         try:
@@ -53,11 +47,8 @@ def validan_jmbg(jmbg):
             break
         except ValueError:
             continue
-
     if not datum_ok:
         return False
-
-    # Kontrolna cifra
     tezine = [7, 6, 5, 4, 3, 2] * 2
     k = 11 - (sum(c * t for c, t in zip(a[:12], tezine)) % 11)
     return (0 if k > 9 else k) == a[12]
@@ -75,7 +66,6 @@ def ucitaj_bazu(godina):
         try:
             with open(f, encoding="utf-8") as fh:
                 data = json.load(fh)
-            # Validacija strukture JSON fajla
             if not isinstance(data, dict):
                 raise ValueError("Ocekivan objekat, dobijen: " + type(data).__name__)
             if "ljudi" not in data or not isinstance(data["ljudi"], list):
@@ -383,8 +373,19 @@ class ProzorPodnosioca(tk.Toplevel):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("OPPSS Generator - ePorezi prijava")
+        self.title("OPPSS Generator v13.9 - ePorezi prijava")
         self.geometry("950x650")
+
+        # Preccice tastature
+        self.bind("<Control-n>", lambda e: self.dodaj_osobu())
+        self.bind("<Control-N>", lambda e: self.dodaj_osobu())
+        self.bind("<Control-d>", lambda e: self.obrisi_osobu())
+        self.bind("<Control-D>", lambda e: self.obrisi_osobu())
+        self.bind("<Control-g>", lambda e: self.generisi())
+        self.bind("<Control-G>", lambda e: self.generisi())
+        self.bind("<Control-p>", lambda e: self.otvori_podnosioca())
+        self.bind("<Control-P>", lambda e: self.otvori_podnosioca())
+        self.bind("<F1>", lambda e: self.prikazi_about())
 
         traka = ttk.Frame(self, padding=10)
         traka.pack(fill="x")
@@ -399,7 +400,7 @@ class App(tk.Tk):
         gore.pack(fill="x", padx=10, pady=5)
         self.info_podnosioc = ttk.Label(gore, font=("Segoe UI", 10))
         self.info_podnosioc.pack(side="left")
-        ttk.Button(gore, text="Podaci podnosioca...", command=self.otvori_podnosioca).pack(side="right", padx=5)
+        ttk.Button(gore, text="Podaci podnosioca... (Ctrl+P)", command=self.otvori_podnosioca).pack(side="right", padx=5)
 
         tf = ttk.Frame(self)
         tf.pack(fill="both", expand=True, padx=10, pady=5)
@@ -420,14 +421,36 @@ class App(tk.Tk):
 
         btns = ttk.Frame(self)
         btns.pack(fill="x", padx=10, pady=5)
-        ttk.Button(btns, text="+ Dodaj unos", command=self.dodaj_osobu).pack(side="left", padx=3)
+        ttk.Button(btns, text="+ Dodaj unos (Ctrl+N)", command=self.dodaj_osobu).pack(side="left", padx=3)
         ttk.Button(btns, text="Izmeni", command=self.izmeni_osobu).pack(side="left", padx=3)
-        ttk.Button(btns, text="Obrisi", command=self.obrisi_osobu).pack(side="left", padx=3)
+        ttk.Button(btns, text="Obrisi (Ctrl+D)", command=self.obrisi_osobu).pack(side="left", padx=3)
         self.ukupno_label = ttk.Label(btns, font=("Segoe UI", 11, "bold"))
         self.ukupno_label.pack(side="left", padx=30)
-        ttk.Button(btns, text="GENERISI XML", command=self.generisi).pack(side="right", padx=3)
+        ttk.Button(btns, text="GENERISI XML (Ctrl+G)", command=self.generisi).pack(side="right", padx=3)
+
+        # Status bar
+        status_bar = ttk.Frame(self)
+        status_bar.pack(fill="x", side="bottom")
+        ttk.Label(status_bar, text="F1 = O aplikaciji | Ctrl+N = Novi | Ctrl+D = Obrisi | Ctrl+G = XML | Ctrl+P = Podnosioc",
+                  font=("Segoe UI", 8), foreground="gray").pack(side="left", padx=10)
 
         self.ucitaj_godinu()
+
+    def prikazi_about(self):
+        """Prijava informacija o aplikaciji."""
+        messagebox.showinfo("O aplikaciji",
+                            "OPPSS Generator v13.9\n\n"
+                            "Aplikacija za generisanje OOPSS prijava\n"
+                            "za portal ePorezi (Poreska uprava RS)\n\n"
+                            "Verzija: 13.9\n"
+                            "Python: " + sys.version.split()[0] + "\n"
+                            "Platforma: " + platform.system() + "\n\n"
+                            "Podrzani identifikatori:\n"
+                            "- JMBG (13 cifara)\n"
+                            "- PIB (9 cifara)\n"
+                            "- EBS (9 cifara)\n\n"
+                            "XSD validacija: opps.xsd\n"
+                            "Izlazni format: XML (ePorezi)")
 
     @property
     def godina(self):
