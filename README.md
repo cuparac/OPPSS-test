@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.1-blue)
+![Version](https://img.shields.io/badge/verzija-15.2-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.1** koristi **SQLite bazu** uz tri ispravke bugova iz v15.0 i poboljšanu kontrolu kursora na datumima.
+**Verzija 15.2** donosi poboljšanu kontrolu kursora na datumima, proveru duplikata, brisanje svih unosa, backup baze, import/CSV, izveštaj za štampu, sortiranje tabele i kontekstni meni.
 
 ---
 
@@ -70,12 +70,18 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - Broj poljoprivrednog gazdinstva
 - Naziv poljoprivrednog gazdinstva
 
-### Dodatne funkcionalnosti
+### Dodatne funkcionalnosti (v15.2)
 - **SQLite baza** - brža i sigurnija od JSON
 - **CSV export** - izvoz u Excel format
+- **CSV import** - uvoz podataka iz CSV fajla
 - **Pretraga** - po opštini, imenu, identifikatoru, iznosu
 - **Statistika** - ukupno po godini, vrsti prometa, opštini
 - **Migracija** - automatska konverzija JSON → SQLite
+- **Brisanje svih unosa** - sa dva nivoa potvrde
+- **Backup baze** - ručno kopiranje SQLite fajla sa timestamp-om
+- **Izveštaj za štampu** - HTML izveštaj (štampa se kroz pregledač)
+- **Sortiranje tabele** - klikom na zaglavlje kolone
+- **Kontekstni meni** - desni klik na red ili prazan prostor
 - **Dvoklik izmena** - brza izmena unosa iz tabele
 
 ---
@@ -109,7 +115,7 @@ pip install lxml
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.1.py
+python opps_generator_gui_v15.2.py
 ```
 
 **Glavni meni:**
@@ -117,9 +123,10 @@ python opps_generator_gui_v15.1.py
 2. Dodaj novi unos
 3. Izmeni unos (ili dvoklik na red u tabeli)
 4. Obriši unos
-5. Podaci o podnosiocu
-6. Generiši XML
-7. Promeni godinu
+5. Obriši SVE unose (sa potvrdom)
+6. Podaci o podnosiocu
+7. Generiši XML
+8. Promeni godinu
 
 **Prečice tastature:**
 | Prečica | Akcija |
@@ -130,7 +137,21 @@ python opps_generator_gui_v15.1.py
 | Ctrl+P | Podaci o podnosioca |
 | Ctrl+F | Pretraga |
 | Dvoklik | Izmeni unos |
-| F1 | O aplikaciji |
+| Desni klik | Kontekstni meni |
+
+**Kontekstni meni (desni klik na red):**
+- ✏️ Izmeni unos
+- 🗑️ Obriši unos
+- 📋 Kopiraj identifikator
+- 🔍 Pretraga po ID-ju
+
+**Kontekstni meni (desni klik na prazan prostor):**
+- ➕ Dodaj novi
+- 🔄 Osveži
+- 📊 Statistika
+
+**Sortiranje tabele:**
+Kliknite na zaglavlje bilo koje kolone za sortiranje. Ponovni klik menja redosled (rastajući/opadajući).
 
 ### CLI verzija (terminal/server)
 
@@ -195,20 +216,29 @@ python opps_generator_cli_v15.py
 - **Bug 2: Provera duplikata** - Upozorenje prilikom unosa postojećeg identifikatora. Ne blokira unos (razlika može biti u datumu/iznosu) ali prikazuje detalje postojećeg unosa.
 - **Bug 3: Dvoklik za izmenu** - Dvoklik na red u tabeli otvara formu za izmenu. Dugme menja tekst: "Sačuvaj" za novi unos, "Sačuvaj izmene" za izmenu. Popravljena greška gde polja za datum nisu bila popunjena prilikom izmene.
 
+### v15.2 - Nove funkcionalnosti
+- **Brisanje svih unosa** - Opcija za brisanje svih unosa za izabranu godinu sa dva nivoa potvrde
+- **Backup baze** - Ručno kopiranje SQLite baze u odabrani folder sa timestamp-om
+- **Import iz CSV** - Uvoz podataka iz CSV fajla (podržava različite formate datuma i nazive kolona)
+- **Izveštaj za štampu** - HTML izveštaj sa svim podacima, po opštini, i dugmetom za štampu
+- **Sortiranje tabele** - Klikom na zaglavlje kolone sortira se tabela (rastajuće/opadajuće)
+- **Kontekstni meni** - Desni klik na red (izmeni, obriši, kopiraj ID, pretraga) ili prazan prostor (dodaj, osveži, statistika)
+
 ---
 
 ## Struktura projekta
 
 ```
 OPPSS-test/
+├── opps_generator_gui_v15.2.py          # GUI v15.2 (najnovija verzija)
 ├── opps_generator_gui_v15.1.py          # GUI v15.1 (ispravke bugova)
-├── opps_generator_gui_v15.py             # GUI v15 (starija verzija)
-├── opps_generator_cli_v15.py             # CLI v15
-├── opps.xsd                              # XSD šema za validaciju XML-a
-├── KorisnikouputstvoOPPSS.pdf            # Korisničko uputstvo
-├── instalacija_ubuntu_server.txt         # Uputstvo za Ubuntu Server
-├── kreiranje_exe_uputstvo.txt            # Uputstvo za kreiranje .exe
-└── README.md                             # Ovaj fajl
+├── opps_generator_gui_v15.py            # GUI v15 (starija verzija)
+├── opps_generator_cli_v15.py            # CLI v15
+├── opps.xsd                             # XSD šema za validaciju XML-a
+├── KorisnikouputstvoOPPSS.pdf           # Korisničko uputstvo
+├── instalacija_ubuntu_server.txt        # Uputstvo za Ubuntu Server
+├── kreiranje_exe_uputstvo.txt           # Uputstvo za kreiranje .exe
+└── README.md                            # Ovaj fajl
 ```
 
 ---
@@ -220,6 +250,8 @@ OPPSS-test/
 | `baza_2026.db` | SQLite baza podataka |
 | `OPPS_prijava_2026.xml` | Generisani XML fajl (za upload na ePorezi) |
 | `OPPS_2026.csv` | CSV izveštaj (za Excel) |
+| `OPPS_izvestaj_2026.html` | HTML izveštaj (za štampu) |
+| `baza_2026_backup_YYYYMMDD_HHMMSS.db` | Backup baze |
 
 ---
 
@@ -260,7 +292,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.1.py  # bez sudo
+python opps_generator_gui_v15.2.py  # bez sudo
 ```
 
 ---
@@ -275,7 +307,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.1
+- **Verzija:** 15.2
 
 ---
 
