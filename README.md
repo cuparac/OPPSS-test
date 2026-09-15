@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.0-blue)
+![Version](https://img.shields.io/badge/verzija-15.1-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.0** koristi **SQLite bazu** umesto JSON, sa mogućnošću CSV exporta, pretrage i izveštaja.
+**Verzija 15.1** koristi **SQLite bazu** uz tri ispravke bugova iz v15.0 i poboljšanu kontrolu kursora na datumima.
 
 ---
 
@@ -39,6 +39,7 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - **EBS** (9 cifara) - provera dužine
 - **Datumi** - provera ispravnosti i redosleda (OD ≤ DO)
 - **Iznos** - provera pozitivnog celog broja
+- **Provera duplikata** - upozorenje ako postoji isti identifikator (ne blokira unos)
 
 ### Vrste identifikatora
 | Tip | Opis | Dužina |
@@ -69,12 +70,13 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - Broj poljoprivrednog gazdinstva
 - Naziv poljoprivrednog gazdinstva
 
-### Dodatne funkcionalnosti (v15)
+### Dodatne funkcionalnosti
 - **SQLite baza** - brža i sigurnija od JSON
 - **CSV export** - izvoz u Excel format
 - **Pretraga** - po opštini, imenu, identifikatoru, iznosu
 - **Statistika** - ukupno po godini, vrsti prometa, opštini
 - **Migracija** - automatska konverzija JSON → SQLite
+- **Dvoklik izmena** - brza izmena unosa iz tabele
 
 ---
 
@@ -107,13 +109,13 @@ pip install lxml
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.py
+python opps_generator_gui_v15.1.py
 ```
 
 **Glavni meni:**
 1. Prikaži tabelu unosa
 2. Dodaj novi unos
-3. Izmeni unos
+3. Izmeni unos (ili dvoklik na red u tabeli)
 4. Obriši unos
 5. Podaci o podnosiocu
 6. Generiši XML
@@ -127,6 +129,7 @@ python opps_generator_gui_v15.py
 | Ctrl+G | Generiši XML |
 | Ctrl+P | Podaci o podnosioca |
 | Ctrl+F | Pretraga |
+| Dvoklik | Izmeni unos |
 | F1 | O aplikaciji |
 
 ### CLI verzija (terminal/server)
@@ -187,19 +190,25 @@ python opps_generator_cli_v15.py
 - **Meni** - Datoteka, Unos, Alat, Pomoć
 - **Property ispravke** - ispravan redosled inicijalizacije
 
+### v15.1 - Ispravke bugova iz v15.0
+- **Bug 1: DatumEntry kursor** - Kursor se sada može pozicionirati bilo gde u polju za datum. Navigacioni tasteri (⬅ ➡ Home End BackSpace Delete) ne okidaju formatiranje.
+- **Bug 2: Provera duplikata** - Upozorenje prilikom unosa postojećeg identifikatora. Ne blokira unos (razlika može biti u datumu/iznosu) ali prikazuje detalje postojećeg unosa.
+- **Bug 3: Dvoklik za izmenu** - Dvoklik na red u tabeli otvara formu za izmenu. Dugme menja tekst: "Sačuvaj" za novi unos, "Sačuvaj izmene" za izmenu. Popravljena greška gde polja za datum nisu bila popunjena prilikom izmene.
+
 ---
 
 ## Struktura projekta
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.py          # GUI v15 (SQLite, CSV, pretraga)
-├── opps_generator_cli_v15.py          # CLI v15 (SQLite, CSV, pretraga)
-├── opps.xsd                           # XSD šema za validaciju XML-a
-├── KorisnikouputstvoOPPSS.pdf         # Korisničko uputstvo
-├── instalacija_ubuntu_server.txt      # Uputstvo za Ubuntu Server
-├── kreiranje_exe_uputstvo.txt         # Uputstvo za kreiranje .exe
-└── README.md                          # Ovaj fajl
+├── opps_generator_gui_v15.1.py          # GUI v15.1 (ispravke bugova)
+├── opps_generator_gui_v15.py             # GUI v15 (starija verzija)
+├── opps_generator_cli_v15.py             # CLI v15
+├── opps.xsd                              # XSD šema za validaciju XML-a
+├── KorisnikouputstvoOPPSS.pdf            # Korisničko uputstvo
+├── instalacija_ubuntu_server.txt         # Uputstvo za Ubuntu Server
+├── kreiranje_exe_uputstvo.txt            # Uputstvo za kreiranje .exe
+└── README.md                             # Ovaj fajl
 ```
 
 ---
@@ -251,7 +260,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.py  # bez sudo
+python opps_generator_gui_v15.1.py  # bez sudo
 ```
 
 ---
@@ -266,7 +275,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.0
+- **Verzija:** 15.1
 
 ---
 
