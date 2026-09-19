@@ -1,5 +1,5 @@
 ================================================================================
-OPPSS GENERATOR v13.9 CLI - Uputstvo za instalaciju na Ubuntu Server
+OPPSS GENERATOR v15.2 CLI - Uputstvo za instalaciju na Ubuntu Server
 ================================================================================
 
 ================================================================================
@@ -13,7 +13,7 @@ git clone https://github.com/cuparac/OPPSS-test.git
 cd OPPSS-test
 
 # ILI ako nemate git, preuzmite ručno:
-wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps_generator_cli.py
+wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps_generator_cli_v15.py
 wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps.xsd
 
 
@@ -80,7 +80,7 @@ Koraci:
 6. FAJLOVI KOJI SE KREIRAJU
 ================================================================================
 
-baza_2026.json          - JSON baza podataka
+baza_2026.db           - SQLite baza podataka
 OPPS_prijava_2026.xml   - Generisani XML fajl (za upload na ePorezi)
 
 
@@ -98,7 +98,7 @@ Problem: "ModuleNotFoundError: No module named 'pip'"
 Resenje:  sudo apt install -y python3-pip
 
 Problem: "Permission denied"
-Resenje:  python3 opps_generator_cli.py (bez sudo)
+Resenje:  python3 opps_generator_cli_v15.py (bez sudo)
 
 Problem: "No space left on device"
 Resenje:  df -h (proverite prostor)
@@ -131,7 +131,7 @@ scp korisnik@server:~/OPPSS-test/OPPS_prijava_2026.xml ./
 ================================================================================
 
 # Obrišite JSON bazu:
-rm baza_2026.json
+rm baza_2026.db
 
 # Obrišite generisani XML:
 rm OPPS_prijava_2026.xml
@@ -142,6 +142,6 @@ KONTAKT
 ================================================================================
 
 GitHub: https://github.com/cuparac/OPPSS-test
-Verzija: 13.9 CLI
+Verzija: 15.2 CLI
 
 ================================================================================

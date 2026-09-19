@@ -1,5 +1,5 @@
 ================================================================================
-KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit)
+KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v15.2
 ================================================================================
 
 ================================================================================
@@ -10,7 +10,7 @@ KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit)
 https://github.com/cuparac/OPPSS-test
 
 # Preuzmite fajl:
-opps_generator_standalone.py
+opps_generator_gui_v15.2.py
 
 
 ================================================================================
@@ -42,10 +42,10 @@ pip install lxml pyinstaller
 cd C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test
 
 # Za 32-bit Windows:
-pyinstaller --onefile --windowed --name "OPPSS_Generator" opps_generator_standalone.py
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v15.2" opps_generator_gui_v15.2.py
 
 # Za 64-bit Windows:
-pyinstaller --onefile --console --name "OPPSS_Generator" opps_generator_standalone.py
+pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15.2" opps_generator_cli_v15.py
 
 
 ================================================================================
@@ -78,7 +78,7 @@ Problem: "lxml se ne instalira"
 Resenje:  pip install lxml --only-binary :all:
 
 Problem: "pyinstaller nije pronađen"
-Resenje:  python -m pyinstaller --onefile opps_generator_standalone.py
+Resenje:  python -m pyinstaller --onefile opps_generator_gui_v15.2.py
 
 Problem: "Antivirus blokira .exe"
 Resenje:  Dodajte .exe u izuzetke antivirusa
@@ -98,6 +98,6 @@ KONTAKT
 ================================================================================
 
 GitHub: https://github.com/cuparac/OPPSS-test
-Verzija: 13.9 STANDALONE
+Verzija: 15.2 STANDALONE
 
 ================================================================================

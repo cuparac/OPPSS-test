@@ -115,8 +115,6 @@
 ```
 OPPSS-test/
 ├── opps_generator_gui_v15.2.py          # GUI v15.2 (aktuelna verzija)
-├── opps_generator_gui_v15.1.py          # GUI v15.1 (ispravke bugova)
-├── opps_generator_gui_v15.py            # GUI v15 (starija verzija)
 ├── opps_generator_cli_v15.py            # CLI v15
 ├── opps.xsd                             # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf           # Korisničko uputstvo
