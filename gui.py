@@ -486,7 +486,8 @@ class App(tk.Tk):
         datoteka_meni.add_command(label="Export CSV", command=self.export_csv)
         datoteka_meni.add_command(label="Import CSV", command=self.import_csv)
         datoteka_meni.add_separator()
-        datoteka_meni.add_command(label="Izveštaj (HTML/PDF)", command=self.export_html)
+        datoteka_meni.add_command(label="Izveštaj (HTML)", command=self.export_html)
+        datoteka_meni.add_command(label="XML izveštaj", command=self.export_xml)
         datoteka_meni.add_separator()
         datoteka_meni.add_command(label="Backup baze", command=self.backup_baze)
         datoteka_meni.add_separator()
@@ -690,7 +691,7 @@ class App(tk.Tk):
             messagebox.showerror("Import", poruka)
 
     def export_html(self) -> None:
-        """Generiše HTML izveštaj i otvara ga u pregledaču."""
+        """Generiše HTML izveštaj za štampu i otvara ga u pregledaču."""
         html = generisi_html_izvestaj(self, self.db, self.godina)
 
         fajl = filedialog.asksaveasfilename(
@@ -704,6 +705,21 @@ class App(tk.Tk):
                 f.write(html)
             messagebox.showinfo("Izveštaj", f"Izveštaj sačuvan: {fajl}\n\nMožete ga otvoriti u pregledaču i štampati (Ctrl+P).")
             webbrowser.open(f"file://{os.path.abspath(fajl)}")
+
+    def export_xml(self) -> None:
+        """Generiše XML fajl za upload na ePorezi portal."""
+        xml = generisi_xml(self.db, self.godina)
+
+        fajl = filedialog.asksaveasfilename(
+            defaultextension=".xml",
+            filetypes=[("XML fajlovi", "*.xml"), ("Svi fajlovi", "*.*")],
+            initialfile=f"OPPS_prijava_{self.godina}.xml"
+        )
+
+        if fajl:
+            with open(fajl, 'w', encoding='utf-8') as f:
+                f.write(xml)
+            messagebox.showinfo("XML izveštaj", f"XML fajl sačuvan: {fajl}\n\nMožete ga upload-ovati na portal ePorezi.")
 
     def sort_by(self, col: str) -> None:
         """Sortira tabelu po odabranoj koloni.
@@ -1203,5 +1219,9 @@ class App(tk.Tk):
         entries["vrsta_tip"].focus_set()
 
     def generisi(self) -> None:
-        """Generiše XML fajl iz baze podataka."""
-        generisi_xml(self.db, self.godina)
+        """Generiše XML fajl iz baze podataka i čuva ga na disk."""
+        xml = generisi_xml(self.db, self.godina)
+        fajl = f"OPPS_prijava_{self.godina}.xml"
+        with open(fajl, 'w', encoding='utf-8') as f:
+            f.write(xml)
+        messagebox.showinfo("XML generisan", f"XML fajl sačuvan: {fajl}\n\nMožete ga upload-ovati na portal ePorezi.")
