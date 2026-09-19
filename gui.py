@@ -487,6 +487,7 @@ class App(tk.Tk):
         datoteka_meni.add_command(label="Import CSV", command=self.import_csv)
         datoteka_meni.add_separator()
         datoteka_meni.add_command(label="Izveštaj (HTML)", command=self.export_html)
+        datoteka_meni.add_command(label="PDF izveštaj", command=self.export_pdf)
         datoteka_meni.add_command(label="XML izveštaj", command=self.export_xml)
         datoteka_meni.add_separator()
         datoteka_meni.add_command(label="Backup baze", command=self.backup_baze)
@@ -704,6 +705,28 @@ class App(tk.Tk):
             with open(fajl, 'w', encoding='utf-8') as f:
                 f.write(html)
             messagebox.showinfo("Izveštaj", f"Izveštaj sačuvan: {fajl}\n\nMožete ga otvoriti u pregledaču i štampati (Ctrl+P).")
+            webbrowser.open(f"file://{os.path.abspath(fajl)}")
+
+    def export_pdf(self) -> None:
+        """Generiše HTML izveštaj i otvara ga u pregledaču za štampu (PDF preko pregledača).
+
+        Ne zahteva dodatne biblioteke — koristi pregledač za štampu.
+        """
+        html = generisi_html_izvestaj(self, self.db, self.godina)
+
+        fajl = filedialog.asksaveasfilename(
+            defaultextension=".html",
+            filetypes=[("HTML fajlovi", "*.html"), ("Svi fajlovi", "*.*")],
+            initialfile=f"OPPS_izvestaj_{self.godina}.html"
+        )
+
+        if fajl:
+            with open(fajl, 'w', encoding='utf-8') as f:
+                f.write(html)
+            messagebox.showinfo("PDF izveštaj",
+                f"Izveštaj sačuvan: {fajl}\n\n"
+                "Otvorite ga u pregledaču i štampate (Ctrl+P).\n"
+                "Odaberite 'Sačuvaj kao PDF' u dijalogu štampe.")
             webbrowser.open(f"file://{os.path.abspath(fajl)}")
 
     def export_xml(self) -> None:
