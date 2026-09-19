@@ -93,6 +93,83 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class ProzorFiltera(tk.Toplevel):
+    """Prozor za napredne filtere tabele.
+
+    Attributes:
+        parent: Glavni prozor.
+        db: Database objekat.
+        godina: Trenutna godina.
+    """
+
+    def __init__(self, parent: tk.Widget, db: Database, godina: str) -> None:
+        """Inicijalizuje ProzorFiltera.
+
+        Args:
+            parent: Glavni prozor.
+            db: Database objekat.
+            godina: Trenutna godina.
+        """
+        super().__init__(parent)
+        self.parent = parent
+        self.db = db
+        self.godina = godina
+        self.title("Napredni filteri")
+        self.geometry("400x350")
+        self.grab_set()
+
+        okvir = ttk.Frame(self, padding=20)
+        okvir.pack(fill="both", expand=True)
+
+        # Filter po vrsti prometa
+        ttk.Label(okvir, text="Vrsta prometa:", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 5))
+        self.vrsta_var = tk.StringVar(value="Sve")
+        ttk.Radiobutton(okvir, text="Sve", variable=self.vrsta_var, value="Sve").pack(anchor="w")
+        ttk.Radiobutton(okvir, text="Poljoprivredni proizvodi/usluge", variable=self.vrsta_var, value="1").pack(anchor="w")
+        ttk.Radiobutton(okvir, text="Sekundarne sirovine", variable=self.vrsta_var, value="2").pack(anchor="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
+
+        # Filter po opštini
+        ttk.Label(okvir, text="Opština:", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 5))
+        opstine = sorted(set(o.get("opstina", "") for o in db.ucitaj_ljude()))
+        self.opstina_var = tk.StringVar(value="Sve")
+        ttk.Combobox(okvir, textvariable=self.opstina_var, values=["Sve"] + opstine, state="readonly", width=35).pack(anchor="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
+
+        # Filter po iznosu
+        ttk.Label(okvir, text="Iznos (RSD):", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 5))
+        self.min_var = tk.StringVar(value="0")
+        self.max_var = tk.StringVar(value="999999999")
+        ttk.Label(okvir, text="Min:").pack(anchor="w")
+        ttk.Entry(okvir, textvariable=self.min_var, width=15).pack(anchor="w")
+        ttk.Label(okvir, text="Max:").pack(anchor="w")
+        ttk.Entry(okvir, textvariable=self.max_var, width=15).pack(anchor="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
+
+        btn_primeni = ttk.Button(okvir, text="Primeni filter", command=self.primeni)
+        btn_primeni.pack(side="left", padx=5)
+        btn_ocisti = ttk.Button(okvir, text="Očisti filter", command=self.ocisti)
+        btn_ocisti.pack(side="left", padx=5)
+
+    def primeni(self) -> None:
+        """Primenjuje filtere na tabelu."""
+        self.parent.filtriraj_tabelu(
+            vrsta=self.vrsta_var.get() if self.vrsta_var.get() != "Sve" else None,
+            opstina=self.opstina_var.get() if self.opstina_var.get() != "Sve" else None,
+            min_iznos=self.min_var.get(),
+            max_iznos=self.max_var.get(),
+        )
+        self.destroy()
+
+    def ocisti(self) -> None:
+        """Očisti filtere."""
+        self.parent.filtriraj_tabelu()
+        self.destroy()
+
+
 class DatumEntry(ttk.Entry):
     """Polje za unos datuma sa automatskim formatiranjem.
 
@@ -587,6 +664,14 @@ class App(tk.Tk):
         # Undo/Redo
         self.undo_stack = UndoStack()
 
+        # Drag & drop (Windows)
+        try:
+            import windnd
+            self.drop_target_register(tk.DND_FILES)
+            self.dnd_bind('<<Drop>>', self.on_drop)
+        except ImportError:
+            pass
+
         # Glavni prozor
         traka = ttk.Frame(self, padding=10)
         traka.pack(fill="x")
@@ -819,6 +904,93 @@ class App(tk.Tk):
                 f.write(xml)
             messagebox.showinfo("XML izveštaj", f"XML fajl sačuvan: {fajl}\n\nMožete ga upload-ovati na portal ePorezi.")
 
+    def on_drop(self, event: tk.Event) -> None:
+        """Obrada drag & drop XML fajla.
+
+        Args:
+            Event: Tkinter event sa putanjom fajla.
+        """
+        try:
+            putanja = event.data.strip()
+            if putanja.startswith('{') and putanja.endswith('}'):
+                putanja = putanja[1:-1]
+
+            if not putanja.lower().endswith('.xml'):
+                messagebox.showerror("Greška", "Fajl mora biti XML!")
+                return
+
+            from lxml import etree
+            tree = etree.parse(putanja)
+            root = tree.getroot()
+
+            # Proveri da li je OPPSS struktura
+            ns = "http://pid.purs.gov.rs"
+            if root.tag != f"{{{ns}}}PoreskaDeklaracija":
+                messagebox.showerror("Greška", "XML nije OPPSS struktura!")
+                return
+
+            # Učitaj podatke
+            db = Database(self.godina)
+            db.kreiraj_tabele()
+
+            for prijava in root.findall(f"{{{ns}}}OPPPSSPrijava"):
+                podaci = prijava.find(f"{{{ns}}}PodaciOPrijavi")
+                if podaci is None:
+                    continue
+
+                # Podaci o podnosiocu
+                podnosioc = podaci.find(f"{{{ns}}}PodaciOPodnosiocu")
+                if podnosioc is not None:
+                    pib = podnosioc.find(f"{{{ns}}}PIBJMBG")
+                    email = podnosioc.find(f"{{{ns}}}EPostaPodnosioca")
+                    telefon = podnosioc.find(f"{{{ns}}}TelefonPodnosioca")
+                    jmbg = podnosioc.find(f"{{{ns}}}JMBGPodnosioca")
+                    db.sacuvaj_podnosioca({
+                        'pib_jmbg': pib.text if pib is not None else '',
+                        'email': email.text if email is not None else '',
+                        'telefon': telefon.text if telefon is not None else '',
+                        'jmbg': jmbg.text if jmbg is not None else '',
+                    })
+
+                # Podaci o prometu
+                for promet in podaci.findall(f"{{{ns}}}PodaciOPrometu"):
+                    vrsta_prometa = promet.find(f"{{{ns}}}VrstaPrometa")
+                    vrsta_identifikatora = promet.find(f"{{{ns}}}VrstaIdentifikatora")
+                    identifikator = promet.find(f"{{{ns}}}Identifikator")
+                    ime_naziv = promet.find(f"{{{ns}}}ImeNaziv")
+                    opstina = promet.find(f"{{{ns}}}Opstina")
+                    adresa = promet.find(f"{{{ns}}}Adresa")
+                    email_osobe = promet.find(f"{{{ns}}}EPosta")
+                    telefon_osobe = promet.find(f"{{{ns}}}Telefon")
+                    broj_gazdinstva = promet.find(f"{{{ns}}}BrojGazdinstva")
+                    naziv_gazdinstva = promet.find(f"{{{ns}}}NazivGazdinstva")
+                    datum = promet.find(f"{{{ns}}}Datum")
+                    datum_do = promet.find(f"{{{ns}}}DatumDo")
+                    iznos = promet.find(f"{{{ns}}}IznosPrometa")
+
+                    db.dodaj_osobu({
+                        'vrsta_prometa': vrsta_prometa.text if vrsta_prometa is not None else '1',
+                        'vrsta_identifikatora': vrsta_identifikatora.text if vrsta_identifikatora is not None else '1',
+                        'identifikator': identifikator.text if identifikator is not None else '',
+                        'ime_naziv': ime_naziv.text if ime_naziv is not None else '',
+                        'opstina': opstina.text if opstina is not None else '',
+                        'adresa': adresa.text if adresa is not None else '',
+                        'email_osobe': email_osobe.text if email_osobe is not None else '',
+                        'telefon': telefon_osobe.text if telefon_osobe is not None else '',
+                        'broj_gazdinstva': broj_gazdinstva.text if broj_gazdinstva is not None else '',
+                        'naziv_gazdinstva': naziv_gazdinstva.text if naziv_gazdinstva is not None else '',
+                        'datum': datum.text if datum is not None else '',
+                        'datum_do': datum_do.text if datum_do is not None else '',
+                        'iznos_prometa': int(iznos.text) if iznos is not None else 0,
+                    })
+
+            db.zatvori()
+            self.osvezi_sve()
+            messagebox.showinfo("Učitano", f"XML fajl učitan: {putanja}")
+
+        except Exception as e:
+            messagebox.showerror("Greška", f"Greška pri učitavanju XML-a: {e}")
+
     def sort_by(self, col: str) -> None:
         """Sortira tabelu po odabranoj koloni.
 
@@ -951,6 +1123,51 @@ class App(tk.Tk):
             messagebox.showinfo("Redo", rezultat)
         else:
             messagebox.showinfo("Redo", "Nema operacija za ponavljanje.")
+
+    def filtriraj_tabelu(self, vrsta: Optional[str] = None, opstina: Optional[str] = None,
+                          min_iznos: str = "0", max_iznos: str = "999999999") -> None:
+        """Filtrira tabelu po zadatim kriterijumima.
+
+        Args:
+            vrsta: Vrsta prometa (1, 2 ili None za sve).
+            opstina: Opština (string ili None za sve).
+            min_iznos: Minimalni iznos (string).
+            max_iznos: Maksimalni iznos (string).
+        """
+        self.tree.delete(*self.tree.get_children())
+        ljudi = self.db.ucitaj_ljude()
+        tipovi = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+
+        try:
+            min_val = int(min_iznos) if min_iznos else 0
+            max_val = int(max_iznos) if max_iznos else 999999999
+        except ValueError:
+            min_val = 0
+            max_val = 999999999
+
+        for o in ljudi:
+            if vrsta and o.get("vrsta_prometa") != vrsta:
+                continue
+            if opstina and o.get("opstina", "") != opstina:
+                continue
+            iznos = o.get("iznos_prometa", 0)
+            if iznos < min_val or iznos > max_val:
+                continue
+
+            prikaz = ""
+            if o.get("datum"):
+                try:
+                    datum_od = datetime.datetime.strptime(o["datum"], "%Y-%m-%d").strftime("%d/%m/%Y")
+                    datum_do = datetime.datetime.strptime(o.get("datum_do", o["datum"]), "%Y-%m-%d").strftime("%d/%m/%Y")
+                    prikaz = datum_od + " - " + datum_do
+                except ValueError:
+                    prikaz = o["datum"]
+
+            self.tree.insert("", "end", iid=str(o['id']),
+                            values=(o['id'], tipovi.get(o["vrsta_prometa"], "?"),
+                                    o["identifikator"], o.get("ime_naziv", ""),
+                                    o.get("opstina", ""), prikaz,
+                                    format(o.get("iznos_prometa", 0), ",").replace(",", ".")))
 
     def osvezi_info(self) -> None:
         """Osvežava informacije o podnosiocu u glavnom prozoru."""
