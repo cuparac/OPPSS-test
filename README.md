@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.2-blue)
+![Version](https://img.shields.io/badge/verzija-15.3-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.2** donosi poboljšanu kontrolu kursora na datumima, proveru duplikata, brisanje svih unosa, backup baze, import/CSV, izveštaj za štampu, sortiranje tabele i kontekstni meni.
+**Verzija 15.3** donosi modularnu arhitekturu (5 modula), type hintove, Google stil docstringove, logging umesto print() i pytest testove. Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.3.py` (entry point).
 
 ---
 
@@ -115,7 +115,7 @@ pip install lxml
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.2.py
+python opps_generator_gui_v15.3.py
 ```
 
 **Glavni meni:**
@@ -230,13 +230,23 @@ python opps_generator_cli_v15.py
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.2.py          # GUI v15.2 (najnovija verzija)
-├── opps_generator_cli_v15.py            # CLI v15
-├── opps.xsd                             # XSD šema za validaciju XML-a
-├── KorisnikouputstvoOPPSS.pdf           # Korisničko uputstvo
-├── instalacija_ubuntu_server.txt        # Uputstvo za Ubuntu Server
-├── kreiranje_exe_uputstvo.txt           # Uputstvo za kreiranje .exe
-└── README.md                            # Ovaj fajl
+├── opps_generator_gui_v15.3.py   # Entry point (pokreće aplikaciju)
+├── gui.py                       # GUI komponente (App, DatumEntry, Kalendar, Prozori)
+├── database.py                  # Database operacije (CRUD, pretraga, statistika, CSV)
+├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
+├── xml_generator.py             # XML/HTML generator (ePorezi prijave, izveštaji)
+├── opps.xsd                     # XSD šema za validaciju XML-a
+├── tests/                       # Pytest testovi
+│   ├── test_database.py
+│   ├── test_validacije.py
+│   └── test_xml.py
+├── docs/                        # Dokumentacija (specovi, planovi)
+├── KorisnikouputstvoOPPSS.pdf   # Korisničko uputstvo
+├── instalacija_ubuntu_server.txt
+├── kreiranje_exe_uputstvo.txt
+├── CHANGELOG.md
+├── README.md
+└── STATUS.md
 ```
 
 ---
@@ -290,7 +300,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.2.py  # bez sudo
+python opps_generator_gui_v15.3.py  # bez sudo
 ```
 
 ---
@@ -305,7 +315,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.2
+- **Verzija:** 15.3
 
 ---
 

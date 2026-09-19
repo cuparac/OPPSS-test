@@ -1,10 +1,10 @@
-# STATUS — OPPS Generator v15.2
+# STATUS — OPPS Generator v15.3
 
-**Poslednji put ažurirano:** 15.09.2026.
-**Trenutna verzija:** v15.2
-**Lokacija koda:** `/tmp/OPPSS-test/opps_generator_gui_v15.2.py`
+**Poslednji put ažurirano:** 19.09.2026.
+**Trenutna verzija:** v15.3
+**Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
-**Git commit:** `2b4ad78`
+**Git commit:** `d20c258`
 
 ---
 
@@ -71,6 +71,15 @@
 - **Sortiranje tabele** - klikom na zaglavlje kolone
 - **Kontekstni meni** - desni klik na red ili prazan prostor
 - **Test suite** - 14 testova koji prolaze uspešno
+
+### v15.3 — Kvalitet koda (ZAVRŠENO 19.09.2026)
+- **Modularna arhitektura** - Podela na 5 modula (gui.py, database.py, validacije.py, xml_generator.py, entry point)
+- **Type hintovi** - Anotacije na svim javnim funkcijama
+- **Docstringovi** - Google stil za sve klase i javne metode
+- **Logging** - Zamena print() sa logging modulom
+- **Pytest testovi** - 25 testova (database, validacije, XML generator)
+- **HTML injection fix** - html.escape() na sve dinamičke vrednosti u HTML izveštaju
+- **Placeholder podnosioc fix** - ValueError umesto podrazumevanih vrednosti
 
 ---
 
@@ -166,7 +175,7 @@ python opps_generator_gui_v15.2.py
 
 ---
 
-## 🎯 PRIORITETI ZA NAREDNU VERZIJU (ako se nastavi)
+## 🎯 PRIORITETI ZA NAREDNU VERZIJU (v15.4+)
 
 ### Kratki rok (1-2 sjednice)
 1. Refaktoring na OOP (odvojiti bazu, GUI, logiku)
