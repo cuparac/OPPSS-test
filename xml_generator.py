@@ -6,17 +6,19 @@ i HTML izveštaja za štampu.
 
 from __future__ import annotations
 
+import html
 from typing import Any
 
 from lxml import etree
 
+from database import Database
 from validacije import get_xsd_schema
 
 # Namespace za XML
 NS = "http://pid.purs.gov.rs"
 
 
-def generisi_xml(db: Any, godina: str) -> str:
+def generisi_xml(db: Database, godina: str) -> str:
     """Generiše XML prijavu za ePorezi portal.
 
     Args:
@@ -27,9 +29,14 @@ def generisi_xml(db: Any, godina: str) -> str:
         XML string
 
     Raises:
-        ValueError: ako XML ne prolazi XSD validaciju
+        ValueError: ako podnosioc nije registrovan ili XML ne prolazi XSD validaciju
     """
     podnosioc = db.ucitaj_podnosioca()
+    if podnosioc is None:
+        raise ValueError(
+            f"Podnosioc za godinu {godina} nije registrovan. "
+            "Prvo registrujte podnosioca pre generisanja XML prijave."
+        )
     ljudi = db.ucitaj_ljude()
 
     # Kreiranje XML strukture
@@ -45,13 +52,13 @@ def generisi_xml(db: Any, godina: str) -> str:
     # Podaci o podnosiocu
     podaci_podnosioca = etree.SubElement(podaci_prijavi, f"{{{NS}}}PodaciOPodnosiocu")
     pib = etree.SubElement(podaci_podnosioca, f"{{{NS}}}PIBJMBG")
-    pib.text = (podnosioc.get('pib_jmbg', '') if podnosioc else '') or '123456789'
+    pib.text = podnosioc.get('pib_jmbg', '')
     email = etree.SubElement(podaci_podnosioca, f"{{{NS}}}EPostaPodnosioca")
-    email.text = (podnosioc.get('email', '') if podnosioc else '') or 'default@example.com'
+    email.text = podnosioc.get('email', '')
     telefon = etree.SubElement(podaci_podnosioca, f"{{{NS}}}TelefonPodnosioca")
-    telefon.text = (podnosioc.get('telefon', '') if podnosioc else '') or '0000000000'
+    telefon.text = podnosioc.get('telefon', '')
     jmbg = etree.SubElement(podaci_podnosioca, f"{{{NS}}}JMBGPodnosioca")
-    jmbg.text = (podnosioc.get('jmbg', '') if podnosioc else '') or '1234567890123'
+    jmbg.text = podnosioc.get('jmbg', '')
 
     # Podaci o prometu
     for osoba in ljudi:
@@ -108,7 +115,7 @@ def generisi_xml(db: Any, godina: str) -> str:
     return etree.tostring(root, pretty_print=True, encoding='unicode')
 
 
-def generisi_html_izvestaj(app: Any, db: Any, godina: str) -> str:
+def generisi_html_izvestaj(app: Any, db: Database, godina: str) -> str:
     """Generiše HTML izveštaj za štampu.
 
     Args:
@@ -122,11 +129,15 @@ def generisi_html_izvestaj(app: Any, db: Any, godina: str) -> str:
     ljudi = db.ucitaj_ljude()
     stat = db.statistika()
 
-    html = f"""<!DOCTYPE html>
+    godina_esc = html.escape(godina)
+    ukupno_esc = html.escape(str(stat['ukupno']))
+    ukupan_iznos_esc = html.escape(str(stat['ukupan_iznos']))
+
+    html_str = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>OPPSS Generator - Izveštaj {godina}</title>
+    <title>OPPSS Generator - Izveštaj {godina_esc}</title>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 20px; }}
         h1 {{ color: #333; }}
@@ -138,10 +149,10 @@ def generisi_html_izvestaj(app: Any, db: Any, godina: str) -> str:
     </style>
 </head>
 <body>
-    <h1>OPPSS Generator - Izveštaj {godina}</h1>
+    <h1>OPPSS Generator - Izveštaj {godina_esc}</h1>
     <div class="statistika">
-        <p><strong>Ukupno unosa:</strong> {stat['ukupno']}</p>
-        <p><strong>Ukupan iznos:</strong> {stat['ukupan_iznos']}</p>
+        <p><strong>Ukupno unosa:</strong> {ukupno_esc}</p>
+        <p><strong>Ukupan iznos:</strong> {ukupan_iznos_esc}</p>
     </div>
     <table>
         <tr>
@@ -154,17 +165,22 @@ def generisi_html_izvestaj(app: Any, db: Any, godina: str) -> str:
 """
 
     for osoba in ljudi:
-        html += f"""        <tr>
-            <td>{osoba.get('id', '')}</td>
-            <td>{osoba.get('ime_naziv', '')}</td>
-            <td>{osoba.get('opstina', '')}</td>
-            <td>{osoba.get('datum', '')}</td>
-            <td>{osoba.get('iznos_prometa', 0)}</td>
+        id_esc = html.escape(str(osoba.get('id', '')))
+        ime_esc = html.escape(str(osoba.get('ime_naziv', '')))
+        opstina_esc = html.escape(str(osoba.get('opstina', '')))
+        datum_esc = html.escape(str(osoba.get('datum', '')))
+        iznos_esc = html.escape(str(osoba.get('iznos_prometa', 0)))
+        html_str += f"""        <tr>
+            <td>{id_esc}</td>
+            <td>{ime_esc}</td>
+            <td>{opstina_esc}</td>
+            <td>{datum_esc}</td>
+            <td>{iznos_esc}</td>
         </tr>
 """
 
-    html += """    </table>
+    html_str += """    </table>
 </body>
 </html>"""
 
-    return html
+    return html_str
