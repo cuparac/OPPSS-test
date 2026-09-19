@@ -234,36 +234,39 @@ class Database:
             writer.writeheader()
             writer.writerows(ljudi)
 
-    def import_csv(self, fajl_putanja: str) -> int:
+    def import_csv(self, fajl_putanja: str) -> tuple:
         """Uvozi podatke iz CSV fajla.
 
         Args:
             fajl_putanja: Putanja do CSV fajla
 
         Returns:
-            Broj uvezenih unosa
+            Tuple (uspeh: bool, poruka: str, broj: int)
         """
         broj = 0
-        with open(fajl_putanja, 'r', encoding='utf-8-sig') as f:
-            reader = csv.DictReader(f, delimiter=';')
-            for row in reader:
-                # Konvertuj datum u ISO format
-                for polje in ['datum', 'datum_do']:
-                    if polje in row and row[polje]:
-                        for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%d.%m.%Y']:
-                            try:
-                                row[polje] = datetime.datetime.strptime(row[polje].strip(), fmt).strftime('%Y-%m-%d')
-                                break
-                            except ValueError:
-                                continue
+        try:
+            with open(fajl_putanja, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                for row in reader:
+                    # Konvertuj datum u ISO format
+                    for polje in ['datum', 'datum_do']:
+                        if polje in row and row[polje]:
+                            for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%d.%m.%Y']:
+                                try:
+                                    row[polje] = datetime.datetime.strptime(row[polje].strip(), fmt).strftime('%Y-%m-%d')
+                                    break
+                                except ValueError:
+                                    continue
 
-                # Konvertuj iznos u int
-                if 'iznos_prometa' in row:
-                    row['iznos_prometa'] = int(row['iznos_prometa'])
+                    # Konvertuj iznos u int
+                    if 'iznos_prometa' in row:
+                        row['iznos_prometa'] = int(row['iznos_prometa'])
 
-                self.dodaj_osobu(row)
-                broj += 1
-        return broj
+                    self.dodaj_osobu(row)
+                    broj += 1
+            return (True, f"Uvezeno {broj} unosa.", broj)
+        except Exception as e:
+            return (False, f"Greška pri uvozu: {e}", 0)
 
     def zatvori(self) -> None:
         """Zatvara konekciju sa bazom."""
@@ -271,27 +274,34 @@ class Database:
             self.conn.close()
 
 
-def migriraj_json_u_sqlite(godina: str) -> None:
+def migriraj_json_u_sqlite(godina: str) -> tuple:
     """Migrira JSON bazu u SQLite.
 
     Args:
         godina: Godina za koju se vrši migracija
+
+    Returns:
+        Tuple (uspeh: bool, poruka: str)
     """
     json_file = f"baza_{godina}.json"
     if not os.path.exists(json_file):
-        return
+        return (False, "Nema JSON fajla za migraciju.")
 
-    with open(json_file, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+    try:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    db = Database(godina)
-    db.kreiraj_tabele()
+        db = Database(godina)
+        db.kreiraj_tabele()
 
-    if 'podnosioc' in data:
-        db.sacuvaj_podnosioca(data['podnosioc'])
+        if 'podnosioc' in data:
+            db.sacuvaj_podnosioca(data['podnosioc'])
 
-    for osoba in data.get('ljudi', []):
-        db.dodaj_osobu(osoba)
+        for osoba in data.get('ljudi', []):
+            db.dodaj_osobu(osoba)
 
-    db.zatvori()
-    os.rename(json_file, f"{json_file}.backup")
+        db.zatvori()
+        os.rename(json_file, f"{json_file}.backup")
+        return (True, "Migracija uspešno završena.")
+    except Exception as e:
+        return (False, f"Greška pri migraciji: {e}")
