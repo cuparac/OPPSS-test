@@ -32,6 +32,7 @@ class Database:
         self._db_file = f"baza_{godina}.db"
         self.conn = sqlite3.connect(self._db_file)
         self.conn.row_factory = sqlite3.Row
+        self.kreiraj_tabele()
 
     @property
     def db_file(self) -> str:
