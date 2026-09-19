@@ -150,6 +150,24 @@ class Database:
                    podaci['datum'], podaci['datum_do'], podaci['iznos_prometa']))
         self.conn.commit()
 
+    def ima_duplikat(self, identifikator: str, datum: str) -> Optional[Dict[str, Any]]:
+        """Proverava da li već postoji unos sa istim identifikatorom i datumom.
+
+        Args:
+            identifikator: JMBG/PIB/EBS
+            datum: Datum u ISO formatu (YYYY-MM-DD)
+
+        Returns:
+            Dict sa postojećim unosom ili None
+        """
+        c = self.conn.cursor()
+        c.execute('''SELECT * FROM ljudi WHERE identifikator = ? AND datum = ? AND godina = ?''',
+                  (identifikator, datum, self.godina))
+        row = c.fetchone()
+        if row:
+            return dict(row)
+        return None
+
     def izmeni_osobu(self, id: int, podaci: Dict[str, Any]) -> None:
         """Menja postojeći unos.
 

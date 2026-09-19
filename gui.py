@@ -1116,27 +1116,33 @@ class App(tk.Tk):
                 messagebox.showerror("Greska", "Iznos mora biti pozitivan ceo broj!", parent=win)
                 return
 
-            # Provera duplikata identifikatora uz upozorenje
-            ljudi = self.db.ucitaj_ljude()
-            duplikat = next((o for o in ljudi if o["identifikator"] == broj_id
-                            and (indeks_izmene is None or o['id'] != indeks_izmene)), None)
-            if duplikat:
-                if not messagebox.askyesno("UPOZORENJE - DUPLIKAT",
-                    "Već postoji unos sa identifikatorom %s:\n\n"
-                    "• Ime/Naziv: %s\n"
-                    "• Opština: %s\n"
-                    "• Datum: %s do %s\n"
-                    "• Iznos: %s RSD\n\n"
-                    "Razlika bi trebala bitu u DATUMU ili IZNOSU.\n\n"
-                    "Da li želite da nastavite i sačuvate ovaj unos?" % (
-                        broj_id,
-                        duplikat.get('ime_naziv', ''),
-                        duplikat.get('opstina', ''),
-                        duplikat.get('datum', ''),
-                        duplikat.get('datum_do', ''),
-                        format(duplikat.get('iznos_prometa', 0), ",").replace(",", ".")),
-                    parent=win):
-                    return
+            # Provera duplikata (identifikator + datum)
+            if indeks_izmene is None:
+                duplikat = self.db.ima_duplikat(broj_id, datum_iso)
+                if duplikat:
+                    odgovor = messagebox.askyesnocancel(
+                        "UPOZORENJE - DUPLIKAT",
+                        "Već postoji unos sa identifikatorom %s i datumom %s:\n\n"
+                        "• Ime/Naziv: %s\n"
+                        "• Opština: %s\n"
+                        "• Datum: %s do %s\n"
+                        "• Iznos: %s RSD\n\n"
+                        "Zameni = obriši staro i snimi novo\n"
+                        "Dodaj kao novi = snimi bez brisanja\n"
+                        "Preskoči = nemoj ništa snimiti" % (
+                            broj_id,
+                            datum_iso,
+                            duplikat.get('ime_naziv', ''),
+                            duplikat.get('opstina', ''),
+                            duplikat.get('datum', ''),
+                            duplikat.get('datum_do', ''),
+                            format(duplikat.get('iznos_prometa', 0), ",").replace(",", ".")),
+                        parent=win)
+                    if odgovor is None:  # Preskoči
+                        return
+                    elif not odgovor:  # Zameni
+                        self.db.obrisi_osobu(duplikat['id'])
+                    # True = Dodaj kao novi, nastavi sa snimanjem
 
             r = {
                 "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
