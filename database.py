@@ -8,9 +8,11 @@ from __future__ import annotations
 import csv
 import datetime
 import json
+import logging
 import os
+import shutil
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class Database:
@@ -33,6 +35,7 @@ class Database:
         self.conn = sqlite3.connect(self._db_file)
         self.conn.row_factory = sqlite3.Row
         self.kreiraj_tabele()
+        self._auto_backup()
 
     @property
     def db_file(self) -> str:
@@ -81,6 +84,17 @@ class Database:
             FOREIGN KEY (godina) REFERENCES podnosioc(godina)
         )''')
         self.conn.commit()
+
+    def _auto_backup(self) -> None:
+        """Automatski backup baze pri pokretanju."""
+        try:
+            if os.path.exists(self._db_file):
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_file = f"backup_baza_{self.godina}_{timestamp}.db"
+                shutil.copy2(self._db_file, backup_file)
+                logging.info("Auto-backup baze: %s", backup_file)
+        except Exception as e:
+            logging.warning("Auto-backup nije uspeo: %s", e)
 
     def ucitaj_podnosioca(self) -> Optional[Dict[str, str]]:
         """Učitava podatke o podnosiocu.
