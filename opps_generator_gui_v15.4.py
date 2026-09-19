@@ -22,6 +22,6 @@ logging.basicConfig(
 from gui import App
 
 if __name__ == "__main__":
-    logging.info("OPPSS Generator v15.3 pokrenut")
+    logging.info("OPPSS Generator v15.4 pokrenut")
     app = App()
     app.mainloop()

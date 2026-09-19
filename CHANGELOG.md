@@ -4,6 +4,18 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.4] — 2026-09-19
+
+### Nove funkcionalnosti
+- **Auto-backup baze** — Automatski backup pri svakom pokretanju (`backup_baza_{godina}_{timestamp}.db`)
+- **Pametni duplikati** — Provera identifikator + datum pri unosu, dijalog sa opcijama Zameni / Dodaj kao novi / Preskoči
+- **PDF export** — PDF izveštaj preko pregledača (bez dodatnih biblioteka)
+- **Undo/Redo** — Ctrl+Z / Ctrl+Y za poništavanje i ponavljanje operacija (dodaj, izmeni, obriši)
+- **Drag & drop XML upload** — Povuci XML fajl na prozor za učitavanje (Windows, `windnd` opciono)
+- **Napredni filteri** — Filter po vrsti prometa, opštini i range iznosa (min/max)
+
+---
+
 ## [15.3] — 2026-09-19
 
 ### Nove funkcionalnosti

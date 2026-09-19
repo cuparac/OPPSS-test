@@ -1,10 +1,10 @@
-# STATUS — OPPS Generator v15.3
+# STATUS — OPPS Generator v15.4
 
 **Poslednji put ažurirano:** 19.09.2026.
-**Trenutna verzija:** v15.3
+**Trenutna verzija:** v15.4
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
-**Git commit:** `d20c258`
+**Git commit:** `c0f466d`
 
 ---
 
@@ -80,6 +80,14 @@
 - **Pytest testovi** - 25 testova (database, validacije, XML generator)
 - **HTML injection fix** - html.escape() na sve dinamičke vrednosti u HTML izveštaju
 - **Placeholder podnosioc fix** - ValueError umesto podrazumevanih vrednosti
+
+### v15.4 — Funkcionalnosti (ZAVRŠENO 19.09.2026)
+- **Auto-backup baze** - Automatski backup pri svakom pokretanju (`backup_baza_{godina}_{timestamp}.db`)
+- **Pametni duplikati** - Provera identifikator + datum, dijalog Zameni/Dodaj kao novi/Preskoči
+- **PDF export** - PDF izveštaj preko pregledača (Ctrl+P, bez dodatnih biblioteka)
+- **Undo/Redo** - Ctrl+Z/Ctrl+Y za poništavanje i ponavljanje operacija
+- **Drag & drop XML upload** - Povuci XML fajl na prozor za učitavanje (Windows)
+- **Napredni filteri** - Filter po vrsti prometa, opštini i range iznosa (min/max)
 
 ---
 

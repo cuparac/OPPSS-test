@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.3-blue)
+![Version](https://img.shields.io/badge/verzija-15.4-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.3** donosi modularnu arhitekturu (5 modula), type hintove, Google stil docstringove, logging umesto print() i pytest testove. Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.3.py` (entry point).
+**Verzija 15.4** donosi 6 novih funkcionalnosti: auto-backup baze, pametnu obradu duplikata (zameni/dodaj/preskoči), PDF export preko pregledača, Undo/Redo (Ctrl+Z/Ctrl+Y), drag & drop XML upload i napredne filtere (vrsta prometa, opština, range iznosa). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.4.py` (entry point).
 
 ---
 
@@ -230,7 +230,7 @@ python opps_generator_cli_v15.py
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.3.py   # Entry point (pokreće aplikaciju)
+├── opps_generator_gui_v15.4.py   # Entry point (pokreće aplikaciju)
 ├── gui.py                       # GUI komponente (App, DatumEntry, Kalendar, Prozori)
 ├── database.py                  # Database operacije (CRUD, pretraga, statistika, CSV)
 ├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
@@ -315,7 +315,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.3
+- **Verzija:** 15.4
 
 ---
 
