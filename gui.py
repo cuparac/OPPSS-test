@@ -654,6 +654,7 @@ class App(tk.Tk):
         alat_meni = tk.Menu(meni, tearoff=0)
         meni.add_cascade(label="Alat", menu=alat_meni)
         alat_meni.add_command(label="Pretraga (Ctrl+F)", command=self.pretraga)
+        alat_meni.add_command(label="Napredni filteri", command=self.otvori_filtere)
         alat_meni.add_command(label="Statistika", command=self.statistika)
         alat_meni.add_command(label="Migracija JSON → SQLite", command=self.migracija)
 
@@ -1123,6 +1124,10 @@ class App(tk.Tk):
             messagebox.showinfo("Redo", rezultat)
         else:
             messagebox.showinfo("Redo", "Nema operacija za ponavljanje.")
+
+    def otvori_filtere(self) -> None:
+        """Otvara prozor za napredne filtere."""
+        ProzorFiltera(self, self.db, self.godina)
 
     def filtriraj_tabelu(self, vrsta: Optional[str] = None, opstina: Optional[str] = None,
                           min_iznos: str = "0", max_iznos: str = "999999999") -> None:
