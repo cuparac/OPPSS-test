@@ -7,3 +7,6 @@ __pycache__/
 *.bak
 venv/
 .env
+docs/
+tests/
+test_opps.py
