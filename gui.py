@@ -253,7 +253,7 @@ class ProzorPodnosioca(tk.Toplevel):
         self.grab_set(); self.resizable(False, False)
         self.db = db
         self.godina = godina
-        p = db.ucitaj_podnosioca()
+        p = db.ucitaj_podnosioca() or {}
         okvir = ttk.Frame(self, padding=20)
         okvir.pack(fill="both", expand=True)
         ttk.Label(okvir, text="Godina podnosenja: " + godina,
@@ -822,7 +822,7 @@ class App(tk.Tk):
 
     def osvezi_info(self) -> None:
         """Osvežava informacije o podnosiocu u glavnom prozoru."""
-        p = self.db.ucitaj_podnosioca()
+        p = self.db.ucitaj_podnosioca() or {}
         if p.get("pib_jmbg"):
             self.info_podnosioc.config(text="Podnosioc: %s   |   Godina: %s" % (p['pib_jmbg'], self.godina))
         else:
