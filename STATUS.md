@@ -131,7 +131,7 @@
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.2.py          # GUI v15.2 (aktuelna verzija)
+├── opps_generator_gui_v15.4.py          # GUI v15.4 (aktuelna verzija)
 ├── opps_generator_cli_v15.py            # CLI v15
 ├── opps.xsd                             # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf           # Korisničko uputstvo
@@ -183,23 +183,30 @@ python opps_generator_gui_v15.2.py
 
 ---
 
-## 🎯 PRIORITETI ZA NAREDNU VERZIJU (v15.4+)
+## 🎯 PREOSTALI ZA DACI ZA v15.5
 
-### Kratki rok (1-2 sjednice)
-1. Refaktoring na OOP (odvojiti bazu, GUI, logiku)
-2. Type hintovi i docstringovi
-3. PDF export (pravi PDF umjesto HTML)
+### Funkcionalnosti
+1. **Više podnosiuca u bazi** - Podržati više podnosiuca (različiti PIB/JMBG, različite godine, opštine, vrste prometa). Trenutno je 1 podnosilac po godini
+2. **Napredni filteri (proširenje)** - "Samo ove godine", "Samo ovog meseca", kombinovani filteri
 
-### Srednji rok (3-4 sjednice)
-4. Auto-backup pri pokretanju
-5. Pametna obrada duplikata
-6. Pregled po kartićima (po opštini, vrsti prometa)
+### GUI poboljšanja
+3. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
+4. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
+5. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
+6. **Dark theme** - Tamna tema
 
-### Dugoročno
-7. Unit testovi (pytest)
-8. Logging umjesto print/messagebox
-9. Dark theme (ako bude tražio)
-10. Undo/Redo funkcionalnost
+### Performanse
+7. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
+8. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
+9. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+
+### Sigurnost (odložiti za kasnije)
+10. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+11. **Enkripcija baze** - SQLCipher ili slično
+12. **Audit log** - Evidencija ko je šta menjao i kada
+
+### Refaktoring (odložiti za kasnije)
+13. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 
