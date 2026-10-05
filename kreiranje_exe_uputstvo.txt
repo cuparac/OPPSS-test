@@ -1,5 +1,5 @@
 ================================================================================
-KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v15.2
+KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v15.8
 ================================================================================
 
 ================================================================================
@@ -10,7 +10,7 @@ KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v15.2
 https://github.com/cuparac/OPPSS-test
 
 # Preuzmite fajl:
-opps_generator_gui_v15.2.py
+opps_generator_gui_v15.8.py
 
 
 ================================================================================
@@ -30,7 +30,7 @@ https://www.python.org/downloads/
 
 # Otvorite Command Prompt (cmd) ili PowerShell i ukucajte:
 
-pip install lxml pyinstaller
+pip install lxml matplotlib pyinstaller
 
 
 ================================================================================
@@ -42,10 +42,10 @@ pip install lxml pyinstaller
 cd C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test
 
 # Za 32-bit Windows:
-pyinstaller --onefile --windowed --name "OPPSS_Generator_v15.2" opps_generator_gui_v15.2.py
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v15.8" opps_generator_gui_v15.8.py
 
 # Za 64-bit Windows:
-pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15.2" opps_generator_cli_v15.py
+pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15.8" opps_generator_cli_v15.py
 
 
 ================================================================================
@@ -78,7 +78,7 @@ Problem: "lxml se ne instalira"
 Resenje:  pip install lxml --only-binary :all:
 
 Problem: "pyinstaller nije pronađen"
-Resenje:  python -m pyinstaller --onefile opps_generator_gui_v15.2.py
+Resenje:  python -m pyinstaller --onefile opps_generator_gui_v15.8.py
 
 Problem: "Antivirus blokira .exe"
 Resenje:  Dodajte .exe u izuzetke antivirusa
@@ -98,6 +98,6 @@ KONTAKT
 ================================================================================
 
 GitHub: https://github.com/cuparac/OPPSS-test
-Verzija: 15.2 STANDALONE
+Verzija: 15.8 STANDALONE
 
 ================================================================================

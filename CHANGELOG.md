@@ -57,7 +57,7 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 ## [15.3] — 2026-09-19
 
 ### Nove funkcionalnosti
-- **Modularna arhitektura** — Podela na 5 modula: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py`, `opps_generator_gui_v15.3.py` (entry point)
+- **Modularna arhitektura** — Podela na 5 modula: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py`, `opps_generator_gui_v15.8.py` (entry point)
 - **Type hintovi** — Anotacije na svim javnim funkcijama i klasama
 - **Docstringovi** — Google stil dokumentacije za sve klase i javne metode
 - **Logging** — Zamena `print()` sa `logging` modulom (log fajl: `opps_generator.log`)
