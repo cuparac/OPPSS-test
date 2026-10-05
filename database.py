@@ -106,8 +106,15 @@ class Database:
             naziv_gazdinstva TEXT,
             datum TEXT,
             datum_do TEXT,
-            iznos_prometa INTEGER
+            iznos_prometa INTEGER,
+            UNIQUE (identifikator, datum, godina)
         )''')
+        # Indeksi za bržu pretragu
+        c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_godina ON ljudi(godina)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_identifikator ON ljudi(identifikator)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_datum ON ljudi(datum)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_opstina ON ljudi(opstina)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_vrsta_prometa ON ljudi(vrsta_prometa)')
         self.conn.commit()
 
     def _auto_backup(self) -> None:
@@ -219,6 +226,31 @@ class Database:
         c = self.conn.cursor()
         c.execute("SELECT * FROM ljudi WHERE godina = ? ORDER BY id", (self.godina,))
         return [dict(row) for row in c.fetchall()]
+
+    def ucitaj_ljude_stranicu(self, offset: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+        """Učitava stranicu unosa za trenutnu godinu (lazy loading).
+
+        Args:
+            offset: Početni redni broj (0-based).
+            limit: Broj unosa po stranici.
+
+        Returns:
+            List sa unosima za traženu stranicu
+        """
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM ljudi WHERE godina = ? ORDER BY id LIMIT ? OFFSET ?",
+                  (self.godina, limit, offset))
+        return [dict(row) for row in c.fetchall()]
+
+    def broj_unosa(self) -> int:
+        """Vraća ukupan broj unosa za trenutnu godinu.
+
+        Returns:
+            Ukupan broj unosa
+        """
+        c = self.conn.cursor()
+        c.execute("SELECT COUNT(*) FROM ljudi WHERE godina = ?", (self.godina,))
+        return c.fetchone()[0]
 
     def dodaj_osobu(self, podaci: Dict[str, Any]) -> None:
         """Dodaje novi unos.

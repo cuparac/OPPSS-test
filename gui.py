@@ -855,6 +855,19 @@ class App(tk.Tk):
         self.sort_status = ttk.Label(tab_svi, text="", font=("Segoe UI", 9), foreground="gray")
         self.sort_status.pack(fill="x", padx=10, pady=(0, 5))
 
+        # Paginacija
+        self.page_size = 100
+        self.current_page = 0
+        self.total_pages = 0
+        self.paginacija_frame = ttk.Frame(tab_svi)
+        self.paginacija_frame.pack(fill="x", padx=10, pady=(0, 5))
+        ttk.Button(self.paginacija_frame, text="<< Prva", command=self.prva_strana).pack(side="left", padx=2)
+        ttk.Button(self.paginacija_frame, text="< Prethodna", command=self.prethodna_strana).pack(side="left", padx=2)
+        self.page_label = ttk.Label(self.paginacija_frame, text="Strana 1/1", font=("Segoe UI", 9))
+        self.page_label.pack(side="left", padx=10)
+        ttk.Button(self.paginacija_frame, text="Sledeća >", command=self.sledeca_strana).pack(side="left", padx=2)
+        ttk.Button(self.paginacija_frame, text="Poslednja >>", command=self.poslednja_strana).pack(side="left", padx=2)
+
         # Tab 2: Po opštini
         tab_opstine = ttk.Frame(notebook)
         notebook.add(tab_opstine, text="Po opštini")
@@ -1317,6 +1330,7 @@ class App(tk.Tk):
         self.db = Database(self._godina)
         self.sort_column = None
         self.sort_reverse = False
+        self.current_page = 0
         self.osvezi_sve()
 
     @property
@@ -1442,10 +1456,21 @@ class App(tk.Tk):
             self.info_podnosioc.config(text="[!] Podaci o podnosiocu NISU uneseni za %s. godinu!" % self.godina)
 
     def osvezi_tabelu(self) -> None:
-        """Osvežava tabelu sa unosima."""
+        """Osvežava tabelu sa unosima (sa paginacijom)."""
         self.tree.delete(*self.tree.get_children())
-        ljudi = self.db.ucitaj_ljude()
         tipovi = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+
+        # Ukupan broj unosa i stranica
+        ukupno_unosa = self.db.broj_unosa()
+        self.total_pages = max(1, (ukupno_unosa + self.page_size - 1) // self.page_size)
+        if self.current_page >= self.total_pages:
+            self.current_page = self.total_pages - 1
+        if self.current_page < 0:
+            self.current_page = 0
+
+        # Učitaj stranicu
+        offset = self.current_page * self.page_size
+        ljudi = self.db.ucitaj_ljude_stranicu(offset, self.page_size)
 
         # Sortiranje
         if self.sort_column:
@@ -1464,7 +1489,7 @@ class App(tk.Tk):
 
             ljudi.sort(key=get_sort_value, reverse=self.sort_reverse)
 
-        for i, o in enumerate(ljudi, 1):
+        for i, o in enumerate(ljudi, offset + 1):
             prikaz = ""
             if o.get("datum"):
                 try:
@@ -1478,7 +1503,30 @@ class App(tk.Tk):
                 o["ime_naziv"], o["opstina"], o["adresa"], o["telefon"],
                 prikaz, format(o['iznos_prometa'], ",").replace(",", ".")))
         ukupno = sum(o["iznos_prometa"] for o in ljudi)
-        self.ukupno_label.config(text="%d unosa | Ukupno: %s RSD" % (len(ljudi), format(ukupno, ",").replace(",", ".")))
+        self.ukupno_label.config(text="%d unosa | Ukupno: %s RSD" % (ukupno_unosa, format(ukupno, ",").replace(",", ".")))
+        self.page_label.config(text="Strana %d/%d" % (self.current_page + 1, self.total_pages))
+
+    def prva_strana(self) -> None:
+        """Ide na prvu stranicu."""
+        self.current_page = 0
+        self.osvezi_tabelu()
+
+    def prethodna_strana(self) -> None:
+        """Ide na prethodnu stranicu."""
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.osvezi_tabelu()
+
+    def sledeca_strana(self) -> None:
+        """Ide na sledeću stranicu."""
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.osvezi_tabelu()
+
+    def poslednja_strana(self) -> None:
+        """Ide na poslednju stranicu."""
+        self.current_page = self.total_pages - 1
+        self.osvezi_tabelu()
 
     def osvezi_sve(self) -> None:
         """Osvežava sve komponente glavnog prozora."""

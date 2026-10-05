@@ -4,6 +4,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.8] — 2026-10-05
+
+### Nove funkcionalnosti
+- **Indeksi u bazi** — UNIQUE constraint na (identifikator, datum, godina) + 5 indeksa (godina, identifikator, datum, opstina, vrsta_prometa)
+- **Lazy loading** — Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
+- **Keširanje XSD seme** — XSD šema se učitava samo jednom i kešira u memoriji
+
+---
+
 ## [15.7] — 2026-10-05
 
 ### Nove funkcionalnosti

@@ -167,14 +167,27 @@ def konvertuj_datum(t: str) -> str:
     raise ValueError(f"Nepoznat format datuma: {t}")
 
 
+_xsd_schema_cache: Optional[etree.XMLSchema] = None
+
+
 def get_xsd_schema() -> Optional[etree.XMLSchema]:
-    """Učitava XSD šemu iz ugrađenog sadržaja.
+    """Učitava XSD šemu iz ugrađenog sadržaja (keširano).
 
     Returns:
         XMLSchema objekat ili None ako učitavanje ne uspe
     """
+    global _xsd_schema_cache
+    if _xsd_schema_cache is not None:
+        return _xsd_schema_cache
     try:
         xsd_root = etree.fromstring(XSD_CONTENT.encode('utf-8'))
-        return etree.XMLSchema(xsd_root)
+        _xsd_schema_cache = etree.XMLSchema(xsd_root)
+        return _xsd_schema_cache
     except Exception:
         return None
+
+
+def resetuj_xsd_cache() -> None:
+    """Resetuje keš XSD seme (za testove ili ponovno učitavanje)."""
+    global _xsd_schema_cache
+    _xsd_schema_cache = None

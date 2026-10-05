@@ -1,7 +1,7 @@
-# STATUS — OPPS Generator v15.7
+# STATUS — OPPS Generator v15.8
 
 **Poslednji put ažurirano:** 05.10.2026.
-**Trenutna verzija:** v15.7
+**Trenutna verzija:** v15.8
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
 **Git commit:** `c0f466d`
@@ -107,6 +107,11 @@
 - **Grafikoni** - Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
 - **Dark theme** - Tamna tema preko Alat menija (🌙 Dark theme)
 
+### v15.8 — Performanse (ZAVRŠENO 05.10.2026)
+- **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina) + 5 indeksa (godina, identifikator, datum, opstina, vrsta_prometa)
+- **Lazy loading** - Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
+- **Keširanje XSD seme** - XSD šema se učitava samo jednom i kešira u memoriji
+
 ---
 
 ## ❌ ŠTA NIJE URAĐENO — Preporuke za unapređenja
@@ -189,20 +194,15 @@ python gui.py
 
 ---
 
-## 🎯 PREOSTALI ZADACI ZA v15.8
-
-### Performanse
-1. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
-2. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
-3. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+## 🎯 PREOSTALI ZADACI ZA v15.9
 
 ### Sigurnost (odložiti za kasnije)
-4. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
-5. **Enkripcija baze** - SQLCipher ili slično
-6. **Audit log** - Evidencija ko je šta menjao i kada
+1. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+2. **Enkripcija baze** - SQLCipher ili slično
+3. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Refaktoring (odložiti za kasnije)
-7. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
+4. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 
