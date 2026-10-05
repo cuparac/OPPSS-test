@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.8** donosi indekse u bazi, lazy loading (paginaciju) i keširanje XSD seme. Prethodne verzije: v15.5 (više podnosioca u bazi), v15.6 (napredni filteri po datumu), v15.7 (tabovi, grafikoni, dark theme). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.4.py` (entry point).
+**Verzija 15.8** donosi indekse u bazi, lazy loading (paginaciju) i keširanje XSD seme. Prethodne verzije: v15.5 (više podnosioca u bazi), v15.6 (napredni filteri po datumu), v15.7 (tabovi, grafikoni, dark theme). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.8.py` (entry point).
 
 ---
 
@@ -124,7 +124,7 @@ pip install lxml matplotlib
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.4.py
+python opps_generator_gui_v15.8.py
 ```
 
 **Glavni meni:**
@@ -278,7 +278,7 @@ python opps_generator_cli_v15.py
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.4.py   # Entry point (pokreće aplikaciju)
+├── opps_generator_gui_v15.8.py   # Entry point (pokreće aplikaciju)
 ├── gui.py                       # GUI komponente (App, DatumEntry, Kalendar, Prozori)
 ├── database.py                  # Database operacije (CRUD, pretraga, statistika, CSV)
 ├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
@@ -348,7 +348,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.4.py  # bez sudo
+python opps_generator_gui_v15.8.py  # bez sudo
 ```
 
 ---
