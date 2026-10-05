@@ -4,6 +4,18 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.5] — 2026-10-05
+
+### Nove funkcionalnosti
+- **Više podnosioca u bazi** — Podržano više podnosioca (različiti PIB/JMBG, opštine, vrste prometa). Migracija tabele `podnosioc` sa `godina` PK na `id` PK, dodata `naziv` i `aktivan` polja
+- **Selektor podnosioca** — Combobox u ProzorPodnosioca za izbor između podnosioca
+- **Upravljanje podnosiocima** — Dugmad + Novi / - Obriši / Aktivan
+- **XML import** — Podnosioc iz XML-a se dodaje kao novi i postavlja kao aktivan
+- **XML export** — Koristi se aktivni podnosilac za generisanje prijave
+- **Migracija postojeće baze** — Automatska konverzija stare tabele (godina PK → id PK)
+
+---
+
 ## [15.4] — 2026-09-19
 
 ### Nove funkcionalnosti

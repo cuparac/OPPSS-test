@@ -56,15 +56,41 @@ class Database:
         self.conn.row_factory = sqlite3.Row
 
     def kreiraj_tabele(self) -> None:
-        """Kreira tabele ako ne postoje."""
+        """Kreira tabele ako ne postoje. Vrši migraciju ako je potrebno."""
         c = self.conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS podnosioc (
-            godina TEXT PRIMARY KEY,
-            pib_jmbg TEXT,
-            email TEXT,
-            telefon TEXT,
-            jmbg TEXT
-        )''')
+
+        # Migracija stare tabele podnosioc (godina PK -> id PK)
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='podnosioc'")
+        if c.fetchone():
+            c.execute("PRAGMA table_info(podnosioc)")
+            columns = [row[1] for row in c.fetchall()]
+            if 'godina' in columns and 'id' not in columns:
+                # Stara struktura - migriraj
+                c.execute("ALTER TABLE podnosioc RENAME TO podnosioc_stara")
+                c.execute('''CREATE TABLE podnosioc (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    naziv TEXT NOT NULL,
+                    pib_jmbg TEXT,
+                    email TEXT,
+                    telefon TEXT,
+                    jmbg TEXT,
+                    aktivan INTEGER DEFAULT 0
+                )''')
+                c.execute('''INSERT INTO podnosioc (naziv, pib_jmbg, email, telefon, jmbg, aktivan)
+                             SELECT 'Podnosilac ' || godina, pib_jmbg, email, telefon, jmbg, 1 FROM podnosioc_stara''')
+                c.execute("DROP TABLE podnosioc_stara")
+                logging.info("Migracija tabele podnosioc: dodat id PK, naziv, aktivan")
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS podnosioc (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                naziv TEXT NOT NULL,
+                pib_jmbg TEXT,
+                email TEXT,
+                telefon TEXT,
+                jmbg TEXT,
+                aktivan INTEGER DEFAULT 0
+            )''')
+
         c.execute('''CREATE TABLE IF NOT EXISTS ljudi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             godina TEXT,
@@ -80,8 +106,7 @@ class Database:
             naziv_gazdinstva TEXT,
             datum TEXT,
             datum_do TEXT,
-            iznos_prometa INTEGER,
-            FOREIGN KEY (godina) REFERENCES podnosioc(godina)
+            iznos_prometa INTEGER
         )''')
         self.conn.commit()
 
@@ -96,30 +121,93 @@ class Database:
         except Exception as e:
             logging.warning("Auto-backup nije uspeo: %s", e)
 
-    def ucitaj_podnosioca(self) -> Optional[Dict[str, str]]:
+    def ucitaj_podnosioca(self, id: Optional[int] = None) -> Optional[Dict[str, Any]]:
         """Učitava podatke o podnosiocu.
+
+        Args:
+            id: ID podnosioca. Ako None, vraća aktivnog podnosioca.
 
         Returns:
             Dict sa podacima o podnosiocu ili None
         """
         c = self.conn.cursor()
-        c.execute("SELECT * FROM podnosioc WHERE godina = ?", (self.godina,))
+        if id is not None:
+            c.execute("SELECT * FROM podnosioc WHERE id = ?", (id,))
+        else:
+            c.execute("SELECT * FROM podnosioc WHERE aktivan = 1 LIMIT 1")
         row = c.fetchone()
         if row:
             return dict(row)
         return None
 
-    def sacuvaj_podnosioca(self, podaci: Dict[str, str]) -> None:
+    def ucitaj_sve_podnosioca(self) -> List[Dict[str, Any]]:
+        """Učitava sve podnosiose.
+
+        Returns:
+            List sa svim podnosiocima
+        """
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM podnosioc ORDER BY id")
+        return [dict(row) for row in c.fetchall()]
+
+    def dodaj_podnosioca(self, podaci: Dict[str, str]) -> int:
+        """Dodaje novog podnosioca.
+
+        Args:
+            podaci: Dict sa podacima (naziv, pib_jmbg, email, telefon, jmbg)
+
+        Returns:
+            ID novog podnosioca
+        """
+        c = self.conn.cursor()
+        c.execute('''INSERT INTO podnosioc (naziv, pib_jmbg, email, telefon, jmbg, aktivan)
+                     VALUES (?, ?, ?, ?, ?, ?)''',
+                  (podaci['naziv'], podaci['pib_jmbg'], podaci['email'],
+                   podaci['telefon'], podaci['jmbg'], 0))
+        self.conn.commit()
+        if c.lastrowid is None:
+            raise RuntimeError("Neuspešno dodavanje podnosioca")
+        return c.lastrowid
+
+    def sacuvaj_podnosioca(self, podaci: Dict[str, str], id: Optional[int] = None) -> None:
         """Čuva podatke o podnosiocu.
 
         Args:
-            podaci: Dict sa podacima (pib_jmbg, email, telefon, jmbg)
+            podaci: Dict sa podacima (naziv, pib_jmbg, email, telefon, jmbg)
+            id: ID podnosioca. Ako None, ažurira aktivnog podnosioca.
         """
         c = self.conn.cursor()
-        c.execute('''INSERT OR REPLACE INTO podnosioc (godina, pib_jmbg, email, telefon, jmbg)
-                     VALUES (?, ?, ?, ?, ?)''',
-                  (self.godina, podaci['pib_jmbg'], podaci['email'],
-                   podaci['telefon'], podaci['jmbg']))
+        if id is not None:
+            c.execute('''UPDATE podnosioc SET naziv=?, pib_jmbg=?, email=?, telefon=?, jmbg=?
+                         WHERE id=?''',
+                      (podaci['naziv'], podaci['pib_jmbg'], podaci['email'],
+                       podaci['telefon'], podaci['jmbg'], id))
+        else:
+            c.execute('''UPDATE podnosioc SET naziv=?, pib_jmbg=?, email=?, telefon=?, jmbg=?
+                         WHERE aktivan=1''',
+                      (podaci['naziv'], podaci['pib_jmbg'], podaci['email'],
+                       podaci['telefon'], podaci['jmbg']))
+        self.conn.commit()
+
+    def obrisi_podnosioca(self, id: int) -> None:
+        """Briše podnosioca.
+
+        Args:
+            id: ID podnosioca
+        """
+        c = self.conn.cursor()
+        c.execute("DELETE FROM podnosioc WHERE id = ?", (id,))
+        self.conn.commit()
+
+    def postavi_aktivnog(self, id: int) -> None:
+        """Postavlja aktivnog podnosioca.
+
+        Args:
+            id: ID podnosioca
+        """
+        c = self.conn.cursor()
+        c.execute("UPDATE podnosioc SET aktivan = 0")
+        c.execute("UPDATE podnosioc SET aktivan = 1 WHERE id = ?", (id,))
         self.conn.commit()
 
     def ucitaj_ljude(self) -> List[Dict[str, Any]]:
@@ -328,7 +416,18 @@ def migriraj_json_u_sqlite(godina: str) -> tuple:
         db.kreiraj_tabele()
 
         if 'podnosioc' in data:
-            db.sacuvaj_podnosioca(data['podnosioc'])
+            p = data['podnosioc']
+            db.dodaj_podnosioca({
+                'naziv': f"Podnosilac {godina}",
+                'pib_jmbg': p.get('pib_jmbg', ''),
+                'email': p.get('email', ''),
+                'telefon': p.get('telefon', ''),
+                'jmbg': p.get('jmbg', ''),
+            })
+            # Postavi prvog podnosioca kao aktivnog
+            podnosioci = db.ucitaj_sve_podnosioca()
+            if podnosioci:
+                db.postavi_aktivnog(podnosioci[0]['id'])
 
         for osoba in data.get('ljudi', []):
             db.dodaj_osobu(osoba)

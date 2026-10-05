@@ -1,7 +1,7 @@
 # STATUS — OPPS Generator v15.4
 
-**Poslednji put ažurirano:** 19.09.2026.
-**Trenutna verzija:** v15.4
+**Poslednji put ažurirano:** 05.10.2026.
+**Trenutna verzija:** v15.5
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
 **Git commit:** `c0f466d`
@@ -89,41 +89,44 @@
 - **Drag & drop XML upload** - Povuci XML fajl na prozor za učitavanje (Windows)
 - **Napredni filteri** - Filter po vrsti prometa, opštini i range iznosa (min/max)
 
+### v15.5 — Više podnosioca (ZAVRŠENO 05.10.2026)
+- **Migracija baze** - Tabela `podnosioc` sa `godina` PK na `id` PK, dodata `naziv` i `aktivan` polja
+- **Više podnosioca** - Podržano više podnosioca u istoj bazi (različiti PIB/JMBG, opštine, vrste prometa)
+- **Selektor podnosioca** - Combobox u ProzorPodnosioca za izbor između podnosioca
+- **Upravljanje podnosiocima** - Dugmad + Novi / - Obriši / Aktivan
+- **XML import** - Podnosioc iz XML-a se dodaje kao novi i postavlja kao aktivan
+- **XML export** - Koristi se aktivni podnosilac za generisanje prijave
+- **Migracija postojeće baze** - Automatska konverzija stare tabele (godina PK → id PK)
+
 ---
 
-## ❌ ŠTA NIJE URAĆENO — Preporuke za unapređenja
+## ❌ ŠTA NIJE URAĐENO — Preporuke za unapređenja
 
 ### Kvalitet koda (preporučujem prvo)
 1. **Refaktoring na OOP** - Razdvojiti logiku od GUI-a (MVC pattern). Trenutno je sve u jednoj klasi što otežava održavanje
-2. **Type hintovi** - Dodati `typing` module i anotacije za sve funkcije
-3. **Docstringovi** - Google/Sphinx stil dokumentacije za sve klase i funkcije
-4. **Unit testovi** - pytest framework umijesto trenutnog custom test runner-a
-5. **Logging** - Zamjena `print()` i `messagebox.showerror()` sa `logging` modulom
 
 ### Funkcionalnosti (preporučujem)
-6. **Export u PDF** - Umjesto HTML izveštaja, praviti pravi PDF (ReportLab ili WeasyPrint)
-7. **Auto-backup** - Automatski backup baze pri svakom pokretanju
-8. **Duplikati — pametna izbora** - Kada se pronađe duplikat, ponudi opciju "zamijeni", "dodaj kao novi", "preskoči"
-9. **Više sekcija** - Podržati više podnosioca u istoj bazi (po opštini, vrsti prometa)
-10. **Undo/Redo** - Poništi/ponovi operacije (brisanje, izmena)
-11. **Drag & drop XML upload** - Povuci XML fajl da učitaš postojeću prijavu
-12. **Napredni filteri** - Range slider za iznos, opcija "samo ove godine", "samo ovog meseca"
+2. **Export u PDF** - Umjesto HTML izveštaja, praviti pravi PDF (ReportLab ili WeasyPrint)
+3. **Napredni filteri** - Range slider za iznos, opcija "samo ove godine", "samo ovog meseca"
 
 ### GUI poboljšanja
-13. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
-14. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
-15. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
-16. **Dark theme** - Tamna tema (zatražio Milan — vjerovatno ne treba?)
+4. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
+5. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
+6. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
+7. **Dark theme** - Tamna tema
 
 ### Sigurnost (odložiti za kasnije)
-17. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
-18. **Enkripcija baze** - SQLCipher ili slično
-19. **Audit log** - Evidencija ko je šta menjao i kada
+8. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+9. **Enkripcija baze** - SQLCipher ili slično
+10. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Performanse (odložiti za kasnije)
-20. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
-21. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
-22. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+11. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
+12. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
+13. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+
+### Refaktoring (odložiti za kasnije)
+14. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 
@@ -131,8 +134,10 @@
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.4.py          # GUI v15.4 (aktuelna verzija)
-├── opps_generator_cli_v15.py            # CLI v15
+├── gui.py                               # GUI v15.5 (aktuelna verzija)
+├── database.py                          # Database modul (SQLite)
+├── validacije.py                        # Validacije (JMBG, EBS, datum)
+├── xml_generator.py                     # XML i HTML generator
 ├── opps.xsd                             # XSD šema za validaciju XML-a
 ├── KorisnikouputstvoOPPSS.pdf           # Korisničko uputstvo
 ├── instalacija_ubuntu_server.txt        # Uputstvo za Ubuntu Server
@@ -146,27 +151,19 @@ OPPSS-test/
 
 ## 🧪 TESTIRANJE
 
-### Pokretanje testova (Linux sa Xvfb):
+### Pokretanje testova:
 ```bash
-# Kreiraj virtualno okruženje
-python3.11 -m venv /tmp/test_venv
-/tmp/test_venv/bin/pip install lxml
-
-# Kopiraj fajl za import (zbog imena sa tačkom)
-cp opps_generator_gui_v15.2.py opps_generator_gui_v15_2.py
-
-# Pokreni testove pod Xvfb
-xvfb-run /tmp/test_venv/bin/python3.11 test_opps.py
+python3 -m pytest tests/ -q
 ```
 
 ### Pokretanje aplikacije (Linux sa Xvfb):
 ```bash
-xvfb-run python3.11 opps_generator_gui_v15.2.py
+xvfb-run python3 gui.py
 ```
 
 ### Pokretanje na Windows/Mac:
 ```bash
-python opps_generator_gui_v15.2.py
+python gui.py
 ```
 
 ---
@@ -175,7 +172,7 @@ python opps_generator_gui_v15.2.py
 
 - **Token za GitHub:** Sačuvan u `~/.config/git/credentials_opps` (važi do 15. oktobra 2026)
 - **Push na GitHub:** `git config credential.helper 'store --file ~/.config/git/credentials_opps' && git push origin main`
-- **Backup baze:** Trenutno ručno preko "Backup" dugmeta
+- **Backup baze:** Automatski pri pokretanju (`backup_baza_{godina}_{timestamp}.db`)
 - **PDF export:** Trenutno se radi preko HTML i štampe iz pregledača (Ctrl+P)
 - **JMBG validacija:** Proverava datum (oba raspona 1000-1999 i 2000-2999) i kontrolnu cifru
 - **XSD šema:** Ugrađena u kod, ne zahteva poseban .xsd fajl
@@ -183,30 +180,29 @@ python opps_generator_gui_v15.2.py
 
 ---
 
-## 🎯 PREOSTALI ZA DACI ZA v15.5
+## 🎯 PREOSTALI ZADACI ZA v15.6
 
 ### Funkcionalnosti
-1. **Više podnosiuca u bazi** - Podržati više podnosiuca (različiti PIB/JMBG, različite godine, opštine, vrste prometa). Trenutno je 1 podnosilac po godini
-2. **Napredni filteri (proširenje)** - "Samo ove godine", "Samo ovog meseca", kombinovani filteri
+1. **Napredni filteri (proširenje)** - "Samo ove godine", "Samo ovog meseca", kombinovani filteri
 
 ### GUI poboljšanja
-3. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
-4. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
-5. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
-6. **Dark theme** - Tamna tema
+2. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
+3. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
+4. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
+5. **Dark theme** - Tamna tema
 
 ### Performanse
-7. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
-8. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
-9. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+6. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
+7. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
+8. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
 
 ### Sigurnost (odložiti za kasnije)
-10. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
-11. **Enkripcija baze** - SQLCipher ili slično
-12. **Audit log** - Evidencija ko je šta menjao i kada
+9. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+10. **Enkripcija baze** - SQLCipher ili slično
+11. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Refaktoring (odložiti za kasnije)
-13. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
+12. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 

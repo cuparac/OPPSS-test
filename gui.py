@@ -379,12 +379,14 @@ class Kalendar(tk.Toplevel):
 
 
 class ProzorPodnosioca(tk.Toplevel):
-    """Prozor za unos i izmenu podataka o podnosiocu prijave.
+    """Prozor za upravljanje podnosiocima prijave.
 
     Attributes:
         db: Database objekat.
         godina: Godina za koju se unosi podnosioc.
         entries: Rečnik polja za unos.
+        podnosioci: Lista svih podnosioca.
+        trenutni_id: ID trenutno izabranog podnosioca.
     """
 
     def __init__(self, parent: tk.Widget, db: Database, godina: str) -> None:
@@ -397,25 +399,44 @@ class ProzorPodnosioca(tk.Toplevel):
         """
         super().__init__(parent)
         self.title("Podaci o podnosiocu prijave - " + godina + ". godina")
-        self.grab_set(); self.resizable(False, False)
+        self.grab_set()
+        self.resizable(True, True)
         self.db = db
         self.godina = godina
-        p = db.ucitaj_podnosioca() or {}
+        self.podnosioci = db.ucitaj_sve_podnosioca()
+        self.trenutni_id: Optional[int] = None
+
         okvir = ttk.Frame(self, padding=20)
         okvir.pack(fill="both", expand=True)
-        ttk.Label(okvir, text="Godina podnosenja: " + godina,
+
+        # Gornji deo - selektor podnosioca
+        gornji = ttk.Frame(okvir)
+        gornji.pack(fill="x", pady=(0, 10))
+        ttk.Label(gornji, text="Podnosioc:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(0, 5))
+        self.podnosioc_var = tk.StringVar()
+        self.podnosioc_combo = ttk.Combobox(gornji, textvariable=self.podnosioc_var, state="readonly", width=30)
+        self.podnosioc_combo.pack(side="left", padx=5)
+        self.podnosioc_combo.bind("<<ComboboxSelected>>", self._izabran_podnosioc)
+        ttk.Button(gornji, text="+ Novi", command=self._dodaj_podnosioca).pack(side="left", padx=2)
+        ttk.Button(gornji, text="- Obriši", command=self._obrisi_podnosioca).pack(side="left", padx=2)
+        ttk.Button(gornji, text="Aktivan", command=self._postavi_aktivnog).pack(side="left", padx=2)
+
+        # Forma za podatke
+        forma = ttk.Frame(okvir)
+        forma.pack(fill="x", pady=10)
+        ttk.Label(forma, text="Godina podnosenja: " + godina,
                   font=("Segoe UI", 11, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
         self.entries = {}
-        polja = [("pib_jmbg", "PIB (9 cifara) ili JMBG (13 cifara):"),
+        polja = [("naziv", "Naziv podnosioca:"),
+                 ("pib_jmbg", "PIB (9 cifara) ili JMBG (13 cifara):"),
                  ("email", "E-posta:"), ("telefon", "Telefon:"),
                  ("jmbg", "JMBG podnosioca (13 cifara):")]
         for row, (key, label) in enumerate(polja, start=1):
-            ttk.Label(okvir, text=label).grid(row=row, column=0, sticky="w", pady=4)
-            e = ttk.Entry(okvir, width=40)
+            ttk.Label(forma, text=label).grid(row=row, column=0, sticky="w", pady=4)
+            e = ttk.Entry(forma, width=40)
             e.grid(row=row, column=1, padx=10, pady=4)
-            e.insert(0, p.get(key, ""))
             self.entries[key] = e
-        self.status_jmbg = ttk.Label(okvir, text="", font=("Segoe UI", 9), foreground="gray")
+        self.status_jmbg = ttk.Label(forma, text="", font=("Segoe UI", 9), foreground="gray")
         self.status_jmbg.grid(row=len(polja), column=2, sticky="w", padx=(5, 0))
 
         def proveri(event: Optional[tk.Event] = None) -> None:
@@ -431,15 +452,98 @@ class ProzorPodnosioca(tk.Toplevel):
 
         self.entries["jmbg"].bind("<KeyRelease>", proveri)
         proveri()
+
         dugmad = ttk.Frame(okvir)
-        dugmad.grid(row=len(polja) + 1, column=0, columnspan=3, pady=15)
+        dugmad.pack(fill="x", pady=15)
         ttk.Button(dugmad, text="Sacuvaj", command=self.sacuvaj).pack(side="left", padx=5)
         ttk.Button(dugmad, text="Ocisti sva polja", command=self.ocisti).pack(side="left", padx=5)
         for e in self.entries.values():
             e.bind("<Return>", lambda ev: self.sacuvaj())
 
+        # Inicijalno učitaj podatke
+        self._osvezi_listu()
+        if self.podnosioci:
+            self.podnosioc_combo.current(0)
+            self._izabran_podnosioca()
+
+    def _osvezi_listu(self) -> None:
+        """Osvežava listu podnosioca u combobox-u."""
+        self.podnosioci = self.db.ucitaj_sve_podnosioca()
+        vrednosti = [f"{p['id']}: {p['naziv']}" for p in self.podnosioci]
+        self.podnosioc_combo['values'] = vrednosti
+        if self.podnosioci:
+            if self.trenutni_id is None:
+                self.podnosioc_combo.current(0)
+            else:
+                for i, p in enumerate(self.podnosioci):
+                    if p['id'] == self.trenutni_id:
+                        self.podnosioc_combo.current(i)
+                        break
+
+    def _izabran_podnosioca(self, event: Optional[tk.Event] = None) -> None:
+        """Učitava podatke izabranog podnosioca u formu."""
+        izbor = self.podnosioc_var.get()
+        if not izbor:
+            return
+        try:
+            id_str = izbor.split(":")[0]
+            self.trenutni_id = int(id_str)
+        except (ValueError, IndexError):
+            return
+        p = self.db.ucitaj_podnosioca(self.trenutni_id)
+        if p:
+            for key in self.entries:
+                self.entries[key].delete(0, "end")
+                self.entries[key].insert(0, p.get(key, ""))
+
+    def _dodaj_podnosioca(self) -> None:
+        """Dodaje novog podnosioca."""
+        novi = {
+            'naziv': f"Podnosilac {len(self.podnosioci) + 1}",
+            'pib_jmbg': '',
+            'email': '',
+            'telefon': '',
+            'jmbg': '',
+        }
+        id = self.db.dodaj_podnosioca(novi)
+        self._osvezi_listu()
+        self.podnosioc_var.set(f"{id}: {novi['naziv']}")
+        self._izabran_podnosioca()
+        messagebox.showinfo("Dodato", f"Novi podnosioc dodat (ID: {id}).", parent=self)
+
+    def _obrisi_podnosioca(self) -> None:
+        """Briše izabranog podnosioca."""
+        if self.trenutni_id is None:
+            messagebox.showwarning("Upozorenje", "Nije izabran podnosioc.", parent=self)
+            return
+        if not messagebox.askyesno("Potvrda brisanja",
+                                   "Obrisati izabranog podnosioca?\n\n(Unosi osoba u tabeli ostaju netaknuti!)",
+                                   parent=self):
+            return
+        self.db.obrisi_podnosioca(self.trenutni_id)
+        self.trenutni_id = None
+        self._osvezi_listu()
+        if self.podnosioci:
+            self.podnosioc_combo.current(0)
+            self._izabran_podnosioca()
+        else:
+            for e in self.entries.values():
+                e.delete(0, "end")
+
+    def _postavi_aktivnog(self) -> None:
+        """Postavlja izabranog podnosioca kao aktivnog."""
+        if self.trenutni_id is None:
+            messagebox.showwarning("Upozorenje", "Nije izabran podnosioc.", parent=self)
+            return
+        self.db.postavi_aktivnog(self.trenutni_id)
+        self._osvezi_listu()
+        messagebox.showinfo("Aktivno", "Izabrani podnosioc je sada aktivan.", parent=self)
+
     def sacuvaj(self) -> None:
         """Čuva podatke o podnosiocu u bazu."""
+        if self.trenutni_id is None:
+            messagebox.showwarning("Upozorenje", "Nije izabran podnosioc.", parent=self)
+            return
         d = {k: e.get().strip() for k, e in self.entries.items()}
         if not all(d.values()):
             messagebox.showwarning("Upozorenje", "Popunite SVA polja!", parent=self)
@@ -453,21 +557,21 @@ class ProzorPodnosioca(tk.Toplevel):
         if not (len(broj) in (9, 13) and broj.isdigit()):
             messagebox.showerror("Greska", "Polje 'PIB ili JMBG' mora imati TACNO 9 cifara (PIB) ili TACNO 13 cifara (JMBG)!", parent=self)
             return
-        self.db.sacuvaj_podnosioca(d)
-        messagebox.showinfo("Sacuvano", "Podaci o podnosiocu (%s) su sacuvani." % self.godina, parent=self)
-        self.destroy()
+        self.db.sacuvaj_podnosioca(d, self.trenutni_id)
+        self._osvezi_listu()
+        messagebox.showinfo("Sacuvano", "Podaci o podnosiocu su sacuvani.", parent=self)
 
     def ocisti(self) -> None:
         """Briše sve podatke o podnosiocu za izabranu godinu."""
-        if not self.db.ucitaj_podnosioca():
-            messagebox.showinfo("Ciscenje", "Sva polja su vec prazna.", parent=self)
+        if self.trenutni_id is None:
+            messagebox.showinfo("Ciscenje", "Nema podnosioca za čišćenje.", parent=self)
             return
         if messagebox.askyesno("Potvrda ciscenja",
-                               "Obrisati SVE podatke o podnosiocu za %s. godinu?\n\n(Unosi osoba u tabeli ostaju netaknuti!)" % self.godina,
+                               "Obrisati SVE podatke o podnosiocu?\n\n(Unosi osoba u tabeli ostaju netaknuti!)",
                                parent=self):
             for e in self.entries.values():
                 e.delete(0, "end")
-            self.db.sacuvaj_podnosioca({'pib_jmbg': '', 'email': '', 'telefon': '', 'jmbg': ''})
+            self.db.sacuvaj_podnosioca({'naziv': '', 'pib_jmbg': '', 'email': '', 'telefon': '', 'jmbg': ''}, self.trenutni_id)
             self.status_jmbg.config(text="")
             messagebox.showinfo("Ocisceno", "Podaci o podnosiocu su obrisani.", parent=self)
 
@@ -946,12 +1050,15 @@ class App(tk.Tk):
                     email = podnosioc.find(f"{{{ns}}}EPostaPodnosioca")
                     telefon = podnosioc.find(f"{{{ns}}}TelefonPodnosioca")
                     jmbg = podnosioc.find(f"{{{ns}}}JMBGPodnosioca")
-                    db.sacuvaj_podnosioca({
+                    # Dodaj novog podnosioca iz XML-a i postavi kao aktivnog
+                    novi_id = db.dodaj_podnosioca({
+                        'naziv': 'Podnosilac (XML)',
                         'pib_jmbg': pib.text if pib is not None else '',
                         'email': email.text if email is not None else '',
                         'telefon': telefon.text if telefon is not None else '',
                         'jmbg': jmbg.text if jmbg is not None else '',
                     })
+                    db.postavi_aktivnog(novi_id)
 
                 # Podaci o prometu
                 for promet in podaci.findall(f"{{{ns}}}PodaciOPrometu"):
@@ -1178,7 +1285,8 @@ class App(tk.Tk):
         """Osvežava informacije o podnosiocu u glavnom prozoru."""
         p = self.db.ucitaj_podnosioca() or {}
         if p.get("pib_jmbg"):
-            self.info_podnosioc.config(text="Podnosioc: %s   |   Godina: %s" % (p['pib_jmbg'], self.godina))
+            naziv = p.get('naziv', '')
+            self.info_podnosioc.config(text="Podnosioc: %s (%s)   |   Godina: %s" % (naziv, p['pib_jmbg'], self.godina))
         else:
             self.info_podnosioc.config(text="[!] Podaci o podnosiocu NISU uneseni za %s. godinu!" % self.godina)
 
