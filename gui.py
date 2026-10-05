@@ -149,6 +149,15 @@ class ProzorFiltera(tk.Toplevel):
 
         ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
 
+        # Filter po datumu
+        ttk.Label(okvir, text="Datum:", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 5))
+        self.datum_var = tk.StringVar(value="Sve")
+        ttk.Radiobutton(okvir, text="Sve", variable=self.datum_var, value="Sve").pack(anchor="w")
+        ttk.Radiobutton(okvir, text="Samo ove godine", variable=self.datum_var, value="godina").pack(anchor="w")
+        ttk.Radiobutton(okvir, text="Samo ovog meseca", variable=self.datum_var, value="mesec").pack(anchor="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
+
         btn_primeni = ttk.Button(okvir, text="Primeni filter", command=self.primeni)
         btn_primeni.pack(side="left", padx=5)
         btn_ocisti = ttk.Button(okvir, text="Očisti filter", command=self.ocisti)
@@ -161,6 +170,7 @@ class ProzorFiltera(tk.Toplevel):
             opstina=self.opstina_var.get() if self.opstina_var.get() != "Sve" else None,
             min_iznos=self.min_var.get(),
             max_iznos=self.max_var.get(),
+            datum_filter=self.datum_var.get() if self.datum_var.get() != "Sve" else None,
         )
         self.destroy()
 
@@ -832,6 +842,10 @@ class App(tk.Tk):
         sb.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=sb.set)
 
+        # Status label za sortiranje
+        self.sort_status = ttk.Label(tf, text="", font=("Segoe UI", 9), foreground="gray")
+        self.sort_status.pack(fill="x", padx=10, pady=(0, 5))
+
         # Dugmad
         btns = ttk.Frame(self)
         btns.pack(fill="x", padx=10, pady=5)
@@ -1121,7 +1135,14 @@ class App(tk.Tk):
             text = naslovi[k]
             if k == self.sort_column:
                 text += " ▼" if self.sort_reverse else " ▲"
-            self.tree.heading(k, text=text)
+            self.tree.heading(k, text)
+
+        # Ažuriraj status label (tooltip)
+        if self.sort_column:
+            smer = "opadajuće" if self.sort_reverse else "rastuće"
+            self.sort_status.config(text=f"Sortirano po: {naslovi.get(self.sort_column, self.sort_column)} ({smer})")
+        else:
+            self.sort_status.config(text="")
 
         self.osvezi_tabelu()
 
@@ -1237,7 +1258,8 @@ class App(tk.Tk):
         ProzorFiltera(self, self.db, self.godina)
 
     def filtriraj_tabelu(self, vrsta: Optional[str] = None, opstina: Optional[str] = None,
-                          min_iznos: str = "0", max_iznos: str = "999999999") -> None:
+                          min_iznos: str = "0", max_iznos: str = "999999999",
+                          datum_filter: Optional[str] = None) -> None:
         """Filtrira tabelu po zadatim kriterijumima.
 
         Args:
@@ -1245,6 +1267,7 @@ class App(tk.Tk):
             opstina: Opština (string ili None za sve).
             min_iznos: Minimalni iznos (string).
             max_iznos: Maksimalni iznos (string).
+            datum_filter: Filter po datumu ("godina", "mesec" ili None za sve).
         """
         self.tree.delete(*self.tree.get_children())
         ljudi = self.db.ucitaj_ljude()
@@ -1257,6 +1280,22 @@ class App(tk.Tk):
             min_val = 0
             max_val = 999999999
 
+        # Izračunaj granice za datum filter
+        datum_od_limit = None
+        datum_do_limit = None
+        if datum_filter == "godina":
+            datum_od_limit = f"{self.godina}-01-01"
+            datum_do_limit = f"{self.godina}-12-31"
+        elif datum_filter == "mesec":
+            sada = datetime.datetime.now()
+            datum_od_limit = sada.replace(day=1).strftime("%Y-%m-%d")
+            # Poslednji dan meseca
+            if sada.month == 12:
+                sledeci = sada.replace(year=sada.year + 1, month=1, day=1)
+            else:
+                sledeci = sada.replace(month=sada.month + 1, day=1)
+            datum_do_limit = (sledeci - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
         for o in ljudi:
             if vrsta and o.get("vrsta_prometa") != vrsta:
                 continue
@@ -1265,6 +1304,10 @@ class App(tk.Tk):
             iznos = o.get("iznos_prometa", 0)
             if iznos < min_val or iznos > max_val:
                 continue
+            if datum_filter and datum_od_limit and datum_do_limit:
+                datum = o.get("datum", "")
+                if not datum or datum < datum_od_limit or datum > datum_do_limit:
+                    continue
 
             prikaz = ""
             if o.get("datum"):

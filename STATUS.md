@@ -1,7 +1,7 @@
-# STATUS — OPPS Generator v15.4
+# STATUS — OPPS Generator v15.6
 
 **Poslednji put ažurirano:** 05.10.2026.
-**Trenutna verzija:** v15.5
+**Trenutna verzija:** v15.6
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
 **Git commit:** `c0f466d`
@@ -98,6 +98,10 @@
 - **XML export** - Koristi se aktivni podnosilac za generisanje prijave
 - **Migracija postojeće baze** - Automatska konverzija stare tabele (godina PK → id PK)
 
+### v15.6 — Napredni filteri i sortiranje (ZAVRŠENO 05.10.2026)
+- **Napredni filteri** - Filter po datumu: "Samo ove godine", "Samo ovog meseca"
+- **Sortiranje tabele** - Status label istabele prikazuje trenutno sortiranje (kolona + smer)
+
 ---
 
 ## ❌ ŠTA NIJE URAĐENO — Preporuke za unapređenja
@@ -180,29 +184,25 @@ python gui.py
 
 ---
 
-## 🎯 PREOSTALI ZADACI ZA v15.6
-
-### Funkcionalnosti
-1. **Napredni filteri (proširenje)** - "Samo ove godine", "Samo ovog meseca", kombinovani filteri
+## 🎯 PREOSTALI ZADACI ZA v15.7
 
 ### GUI poboljšanja
-2. **Sortiranje tabele — tooltip** - Prikaži tooltip kada je sortirano
-3. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
-4. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
-5. **Dark theme** - Tamna tema
+1. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
+2. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
+3. **Dark theme** - Tamna tema
 
 ### Performanse
-6. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
-7. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
-8. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+4. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
+5. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
+6. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
 
 ### Sigurnost (odložiti za kasnije)
-9. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
-10. **Enkripcija baze** - SQLCipher ili slično
-11. **Audit log** - Evidencija ko je šta menjao i kada
+7. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+8. **Enkripcija baze** - SQLCipher ili slično
+9. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Refaktoring (odložiti za kasnije)
-12. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
+10. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 

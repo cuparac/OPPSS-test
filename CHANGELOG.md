@@ -4,6 +4,14 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.6] — 2026-10-05
+
+### Nove funkcionalnosti
+- **Napredni filteri** — Filter po datumu: "Samo ove godine", "Samo ovog meseca"
+- **Sortiranje tabele** — Status label ispod tabele prikazuje trenutno sortiranje (kolona + smer)
+
+---
+
 ## [15.5] — 2026-10-05
 
 ### Nove funkcionalnosti
