@@ -1,7 +1,7 @@
-# STATUS — OPPS Generator v15.6
+# STATUS — OPPS Generator v15.7
 
 **Poslednji put ažurirano:** 05.10.2026.
-**Trenutna verzija:** v15.6
+**Trenutna verzija:** v15.7
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
 **Git commit:** `c0f466d`
@@ -102,6 +102,11 @@
 - **Napredni filteri** - Filter po datumu: "Samo ove godine", "Samo ovog meseca"
 - **Sortiranje tabele** - Status label istabele prikazuje trenutno sortiranje (kolona + smer)
 
+### v15.7 — Tabovi, grafikoni i dark theme (ZAVRŠENO 05.10.2026)
+- **Tabovi (kartice)** - Notebook sa 5 tabova: Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni
+- **Grafikoni** - Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
+- **Dark theme** - Tamna tema preko Alat menija (🌙 Dark theme)
+
 ---
 
 ## ❌ ŠTA NIJE URAĐENO — Preporuke za unapređenja
@@ -184,25 +189,20 @@ python gui.py
 
 ---
 
-## 🎯 PREOSTALI ZADACI ZA v15.7
-
-### GUI poboljšanja
-1. **Pregled unosa — kartice** - Tabovi za različite pregledi (po opštini, vrsti prometa, datumu)
-2. **Grafikoni** - Matplotlib grafikon po opštini, vrsti prometa
-3. **Dark theme** - Tamna tema
+## 🎯 PREOSTALI ZADACI ZA v15.8
 
 ### Performanse
-4. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
-5. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
-6. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
+1. **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina)
+2. **Lazy loading** - Učitavanje po stranicama za velike tabele (500+ unosa)
+3. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
 
 ### Sigurnost (odložiti za kasnije)
-7. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
-8. **Enkripcija baze** - SQLCipher ili slično
-9. **Audit log** - Evidencija ko je šta menjao i kada
+4. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
+5. **Enkripcija baze** - SQLCipher ili slično
+6. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Refaktoring (odložiti za kasnije)
-10. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
+7. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
 
 ---
 

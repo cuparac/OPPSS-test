@@ -4,6 +4,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.7] — 2026-10-05
+
+### Nove funkcionalnosti
+- **Tabovi (kartice)** — Notebook sa 5 tabova: Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni
+- **Grafikoni** — Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
+- **Dark theme** — Tamna tema preko Alat menija (🌙 Dark theme)
+
+---
+
 ## [15.6] — 2026-10-05
 
 ### Nove funkcionalnosti

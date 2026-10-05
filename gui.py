@@ -776,6 +776,11 @@ class App(tk.Tk):
         meni.add_cascade(label="Pomoć", menu=pomoc_meni)
         pomoc_meni.add_command(label="O aplikaciji (F1)", command=self.prikazi_about)
 
+        # Dark theme toggle
+        self.dark_theme = False
+        alat_meni.add_separator()
+        alat_meni.add_command(label="🌙 Dark theme", command=self.promeni_temu)
+
         # Undo/Redo
         self.undo_stack = UndoStack()
 
@@ -803,16 +808,20 @@ class App(tk.Tk):
         self.info_podnosioc.pack(side="left")
         ttk.Button(gore, text="Podaci podnosioca...", command=self.otvori_podnosioca).pack(side="right", padx=5)
 
-        # Tabela
-        tf = ttk.Frame(self)
-        tf.pack(fill="both", expand=True, padx=10, pady=5)
+        # Notebook sa tabovima
+        notebook = ttk.Notebook(self)
+        notebook.pack(fill="both", expand=True, padx=10, pady=5)
+
+        # Tab 1: Svi unosi
+        tab_svi = ttk.Frame(notebook)
+        notebook.add(tab_svi, text="Svi unosi")
         kolone = ("rb", "tip", "identifikator", "ime_naziv", "opstina", "adresa", "telefon", "datum", "iznos")
         naslovi = {"rb": "R.br", "tip": "Vrsta prometa", "identifikator": "JMBG/PIB/EBS",
                    "ime_naziv": "Ime / Naziv", "opstina": "Opština", "adresa": "Adresa",
                    "telefon": "Telefon", "datum": "Datum (od/do)", "iznos": "Iznos (RSD)"}
         sirine = {"rb": 45, "tip": 165, "identifikator": 115, "ime_naziv": 170,
                   "opstina": 120, "adresa": 140, "telefon": 105, "datum": 100, "iznos": 95}
-        self.tree = ttk.Treeview(tf, columns=kolone, show="headings", height=12)
+        self.tree = ttk.Treeview(tab_svi, columns=kolone, show="headings", height=12)
         for k in kolone:
             self.tree.heading(k, text=naslovi[k], command=lambda c=k: self.sort_by(c))
             self.tree.column(k, width=sirine[k])
@@ -838,13 +847,58 @@ class App(tk.Tk):
         self.tree.bind("<Button-3>", self.prikazi_kontekstni_meni)
         self.tree.bind("<Button-2>", self.prikazi_kontekstni_meni)  # macOS
 
-        sb = ttk.Scrollbar(tf, orient="vertical", command=self.tree.yview)
+        sb = ttk.Scrollbar(tab_svi, orient="vertical", command=self.tree.yview)
         sb.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=sb.set)
 
         # Status label za sortiranje
-        self.sort_status = ttk.Label(tf, text="", font=("Segoe UI", 9), foreground="gray")
+        self.sort_status = ttk.Label(tab_svi, text="", font=("Segoe UI", 9), foreground="gray")
         self.sort_status.pack(fill="x", padx=10, pady=(0, 5))
+
+        # Tab 2: Po opštini
+        tab_opstine = ttk.Frame(notebook)
+        notebook.add(tab_opstine, text="Po opštini")
+        kolone_opstine = ("opstina", "broj", "iznos")
+        self.tree_opstine = ttk.Treeview(tab_opstine, columns=kolone_opstine, show="headings", height=12)
+        for k in kolone_opstine:
+            self.tree_opstine.heading(k, text=k.capitalize())
+            self.tree_opstine.column(k, width=150)
+        self.tree_opstine.pack(side="left", fill="both", expand=True)
+        sb_opstine = ttk.Scrollbar(tab_opstine, orient="vertical", command=self.tree_opstine.yview)
+        sb_opstine.pack(side="right", fill="y")
+        self.tree_opstine.configure(yscrollcommand=sb_opstine.set)
+
+        # Tab 3: Po vrsti prometa
+        tab_vrste = ttk.Frame(notebook)
+        notebook.add(tab_vrste, text="Po vrsti prometa")
+        kolone_vrste = ("vrsta", "broj", "iznos")
+        self.tree_vrste = ttk.Treeview(tab_vrste, columns=kolone_vrste, show="headings", height=12)
+        for k in kolone_vrste:
+            self.tree_vrste.heading(k, text=k.capitalize())
+            self.tree_vrste.column(k, width=150)
+        self.tree_vrste.pack(side="left", fill="both", expand=True)
+        sb_vrste = ttk.Scrollbar(tab_vrste, orient="vertical", command=self.tree_vrste.yview)
+        sb_vrste.pack(side="right", fill="y")
+        self.tree_vrste.configure(yscrollcommand=sb_vrste.set)
+
+        # Tab 4: Po datumu
+        tab_datumi = ttk.Frame(notebook)
+        notebook.add(tab_datumi, text="Po datumu")
+        kolone_datumi = ("datum", "broj", "iznos")
+        self.tree_datumi = ttk.Treeview(tab_datumi, columns=kolone_datumi, show="headings", height=12)
+        for k in kolone_datumi:
+            self.tree_datumi.heading(k, text=k.capitalize())
+            self.tree_datumi.column(k, width=150)
+        self.tree_datumi.pack(side="left", fill="both", expand=True)
+        sb_datumi = ttk.Scrollbar(tab_datumi, orient="vertical", command=self.tree_datumi.yview)
+        sb_datumi.pack(side="right", fill="y")
+        self.tree_datumi.configure(yscrollcommand=sb_datumi.set)
+
+        # Tab 5: Grafikoni
+        tab_grafikoni = ttk.Frame(notebook)
+        notebook.add(tab_grafikoni, text="Grafikoni")
+        self.grafikoni_frame = ttk.Frame(tab_grafikoni)
+        self.grafikoni_frame.pack(fill="both", expand=True)
 
         # Dugmad
         btns = ttk.Frame(self)
@@ -1193,14 +1247,68 @@ class App(tk.Tk):
         import sys
         import platform
         messagebox.showinfo("O aplikaciji",
-                            "OPPSS Generator v15.3 GUI STANDALONE\n\n"
+                            "OPPSS Generator v15.7 GUI STANDALONE\n\n"
                             "Aplikacija za generisanje OOPSS prijava\n"
                             "za portal ePorezi (Poreska uprava RS)\n\n"
-                            "Verzija: 15.3\n"
+                            "Verzija: 15.7\n"
                             "Baza: SQLite\n"
                             "XSD šema: ugrađena\n\n"
                             "Python: " + sys.version.split()[0] + "\n"
                             "Platforma: " + platform.system())
+
+    def promeni_temu(self) -> None:
+        """Menja između svetle i tamne teme."""
+        self.dark_theme = not self.dark_theme
+        style = ttk.Style()
+
+        if self.dark_theme:
+            # Tamna tema
+            style.theme_use("clam")
+            style.configure(".", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TFrame", background="#2b2b2b")
+            style.configure("TLabel", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TButton", background="#3c3c3c", foreground="#ffffff")
+            style.configure("TEntry", fieldbackground="#3c3c3c", foreground="#ffffff")
+            style.configure("TCombobox", fieldbackground="#3c3c3c", foreground="#ffffff")
+            style.configure("Treeview", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
+            style.configure("Treeview.Heading", background="#4a4a4a", foreground="#ffffff")
+            style.configure("TNotebook", background="#2b2b2b")
+            style.configure("TNotebook.Tab", background="#3c3c3c", foreground="#ffffff")
+            style.configure("TLabelframe", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TLabelframe.Label", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TSeparator", background="#2b2b2b")
+            style.configure("TScrollbar", background="#3c3c3c", troughcolor="#2b2b2b")
+            style.configure("TRadiobutton", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TCheckbutton", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TMenu", background="#3c3c3c", foreground="#ffffff")
+            self.configure(background="#2b2b2b")
+            # Kontekstni meniji
+            self.context_menu_row.configure(background="#3c3c3c", foreground="#ffffff")
+            self.context_menu_empty.configure(background="#3c3c3c", foreground="#ffffff")
+        else:
+            # Svetla tema
+            style.theme_use("clam")
+            style.configure(".", background="#f0f0f0", foreground="#000000")
+            style.configure("TFrame", background="#f0f0f0")
+            style.configure("TLabel", background="#f0f0f0", foreground="#000000")
+            style.configure("TButton", background="#e0e0e0", foreground="#000000")
+            style.configure("TEntry", fieldbackground="#ffffff", foreground="#000000")
+            style.configure("TCombobox", fieldbackground="#ffffff", foreground="#000000")
+            style.configure("Treeview", background="#ffffff", foreground="#000000", fieldbackground="#ffffff")
+            style.configure("Treeview.Heading", background="#e0e0e0", foreground="#000000")
+            style.configure("TNotebook", background="#f0f0f0")
+            style.configure("TNotebook.Tab", background="#e0e0e0", foreground="#000000")
+            style.configure("TLabelframe", background="#f0f0f0", foreground="#000000")
+            style.configure("TLabelframe.Label", background="#f0f0f0", foreground="#000000")
+            style.configure("TSeparator", background="#f0f0f0")
+            style.configure("TScrollbar", background="#e0e0e0", troughcolor="#f0f0f0")
+            style.configure("TRadiobutton", background="#f0f0f0", foreground="#000000")
+            style.configure("TCheckbutton", background="#f0f0f0", foreground="#000000")
+            style.configure("TMenu", background="#e0e0e0", foreground="#000000")
+            self.configure(background="#f0f0f0")
+            # Kontekstni meniji
+            self.context_menu_row.configure(background="#e0e0e0", foreground="#000000")
+            self.context_menu_empty.configure(background="#e0e0e0", foreground="#000000")
 
     def promeni_godinu(self) -> None:
         """Menja godinu i osvežava prikaz."""
@@ -1375,7 +1483,129 @@ class App(tk.Tk):
     def osvezi_sve(self) -> None:
         """Osvežava sve komponente glavnog prozora."""
         self.osvezi_tabelu()
+        self.osvezi_tabove()
         self.osvezi_info()
+
+    def osvezi_tabove(self) -> None:
+        """Osvežava tabove (Po opštini, Po vrsti prometa, Po datumu, Grafikoni)."""
+        ljudi = self.db.ucitaj_ljude()
+
+        # Po opštini
+        self.tree_opstine.delete(*self.tree_opstine.get_children())
+        po_opstini: Dict[str, Dict[str, Any]] = {}
+        for o in ljudi:
+            opstina = o.get("opstina", "") or "Bez opštine"
+            if opstina not in po_opstini:
+                po_opstini[opstina] = {"broj": 0, "iznos": 0}
+            po_opstini[opstina]["broj"] += 1
+            po_opstini[opstina]["iznos"] += o.get("iznos_prometa", 0)
+        for opstina, podaci in sorted(po_opstini.items()):
+            self.tree_opstine.insert("", "end", values=(
+                opstina, podaci["broj"], format(podaci["iznos"], ",").replace(",", ".")))
+
+        # Po vrsti prometa
+        self.tree_vrste.delete(*self.tree_vrste.get_children())
+        tipovi = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+        po_vrsti: Dict[str, Dict[str, Any]] = {}
+        for o in ljudi:
+            vrsta = tipovi.get(o.get("vrsta_prometa", ""), "Ostalo")
+            if vrsta not in po_vrsti:
+                po_vrsti[vrsta] = {"broj": 0, "iznos": 0}
+            po_vrsti[vrsta]["broj"] += 1
+            po_vrsti[vrsta]["iznos"] += o.get("iznos_prometa", 0)
+        for vrsta, podaci in sorted(po_vrsti.items()):
+            self.tree_vrste.insert("", "end", values=(
+                vrsta, podaci["broj"], format(podaci["iznos"], ",").replace(",", ".")))
+
+        # Po datumu
+        self.tree_datumi.delete(*self.tree_datumi.get_children())
+        po_datumu: Dict[str, Dict[str, Any]] = {}
+        for o in ljudi:
+            datum = o.get("datum", "") or "Bez datuma"
+            if datum not in po_datumu:
+                po_datumu[datum] = {"broj": 0, "iznos": 0}
+            po_datumu[datum]["broj"] += 1
+            po_datumu[datum]["iznos"] += o.get("iznos_prometa", 0)
+        for datum, podaci in sorted(po_datumu.items()):
+            self.tree_datumi.insert("", "end", values=(
+                datum, podaci["broj"], format(podaci["iznos"], ",").replace(",", ".")))
+
+        # Grafikoni
+        self.osvezi_grafikone(po_opstini, po_vrsti)
+
+    def osvezi_grafikone(self, po_opstini: Dict[str, Dict[str, Any]], po_vrsti: Dict[str, Dict[str, Any]]) -> None:
+        """Osvežava grafikone u tabu Grafikoni.
+
+        Args:
+            po_opstini: Dict sa podacima po opštini
+            po_vrsti: Dict sa podacima po vrsti prometa
+        """
+        try:
+            import matplotlib
+            matplotlib.use("TkAgg")
+            from matplotlib.figure import Figure
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        except ImportError:
+            # Matplotlib nije instaliran - prikazuje se poruka
+            for widget in self.grafikoni_frame.winfo_children():
+                widget.destroy()
+            ttk.Label(self.grafikoni_frame, text="Matplotlib nije instaliran.\nInstalirajte: pip install matplotlib",
+                      font=("Segoe UI", 12), foreground="gray").pack(expand=True)
+            return
+
+        # Obriši prethodne grafikone
+        for widget in self.grafikoni_frame.winfo_children():
+            widget.destroy()
+
+        if not po_opstini and not po_vrsti:
+            ttk.Label(self.grafikoni_frame, text="Nema podataka za grafikone.",
+                      font=("Segoe UI", 12), foreground="gray").pack(expand=True)
+            return
+
+        # Kreiraj figure
+        fig = Figure(figsize=(10, 8), dpi=100)
+
+        # Grafikon 1: Bar chart po opštini (iznos)
+        if po_opstini:
+            ax1 = fig.add_subplot(221)
+            opstine = list(po_opstini.keys())
+            iznosi = [po_opstini[o]["iznos"] for o in opstine]
+            ax1.barh(opstine, iznosi, color="#4a90d9")
+            ax1.set_title("Iznos po opštini")
+            ax1.set_xlabel("RSD")
+
+        # Grafikon 2: Bar chart po vrsti prometa (iznos)
+        if po_vrsti:
+            ax2 = fig.add_subplot(222)
+            vrste = list(po_vrsti.keys())
+            iznosi_vrsta = [po_vrsti[v]["iznos"] for v in vrste]
+            ax2.bar(vrste, iznosi_vrsta, color="#e74c3c")
+            ax2.set_title("Iznos po vrsti prometa")
+            ax2.set_ylabel("RSD")
+
+        # Grafikon 3: Pie chart po vrsti prometa (broj)
+        if po_vrsti:
+            ax3 = fig.add_subplot(223)
+            vrste = list(po_vrsti.keys())
+            brojevi = [po_vrsti[v]["broj"] for v in vrste]
+            ax3.pie(brojevi, labels=vrste, autopct="%1.1f%%", startangle=90)
+            ax3.set_title("Broj po vrsti prometa")
+
+        # Grafikon 4: Bar chart po opštini (broj)
+        if po_opstini:
+            ax4 = fig.add_subplot(224)
+            opstine = list(po_opstini.keys())
+            brojevi_opstina = [po_opstini[o]["broj"] for o in opstine]
+            ax4.bar(opstine, brojevi_opstina, color="#2ecc71")
+            ax4.set_title("Broj po opštini")
+            ax4.set_ylabel("Broj")
+
+        fig.tight_layout()
+
+        # Prikazi u Tkinter
+        canvas = FigureCanvasTkAgg(fig, master=self.grafikoni_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def dodaj_osobu(self) -> None:
         """Otvara formu za dodavanje novog unosa."""
