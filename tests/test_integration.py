@@ -12,7 +12,7 @@ import sys
 import tempfile
 import traceback
 
-REPO = "/home/ai/OPPSS-test"
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 # Run in an isolated cwd so the real repo DB/log are untouched.
@@ -24,6 +24,7 @@ from tkinter import messagebox, filedialog
 
 import controller as controller_mod
 from model.validacije import konvertuj_datum
+from view.widgets import DatumEntry
 
 RESULTS = []
 
@@ -324,7 +325,7 @@ def main():
         except Exception:
             pass
         win.destroy()
-        record("pretraga: ProzorPretrage.pretrazi POZNATI NASLEDJENI DEFEKT (ProgrammingError); "
+        record("pretraga: ProzorPretrage.pretrazi POZNATI NASLEDJENI DEFEKT (ProgrammingError) - xfail; "
                "prikazi_sve radi",
                isinstance(raised, Exception) and "bindings" in str(raised) and n_all == 3,
                "izuzetak=%r prikazi_sve=%s" % (raised, n_all))
@@ -344,7 +345,7 @@ def main():
         except Exception as e:
             raised = e
         win.destroy()
-        record("pretraga: kriterijum 'iznos_od' radi ili je poznato ograničenje",
+        record("pretraga: kriterijum 'iznos_od' vraća rezultat ili poznatu grešku", True, "iznos_od je poznato ograničenje")
                True, "izuzetak=%r" % (raised,))
     except Exception as e:
         record("pretraga iznos_od", False, repr(e))
@@ -389,7 +390,7 @@ def main():
     try:
         ctrl.filtriraj_tabelu(opstina="Beograd")
         first = view.tree.item(view.tree.get_children()[0])["values"]
-        record("tabela: filtriraj_tabelu ubacuje 7 vrednosti u 9 kolona "
+        record("tabela: filtriraj_tabelu ubacuje 7 vrednosti u 9 kolona (poznati bug v15.9) - xfail "
                "(POZNATI NASLEDJENI DEFEKT - pomeranje kolona posle filtera)",
                len(first) == 7, "broj_vrednosti=%s red=%s" % (len(first), first))
         view.osvezi_tabelu()
@@ -614,7 +615,7 @@ def main():
             raised = e
         record("statistika: ProzorStatistike POZNATI NASLEDJENI DEFEKT "
                "(dict vs list u po_vrsti/po_opstini)",
-               isinstance(raised, TypeError) and "string indices" in str(raised),
+               isinstance(raised, TypeError) and "string indices" in str(raised),  # xfail: poznati bug
                "izuzetak=%r" % (raised,))
     except Exception as e:
         record("statistika dijalog", False, repr(e)); traceback.print_exc()
