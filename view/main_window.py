@@ -1,20 +1,19 @@
-"""Glavni prozor OPPSS Generator aplikacije."""
+"""Glavni prozor OPPSS Generator aplikacije (View layer).
+
+``MainWindow`` sadrži samo GUI (widget-e, tabele, menije). Poslovnu logiku
+delegira na ``controller.Controller`` preko tankih metoda koje prosleđuju
+korisničke akcije.
+"""
 
 from __future__ import annotations
 
 import datetime
 import logging
-import os
-import shutil
-import webbrowser
-from typing import Any, Dict, List, Optional, Tuple
-
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from typing import Any, Dict, Optional
 
-from model import Database, migriraj_json_u_sqlite
-from model import validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema
-from model import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
+from model import Database, validan_jmbg, validan_ebs
 from view.widgets import DatumEntry, Kalendar
 from view.dialogs import ProzorFiltera, ProzorPodnosioca, ProzorPretrage, ProzorStatistike
 
@@ -22,15 +21,16 @@ logger = logging.getLogger(__name__)
 
 
 class MainWindow(tk.Tk):
-    """Glavna aplikacija OPPSS Generator.
+    """Glavna aplikacija OPPSS Generator (View).
 
     Attributes:
         godina: Trenutna godina.
-        db: Database objekat.
+        db: Database objekat (referentna kopija koju održava Controller).
+        controller: Controller objekat (postavlja se preko set_controller).
     """
 
     def __init__(self) -> None:
-        """Inicijalizuje glavnu aplikaciju."""
+        """Inicijalizuje glavnu aplikaciju (samo GUI)."""
         super().__init__()
         self.title("OPPSS Generator v15.3 GUI STANDALONE - ePorezi prijava")
         self.geometry("1000x700")
@@ -39,11 +39,12 @@ class MainWindow(tk.Tk):
         self.godina_var = tk.StringVar(value=self._godina)
         self.db = Database(self._godina)
 
+        # Controller se postavlja nakon kreiranja view-a
+        self.controller: Optional[Any] = None
+
         # Sortiranje
         self.sort_column: Optional[str] = None
         self.sort_reverse = False
-
-        self.proveri_migraciju()
 
         self.bind("<Control-n>", lambda e: self.dodaj_osobu())
         self.bind("<Control-d>", lambda e: self.obrisi_osobu())
@@ -97,10 +98,6 @@ class MainWindow(tk.Tk):
         self.dark_theme = False
         alat_meni.add_separator()
         self.theme_menu_item = alat_meni.add_command(label="🌙 Dark theme", command=self.promeni_temu)
-
-        # Undo/Redo
-        from gui import UndoStack
-        self.undo_stack = UndoStack()
 
         # Drag & drop (Windows)
         try:
@@ -254,8 +251,164 @@ class MainWindow(tk.Tk):
         ttk.Label(status_bar, text="F1 = Pomoć | Ctrl+N = Novi | Ctrl+D = Obriši | Ctrl+F = Pretraga | Ctrl+G = XML | Ctrl+P = Podnosioc | Dvoklik = Izmeni | Desni klik = Meni",
                   font=("Segoe UI", 8), foreground="gray").pack(side="left", padx=10)
 
+        # Ako je controller već postavljen, osveži prikaz
+        if self.controller is not None:
+            self.osvezi_sve()
+
+    # ------------------------------------------------------------------
+    # Controller wiring
+    # ------------------------------------------------------------------
+    def set_controller(self, controller: Any) -> None:
+        """Povezuje Controller sa ovim View-om i osvežava prikaz.
+
+        Args:
+            controller: Controller objekat.
+        """
+        self.controller = controller
+        self.db = controller.db
         self.osvezi_sve()
 
+    def _ctrl(self) -> Any:
+        """Vraća Controller ili None ako još nije postavljen.
+
+        Returns:
+            Controller objekat ili None.
+        """
+        return self.controller
+
+    # ------------------------------------------------------------------
+    # Delegacije na Controller (korisničke akcije)
+    # ------------------------------------------------------------------
+    def dodaj_osobu(self) -> None:
+        """Delegira dodavanje novog unosa Controller-u."""
+        if self.controller:
+            self.controller.dodaj_osobu()
+
+    def izmeni_osobu(self) -> None:
+        """Delegira izmenu unosa Controller-u."""
+        if self.controller:
+            self.controller.izmeni_osobu()
+
+    def obrisi_osobu(self) -> None:
+        """Delegira brisanje unosa Controller-u."""
+        if self.controller:
+            self.controller.obrisi_osobu()
+
+    def obrisi_sve(self) -> None:
+        """Delegira brisanje svih unosa Controller-u."""
+        if self.controller:
+            self.controller.obrisi_sve()
+
+    def pretraga(self) -> None:
+        """Delegira otvaranje pretrage Controller-u."""
+        if self.controller:
+            self.controller.pretraga()
+
+    def pretraga_po_id(self) -> None:
+        """Delegira pretragu po ID-ju Controller-u."""
+        if self.controller:
+            self.controller.pretraga_po_id()
+
+    def statistika(self) -> None:
+        """Delegira otvaranje statistike Controller-u."""
+        if self.controller:
+            self.controller.statistika()
+
+    def otvori_podnosioca(self) -> None:
+        """Delegira otvaranje prozora podnosioca Controller-u."""
+        if self.controller:
+            self.controller.otvori_podnosioca()
+
+    def otvori_filtere(self) -> None:
+        """Delegira otvaranje filtera Controller-u."""
+        if self.controller:
+            self.controller.otvori_filtere()
+
+    def filtriraj_tabelu(self, vrsta: Optional[str] = None, opstina: Optional[str] = None,
+                         min_iznos: str = "0", max_iznos: str = "999999999",
+                         datum_filter: Optional[str] = None) -> None:
+        """Delegira filtriranje tabele Controller-u."""
+        if self.controller:
+            self.controller.filtriraj_tabelu(vrsta, opstina, min_iznos, max_iznos, datum_filter)
+
+    def sort_by(self, col: str) -> None:
+        """Delegira sortiranje tabele Controller-u."""
+        if self.controller:
+            self.controller.sort_by(col)
+
+    def export_csv(self) -> None:
+        """Delegira CSV export Controller-u."""
+        if self.controller:
+            self.controller.export_csv()
+
+    def import_csv(self) -> None:
+        """Delegira CSV import Controller-u."""
+        if self.controller:
+            self.controller.import_csv()
+
+    def export_html(self) -> None:
+        """Delegira HTML izveštaj Controller-u."""
+        if self.controller:
+            self.controller.export_html()
+
+    def export_pdf(self) -> None:
+        """Delegira PDF izveštaj Controller-u."""
+        if self.controller:
+            self.controller.export_pdf()
+
+    def export_xml(self) -> None:
+        """Delegira XML izveštaj Controller-u."""
+        if self.controller:
+            self.controller.export_xml()
+
+    def generisi(self) -> None:
+        """Delegira generisanje XML-a Controller-u."""
+        if self.controller:
+            self.controller.generisi()
+
+    def backup_baze(self) -> None:
+        """Delegira backup baze Controller-u."""
+        if self.controller:
+            self.controller.backup_baze()
+
+    def undo(self) -> None:
+        """Delegira undo Controller-u."""
+        if self.controller:
+            self.controller.undo()
+
+    def redo(self) -> None:
+        """Delegira redo Controller-u."""
+        if self.controller:
+            self.controller.redo()
+
+    def promeni_godinu(self) -> None:
+        """Delegira promenu godine Controller-u."""
+        if self.controller:
+            self.controller.promeni_godinu()
+
+    def migracija(self) -> None:
+        """Delegira migraciju Controller-u."""
+        if self.controller:
+            self.controller.migracija()
+
+    def proveri_migraciju(self) -> None:
+        """Delegira proveru migracije Controller-u."""
+        if self.controller:
+            self.controller.proveri_migraciju()
+
+    def prikazi_about(self) -> None:
+        """Delegira prikaz 'O aplikaciji' Controller-u."""
+        if self.controller:
+            self.controller.prikazi_about()
+
+    def on_drop(self, event: tk.Event) -> None:
+        """Delegira drag & drop obradu Controller-u."""
+        if self.controller:
+            self.controller.on_drop(event)
+
+    # ------------------------------------------------------------------
+    # GUI: tabele, tabovi, grafikoni, info
+    # ------------------------------------------------------------------
     def prikazi_kontekstni_meni(self, event: tk.Event) -> None:
         """Prikazuje kontekstni meni na osnovu pozicije klika.
 
@@ -280,489 +433,6 @@ class MainWindow(tk.Tk):
             self.clipboard_clear()
             self.clipboard_append(identifikator)
             messagebox.showinfo("Kopirano", f"Identifikator '{identifikator}' je kopiran u clipboard.")
-
-    def pretraga_po_id(self) -> None:
-        """Otvara pretragu sa identifikatorom iz selektovanog reda."""
-        sel = self.tree.selection()
-        if not sel:
-            return
-        values = self.tree.item(sel[0])['values']
-        if len(values) > 2:
-            identifikator = str(values[2])
-            win = ProzorPretrage(self, self.db)
-            win.kriterijum.set("identifikator")
-            win.vrednost.delete(0, "end")
-            win.vrednost.insert(0, identifikator)
-            win.pretrazi()
-
-    def obrisi_sve(self) -> None:
-        """Briše sve unose za izabranu godinu."""
-        ljudi = self.db.ucitaj_ljude()
-        if not ljudi:
-            messagebox.showinfo("Brisanje", "Nema unosa za brisanje.")
-            return
-
-        if messagebox.askyesno("⚠️ BRISANJE SVIH UNOSA",
-                               "Da li ste SIGURNI da želite da obrišete SVE unose za %s. godinu?\n\n"
-                               "Broj unosa: %d\n"
-                               "Ukupan iznos: %s RSD\n\n"
-                               "OVA AKCIJA SE NE MOŽE PONIŠTITI!" % (
-                                   self.godina,
-                                   len(ljudi),
-                                   format(sum(o['iznos_prometa'] for o in ljudi), ",").replace(",", "."))):
-            if messagebox.askyesno("POTVRDA", "Jeste li zaista sigurni? Ovo će obrisati SVE podatke o osobama!"):
-                self.db.obrisi_sve()
-                self.osvezi_sve()
-                messagebox.showinfo("Obrisano", "Svi unosi za %s. godinu su obrisani." % self.godina)
-
-    def backup_baze(self) -> None:
-        """Kreira backup SQLite baze."""
-        db_file = self.db.db_file
-        if not os.path.exists(db_file):
-            messagebox.showerror("Greška", "Baza podataka ne postoji.")
-            return
-
-        backup_dir = filedialog.askdirectory(title="Odaberite folder za backup")
-        if not backup_dir:
-            return
-
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = os.path.join(backup_dir, f"baza_{self.godina}_backup_{timestamp}.db")
-
-        try:
-            self.db.zatvori()
-            shutil.copy2(db_file, backup_file)
-            self.db = Database(self._godina)
-            messagebox.showinfo("Backup", f"Backup uspešno kreiran:\n{backup_file}")
-        except Exception as e:
-            logger.error("Greška pri backup-u: %s", e)
-            messagebox.showerror("Greška", f"Greška pri backup-u: {e}")
-            self.db = Database(self._godina)
-
-    def import_csv(self) -> None:
-        """Import podataka iz CSV fajla."""
-        fajl = filedialog.askopenfilename(
-            title="Odaberite CSV fajl za import",
-            filetypes=[("CSV fajlovi", "*.csv"), ("Svi fajlovi", "*.*")]
-        )
-        if not fajl:
-            return
-
-        uspeh, poruka, uneto = self.db.import_csv(fajl)
-        if uspeh:
-            self.osvezi_sve()
-            messagebox.showinfo("Import", poruka)
-        else:
-            messagebox.showerror("Import", poruka)
-
-    def export_html(self) -> None:
-        """Generiše HTML izveštaj za štampu i otvara ga u pregledaču."""
-        html = generisi_html_izvestaj(self, self.db, self.godina)
-
-        fajl = filedialog.asksaveasfilename(
-            defaultextension=".html",
-            filetypes=[("HTML fajlovi", "*.html"), ("Svi fajlovi", "*.*")],
-            initialfile=f"OPPS_izvestaj_{self.godina}.html"
-        )
-
-        if fajl:
-            with open(fajl, 'w', encoding='utf-8') as f:
-                f.write(html)
-            messagebox.showinfo("Izveštaj", f"Izveštaj sačuvan: {fajl}\n\nMožete ga otvoriti u pregledaču i štampati (Ctrl+P).")
-            webbrowser.open(f"file://{os.path.abspath(fajl)}")
-
-    def export_pdf(self) -> None:
-        """Generiše pravi PDF izveštaj koristeći ReportLab."""
-        fajl = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("PDF fajlovi", "*.pdf"), ("Svi fajlovi", "*.*")],
-            initialfile=f"OPPS_izvestaj_{self.godina}.pdf"
-        )
-
-        if fajl:
-            try:
-                generisi_pdf_izvestaj(self.db, self.godina, fajl)
-                messagebox.showinfo("PDF izveštaj", f"PDF izveštaj sačuvan: {fajl}")
-            except ImportError:
-                messagebox.showerror("Greška", "ReportLab nije instaliran.\nInstalirajte: pip install reportlab")
-            except Exception as e:
-                messagebox.showerror("Greška", f"Greška pri generisanju PDF-a: {e}")
-
-    def export_xml(self) -> None:
-        """Generiše XML fajl za upload na ePorezi portal."""
-        xml = generisi_xml(self.db, self.godina)
-
-        fajl = filedialog.asksaveasfilename(
-            defaultextension=".xml",
-            filetypes=[("XML fajlovi", "*.xml"), ("Svi fajlovi", "*.*")],
-            initialfile=f"OPPS_prijava_{self.godina}.xml"
-        )
-
-        if fajl:
-            with open(fajl, 'w', encoding='utf-8') as f:
-                f.write(xml)
-            messagebox.showinfo("XML izveštaj", f"XML fajl sačuvan: {fajl}\n\nMožete ga upload-ovati na portal ePorezi.")
-
-    def on_drop(self, event: tk.Event) -> None:
-        """Obrada drag & drop XML fajla.
-
-        Args:
-            event: Tkinter event sa putanjom fajla.
-        """
-        try:
-            putanja = event.data.strip()
-            if putanja.startswith('{') and putanja.endswith('}'):
-                putanja = putanja[1:-1]
-
-            if not putanja.lower().endswith('.xml'):
-                messagebox.showerror("Greška", "Fajl mora biti XML!")
-                return
-
-            from lxml import etree
-            tree = etree.parse(putanja)
-            root = tree.getroot()
-
-            # Proveri da li je OPPSS struktura
-            ns = "http://pid.purs.gov.rs"
-            if root.tag != f"{{{ns}}}PoreskaDeklaracija":
-                messagebox.showerror("Greška", "XML nije OPPSS struktura!")
-                return
-
-            # Učitaj podatke
-            db = Database(self.godina)
-            db.kreiraj_tabele()
-
-            for prijava in root.findall(f"{{{ns}}}OPPPSSPrijava"):
-                podaci = prijava.find(f"{{{ns}}}PodaciOPrijavi")
-                if podaci is None:
-                    continue
-
-                # Podaci o podnosiocu
-                podnosioc = podaci.find(f"{{{ns}}}PodaciOPodnosiocu")
-                if podnosioc is not None:
-                    pib = podnosioc.find(f"{{{ns}}}PIBJMBG")
-                    email = podnosioc.find(f"{{{ns}}}EPostaPodnosioca")
-                    telefon = podnosioc.find(f"{{{ns}}}TelefonPodnosioca")
-                    jmbg = podnosioc.find(f"{{{ns}}}JMBGPodnosioca")
-                    # Dodaj novog podnosioca iz XML-a i postavi kao aktivnog
-                    novi_id = db.dodaj_podnosioca({
-                        'naziv': 'Podnosilac (XML)',
-                        'pib_jmbg': pib.text if pib is not None else '',
-                        'email': email.text if email is not None else '',
-                        'telefon': telefon.text if telefon is not None else '',
-                        'jmbg': jmbg.text if jmbg is not None else '',
-                    })
-                    db.postavi_aktivnog(novi_id)
-
-                # Podaci o prometu
-                for promet in podaci.findall(f"{{{ns}}}PodaciOPrometu"):
-                    vrsta_prometa = promet.find(f"{{{ns}}}VrstaPrometa")
-                    vrsta_identifikatora = promet.find(f"{{{ns}}}VrstaIdentifikatora")
-                    identifikator = promet.find(f"{{{ns}}}Identifikator")
-                    ime_naziv = promet.find(f"{{{ns}}}ImeNaziv")
-                    opstina = promet.find(f"{{{ns}}}Opstina")
-                    adresa = promet.find(f"{{{ns}}}Adresa")
-                    email_osobe = promet.find(f"{{{ns}}}EPosta")
-                    telefon_osobe = promet.find(f"{{{ns}}}Telefon")
-                    broj_gazdinstva = promet.find(f"{{{ns}}}BrojGazdinstva")
-                    naziv_gazdinstva = promet.find(f"{{{ns}}}NazivGazdinstva")
-                    datum = promet.find(f"{{{ns}}}Datum")
-                    datum_do = promet.find(f"{{{ns}}}DatumDo")
-                    iznos = promet.find(f"{{{ns}}}IznosPrometa")
-
-                    db.dodaj_osobu({
-                        'vrsta_prometa': vrsta_prometa.text if vrsta_prometa is not None else '1',
-                        'vrsta_identifikatora': vrsta_identifikatora.text if vrsta_identifikatora is not None else '1',
-                        'identifikator': identifikator.text if identifikator is not None else '',
-                        'ime_naziv': ime_naziv.text if ime_naziv is not None else '',
-                        'opstina': opstina.text if opstina is not None else '',
-                        'adresa': adresa.text if adresa is not None else '',
-                        'email_osobe': email_osobe.text if email_osobe is not None else '',
-                        'telefon': telefon_osobe.text if telefon_osobe is not None else '',
-                        'broj_gazdinstva': broj_gazdinstva.text if broj_gazdinstva is not None else '',
-                        'naziv_gazdinstva': naziv_gazdinstva.text if naziv_gazdinstva is not None else '',
-                        'datum': datum.text if datum is not None else '',
-                        'datum_do': datum_do.text if datum_do is not None else '',
-                        'iznos_prometa': int(iznos.text) if iznos is not None else 0,
-                    })
-
-            db.zatvori()
-            self.osvezi_sve()
-            messagebox.showinfo("Učitano", f"XML fajl učitan: {putanja}")
-
-        except Exception as e:
-            messagebox.showerror("Greška", f"Greška pri učitavanju XML-a: {e}")
-
-    def sort_by(self, col: str) -> None:
-        """Sortira tabelu po odabranoj koloni.
-
-        Args:
-            col: Naziv kolone po kojoj se sortira.
-        """
-        if self.sort_column == col:
-            self.sort_reverse = not self.sort_reverse
-        else:
-            self.sort_column = col
-            self.sort_reverse = False
-
-        # Ažuriraj indikatore sortiranja u zaglavljima
-        kolone = ("rb", "tip", "identifikator", "ime_naziv", "opstina", "adresa", "telefon", "datum", "iznos")
-        naslovi = {"rb": "R.br", "tip": "Vrsta prometa", "identifikator": "JMBG/PIB/EBS",
-                   "ime_naziv": "Ime / Naziv", "opstina": "Opština", "adresa": "Adresa",
-                   "telefon": "Telefon", "datum": "Datum (od/do)", "iznos": "Iznos (RSD)"}
-
-        for k in kolone:
-            text = naslovi[k]
-            if k == self.sort_column:
-                text += " ▼" if self.sort_reverse else " ▲"
-            self.tree.heading(k, text)
-
-        # Ažuriraj status label (tooltip)
-        if self.sort_column:
-            smer = "opadajuće" if self.sort_reverse else "rastuće"
-            self.sort_status.config(text=f"Sortirano po: {naslovi.get(self.sort_column, self.sort_column)} ({smer})")
-        else:
-            self.sort_status.config(text="")
-
-        self.osvezi_tabelu()
-
-    def proveri_migraciju(self) -> None:
-        """Proverava da li postoji stari JSON fajl za migraciju."""
-        json_file = f"baza_{self.godina}.json"
-        if os.path.exists(json_file):
-            odgovor = messagebox.askyesno("Migracija",
-                "Pronađen je stari JSON fajl. Želite li da ga migrirate u SQLite bazu?")
-            if odgovor:
-                self.migracija()
-
-    def migracija(self) -> None:
-        """Vrši migraciju podataka iz JSON fajla u SQLite bazu."""
-        json_file = f"baza_{self.godina}.json"
-        if not os.path.exists(json_file):
-            messagebox.showinfo("Migracija", "Nema JSON fajla za migraciju.")
-            return
-
-        uspeh, poruka = migriraj_json_u_sqlite(self.godina)
-        if uspeh:
-            messagebox.showinfo("Migracija", poruka)
-            self.osvezi_sve()
-        else:
-            messagebox.showerror("Migracija", poruka)
-
-    def export_csv(self) -> None:
-        """Export podataka u CSV fajl."""
-        fajl = filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=[("CSV fajlovi", "*.csv"), ("Svi fajlovi", "*.*")],
-            initialfile=f"OPPS_{self.godina}.csv"
-        )
-        if fajl:
-            self.db.export_csv(fajl)
-            messagebox.showinfo("Export", f"CSV fajl sačuvan: {fajl}")
-
-    def pretraga(self) -> None:
-        """Otvara prozor za pretragu."""
-        ProzorPretrage(self, self.db)
-
-    def statistika(self) -> None:
-        """Otvara prozor za statistiku."""
-        ProzorStatistike(self, self.db)
-
-    def prikazi_about(self) -> None:
-        """Prikazuje informacije o aplikaciji."""
-        import sys
-        import platform
-        messagebox.showinfo("O aplikaciji",
-                            "OPPSS Generator v15.7 GUI STANDALONE\n\n"
-                            "Aplikacija za generisanje OOPSS prijava\n"
-                            "za portal ePorezi (Poreska uprava RS)\n\n"
-                            "Verzija: 15.7\n"
-                            "Baza: SQLite\n"
-                            "XSD šema: ugrađena\n\n"
-                            "Python: " + sys.version.split()[0] + "\n"
-                            "Platforma: " + platform.system())
-
-    def promeni_temu(self) -> None:
-        """Menja između svetle i tamne teme."""
-        self.dark_theme = not self.dark_theme
-        style = ttk.Style()
-
-        # Ažuriraj tekst dugme u meniju
-        theme_idx = self.alat_meni.index("end")
-        if theme_idx is not None:
-            self.alat_meni.entryconfigure(theme_idx, label="☀️ Light theme" if self.dark_theme else "🌙 Dark theme")
-
-        if self.dark_theme:
-            # Tamna tema
-            style.theme_use("clam")
-            style.configure(".", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TFrame", background="#2b2b2b")
-            style.configure("TLabel", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TButton", background="#3c3c3c", foreground="#ffffff")
-            style.configure("TEntry", fieldbackground="#3c3c3c", foreground="#ffffff")
-            style.configure("TCombobox", fieldbackground="#3c3c3c", foreground="#ffffff")
-            style.configure("Treeview", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
-            style.configure("Treeview.Heading", background="#4a4a4a", foreground="#ffffff")
-            style.configure("TNotebook", background="#2b2b2b")
-            style.configure("TNotebook.Tab", background="#3c3c3c", foreground="#ffffff")
-            style.configure("TLabelframe", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TLabelframe.Label", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TSeparator", background="#2b2b2b")
-            style.configure("TScrollbar", background="#3c3c3c", troughcolor="#2b2b2b")
-            style.configure("TRadiobutton", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TCheckbutton", background="#2b2b2b", foreground="#ffffff")
-            style.configure("TMenu", background="#3c3c3c", foreground="#ffffff")
-            self.configure(background="#2b2b2b")
-            # Kontekstni meniji
-            self.context_menu_row.configure(background="#3c3c3c", foreground="#ffffff")
-            self.context_menu_empty.configure(background="#3c3c3c", foreground="#ffffff")
-        else:
-            # Svetla tema
-            style.theme_use("clam")
-            style.configure(".", background="#f0f0f0", foreground="#000000")
-            style.configure("TFrame", background="#f0f0f0")
-            style.configure("TLabel", background="#f0f0f0", foreground="#000000")
-            style.configure("TButton", background="#e0e0e0", foreground="#000000")
-            style.configure("TEntry", fieldbackground="#ffffff", foreground="#000000")
-            style.configure("TCombobox", fieldbackground="#ffffff", foreground="#000000")
-            style.configure("Treeview", background="#ffffff", foreground="#000000", fieldbackground="#ffffff")
-            style.configure("Treeview.Heading", background="#e0e0e0", foreground="#000000")
-            style.configure("TNotebook", background="#f0f0f0")
-            style.configure("TNotebook.Tab", background="#e0e0e0", foreground="#000000")
-            style.configure("TLabelframe", background="#f0f0f0", foreground="#000000")
-            style.configure("TLabelframe.Label", background="#f0f0f0", foreground="#000000")
-            style.configure("TSeparator", background="#f0f0f0")
-            style.configure("TScrollbar", background="#e0e0e0", troughcolor="#f0f0f0")
-            style.configure("TRadiobutton", background="#f0f0f0", foreground="#000000")
-            style.configure("TCheckbutton", background="#f0f0f0", foreground="#000000")
-            style.configure("TMenu", background="#e0e0e0", foreground="#000000")
-            self.configure(background="#f0f0f0")
-            # Kontekstni meniji
-            self.context_menu_row.configure(background="#e0e0e0", foreground="#000000")
-            self.context_menu_empty.configure(background="#e0e0e0", foreground="#000000")
-
-    def promeni_godinu(self) -> None:
-        """Menja godinu i osvežava prikaz."""
-        self.db.zatvori()
-        self._godina = self.godina_var.get()
-        self.db = Database(self._godina)
-        self.sort_column = None
-        self.sort_reverse = False
-        self.current_page = 0
-        self.osvezi_sve()
-
-    @property
-    def godina(self) -> str:
-        """Vraća trenutnu godinu.
-
-        Returns:
-            Trenutna godina kao string.
-        """
-        return self._godina
-
-    @godina.setter
-    def godina(self, value: str) -> None:
-        """Postavlja trenutnu godinu.
-
-        Args:
-            value: Nova godina kao string.
-        """
-        self._godina = value
-        self.godina_var.set(value)
-
-    def otvori_podnosioca(self) -> None:
-        """Otvara prozor za podatke o podnosiocu."""
-        ProzorPodnosioca(self, self.db, self.godina)
-        self.osvezi_info()
-
-    def undo(self) -> None:
-        """Poništava poslednju operaciju (Ctrl+Z)."""
-        rezultat = self.undo_stack.undo(self.db)
-        if rezultat:
-            self.osvezi_sve()
-            messagebox.showinfo("Undo", rezultat)
-        else:
-            messagebox.showinfo("Undo", "Nema operacija za poništavanje.")
-
-    def redo(self) -> None:
-        """Ponavlja poslednju poništenu operaciju (Ctrl+Y)."""
-        rezultat = self.undo_stack.redo(self.db)
-        if rezultat:
-            self.osvezi_sve()
-            messagebox.showinfo("Redo", rezultat)
-        else:
-            messagebox.showinfo("Redo", "Nema operacija za ponavljanje.")
-
-    def otvori_filtere(self) -> None:
-        """Otvara prozor za napredne filtere."""
-        ProzorFiltera(self, self.db, self.godina)
-
-    def filtriraj_tabelu(self, vrsta: Optional[str] = None, opstina: Optional[str] = None,
-                          min_iznos: str = "0", max_iznos: str = "999999999",
-                          datum_filter: Optional[str] = None) -> None:
-        """Filtrira tabelu po zadatim kriterijumima.
-
-        Args:
-            vrsta: Vrsta prometa (1, 2 ili None za sve).
-            opstina: Opština (string ili None za sve).
-            min_iznos: Minimalni iznos (string).
-            max_iznos: Maksimalni iznos (string).
-            datum_filter: Filter po datumu ("godina", "mesec" ili None za sve).
-        """
-        self.tree.delete(*self.tree.get_children())
-        ljudi = self.db.ucitaj_ljude()
-        tipovi = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
-
-        try:
-            min_val = int(min_iznos) if min_iznos else 0
-            max_val = int(max_iznos) if max_iznos else 999999999
-        except ValueError:
-            min_val = 0
-            max_val = 999999999
-
-        # Izračunaj granice za datum filter
-        datum_od_limit = None
-        datum_do_limit = None
-        if datum_filter == "godina":
-            datum_od_limit = f"{self.godina}-01-01"
-            datum_do_limit = f"{self.godina}-12-31"
-        elif datum_filter == "mesec":
-            sada = datetime.datetime.now()
-            datum_od_limit = sada.replace(day=1).strftime("%Y-%m-%d")
-            # Poslednji dan meseca
-            if sada.month == 12:
-                sledeci = sada.replace(year=sada.year + 1, month=1, day=1)
-            else:
-                sledeci = sada.replace(month=sada.month + 1, day=1)
-            datum_do_limit = (sledeci - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
-        for o in ljudi:
-            if vrsta and o.get("vrsta_prometa") != vrsta:
-                continue
-            if opstina and o.get("opstina", "") != opstina:
-                continue
-            iznos = o.get("iznos_prometa", 0)
-            if iznos < min_val or iznos > max_val:
-                continue
-            if datum_filter and datum_od_limit and datum_do_limit:
-                datum = o.get("datum", "")
-                if not datum or datum < datum_od_limit or datum > datum_do_limit:
-                    continue
-
-            prikaz = ""
-            if o.get("datum"):
-                try:
-                    datum_od = datetime.datetime.strptime(o["datum"], "%Y-%m-%d").strftime("%d/%m/%Y")
-                    datum_do = datetime.datetime.strptime(o.get("datum_do", o["datum"]), "%Y-%m-%d").strftime("%d/%m/%Y")
-                    prikaz = datum_od + " - " + datum_do
-                except ValueError:
-                    prikaz = o["datum"]
-
-            self.tree.insert("", "end", iid=str(o['id']),
-                            values=(o['id'], tipovi.get(o["vrsta_prometa"], "?"),
-                                    o["identifikator"], o.get("ime_naziv", ""),
-                                    o.get("opstina", ""), prikaz,
-                                    format(o.get("iznos_prometa", 0), ",").replace(",", ".")))
 
     def osvezi_info(self) -> None:
         """Osvežava informacije o podnosiocu u glavnom prozoru."""
@@ -848,6 +518,8 @@ class MainWindow(tk.Tk):
 
     def osvezi_sve(self) -> None:
         """Osvežava sve komponente glavnog prozora."""
+        if self.controller is None:
+            return
         self.osvezi_tabelu()
         self.osvezi_tabove()
         self.osvezi_info()
@@ -973,38 +645,87 @@ class MainWindow(tk.Tk):
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
 
-    def dodaj_osobu(self) -> None:
-        """Otvara formu za dodavanje novog unosa."""
-        self.forma_osobe()
+    def promeni_temu(self) -> None:
+        """Menja između svetle i tamne teme (čisto GUI)."""
+        self.dark_theme = not self.dark_theme
+        style = ttk.Style()
 
-    def izmeni_osobu(self) -> None:
-        """Otvara formu za izmenu postojećeg unosa."""
-        sel = self.tree.selection()
-        if not sel:
-            messagebox.showwarning("Upozorenje", "Izaberite unos u tabeli!")
-            return
-        id = int(sel[0])
-        ljudi = self.db.ucitaj_ljude()
-        osoba = next((o for o in ljudi if o['id'] == id), None)
-        if osoba:
-            self.forma_osobe(osoba, id)
+        # Ažuriraj tekst dugme u meniju
+        theme_idx = self.alat_meni.index("end")
+        if theme_idx is not None:
+            self.alat_meni.entryconfigure(theme_idx, label="☀️ Light theme" if self.dark_theme else "🌙 Dark theme")
 
-    def obrisi_osobu(self) -> None:
-        """Briše selektovani unos iz tabele."""
-        sel = self.tree.selection()
-        if not sel:
-            messagebox.showwarning("Upozorenje", "Izaberite unos u tabeli!")
-            return
-        id = int(sel[0])
-        ime = self.tree.item(sel[0])['values'][3]
-        if messagebox.askyesno("Brisanje", "Obrisati unos: " + str(ime) + "?"):
-            ljudi = self.db.ucitaj_ljude()
-            osoba = next((o for o in ljudi if o['id'] == id), None)
-            if osoba:
-                self.undo_stack.push("obrisi", osoba)
-            self.db.obrisi_osobu(id)
-            self.osvezi_tabelu()
+        if self.dark_theme:
+            # Tamna tema
+            style.theme_use("clam")
+            style.configure(".", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TFrame", background="#2b2b2b")
+            style.configure("TLabel", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TButton", background="#3c3c3c", foreground="#ffffff")
+            style.configure("TEntry", fieldbackground="#3c3c3c", foreground="#ffffff")
+            style.configure("TCombobox", fieldbackground="#3c3c3c", foreground="#ffffff")
+            style.configure("Treeview", background="#3c3c3c", foreground="#ffffff", fieldbackground="#3c3c3c")
+            style.configure("Treeview.Heading", background="#4a4a4a", foreground="#ffffff")
+            style.configure("TNotebook", background="#2b2b2b")
+            style.configure("TNotebook.Tab", background="#3c3c3c", foreground="#ffffff")
+            style.configure("TLabelframe", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TLabelframe.Label", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TSeparator", background="#2b2b2b")
+            style.configure("TScrollbar", background="#3c3c3c", troughcolor="#2b2b2b")
+            style.configure("TRadiobutton", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TCheckbutton", background="#2b2b2b", foreground="#ffffff")
+            style.configure("TMenu", background="#3c3c3c", foreground="#ffffff")
+            self.configure(background="#2b2b2b")
+            # Kontekstni meniji
+            self.context_menu_row.configure(background="#3c3c3c", foreground="#ffffff")
+            self.context_menu_empty.configure(background="#3c3c3c", foreground="#ffffff")
+        else:
+            # Svetla tema
+            style.theme_use("clam")
+            style.configure(".", background="#f0f0f0", foreground="#000000")
+            style.configure("TFrame", background="#f0f0f0")
+            style.configure("TLabel", background="#f0f0f0", foreground="#000000")
+            style.configure("TButton", background="#e0e0e0", foreground="#000000")
+            style.configure("TEntry", fieldbackground="#ffffff", foreground="#000000")
+            style.configure("TCombobox", fieldbackground="#ffffff", foreground="#000000")
+            style.configure("Treeview", background="#ffffff", foreground="#000000", fieldbackground="#ffffff")
+            style.configure("Treeview.Heading", background="#e0e0e0", foreground="#000000")
+            style.configure("TNotebook", background="#f0f0f0")
+            style.configure("TNotebook.Tab", background="#e0e0e0", foreground="#000000")
+            style.configure("TLabelframe", background="#f0f0f0", foreground="#000000")
+            style.configure("TLabelframe.Label", background="#f0f0f0", foreground="#000000")
+            style.configure("TSeparator", background="#f0f0f0")
+            style.configure("TScrollbar", background="#e0e0e0", troughcolor="#f0f0f0")
+            style.configure("TRadiobutton", background="#f0f0f0", foreground="#000000")
+            style.configure("TCheckbutton", background="#f0f0f0", foreground="#000000")
+            style.configure("TMenu", background="#e0e0e0", foreground="#000000")
+            self.configure(background="#f0f0f0")
+            # Kontekstni meniji
+            self.context_menu_row.configure(background="#e0e0e0", foreground="#000000")
+            self.context_menu_empty.configure(background="#e0e0e0", foreground="#000000")
 
+    @property
+    def godina(self) -> str:
+        """Vraća trenutnu godinu.
+
+        Returns:
+            Trenutna godina kao string.
+        """
+        return self._godina
+
+    @godina.setter
+    def godina(self, value: str) -> None:
+        """Postavlja trenutnu godinu.
+
+        Args:
+            value: Nova godina kao string.
+        """
+        self._godina = value
+        self.godina_var.set(value)
+
+    # ------------------------------------------------------------------
+    # Forma za unos/izmenu osobe (GUI + delegacija validacije/snimanja)
+    # ------------------------------------------------------------------
     def forma_osobe(self, podrazumevano: Optional[Dict[str, Any]] = None, indeks_izmene: Optional[int] = None) -> None:
         """Otvara formu za unos/izmenu osobe.
 
@@ -1021,7 +742,7 @@ class MainWindow(tk.Tk):
 
         vrste_pr = {"Poljoprivredni proizvodi/usluge": "1", "Sekundarne sirovine": "2"}
         vrste_id = {"JMBG": "1", "PIB": "0", "EBS": "5"}
-        entries = {}
+        entries: Dict[str, Any] = {}
         redovi = [
             ("vrsta_tip", "VRSTA PROMETA:", list(vrste_pr.keys())),
             ("id_tip", "Identifikator:", list(vrste_id.keys())),
@@ -1170,101 +891,11 @@ class MainWindow(tk.Tk):
             azuriraj_limit()
 
         def sacuvaj() -> None:
-            datum_iso = konvertuj_datum(entries["datum_unos"].get())
-            if not datum_iso or not entries["datum_unos"].dobar_datum():
-                messagebox.showerror("Greska", "Neispravan datum OD!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
+            ok = False
+            if self.controller:
+                ok = self.controller.sacuvaj_osobu(entries, indeks_izmene, parent=win)
+            if not ok:
                 return
-            datum_do_iso = konvertuj_datum(entries["datum_do"].get())
-            if not datum_do_iso or not entries["datum_do"].dobar_datum():
-                messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
-                return
-            if datum_do_iso < datum_iso:
-                messagebox.showerror("Greska", "Datum DO ne moze biti pre datuma OD!", parent=win)
-                return
-            broj_id = entries["identifikator"].get().strip()
-            tip = entries["id_tip"].get()
-            ocekivano = 13 if tip == "JMBG" else 9
-            if not broj_id.isdigit() or len(broj_id) != ocekivano:
-                messagebox.showerror("Greska", "Identifikator mora imati TACNO %d cifara!\n(Uneseno: %d)" % (ocekivano, len(broj_id)), parent=win)
-                return
-            if tip == "JMBG" and not validan_jmbg(broj_id):
-                if not messagebox.askyesno("Upozorenje",
-                                           "JMBG (%s) NE prolazi proveru kontrolne cifre!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
-                                           parent=win):
-                    return
-            if tip == "EBS" and not validan_ebs(broj_id):
-                if not messagebox.askyesno("Upozorenje",
-                                           "EBS (%s) NIJE ispravan (mora imati 9 cifara)!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
-                                           parent=win):
-                    return
-            try:
-                iznos = int(entries["iznos_prometa"].get().strip())
-                if iznos <= 0:
-                    raise ValueError
-            except ValueError:
-                messagebox.showerror("Greska", "Iznos mora biti pozitivan ceo broj!", parent=win)
-                return
-
-            # Provera duplikata (identifikator + datum)
-            if indeks_izmene is None:
-                duplikat = self.db.ima_duplikat(broj_id, datum_iso)
-                if duplikat:
-                    odgovor = messagebox.askyesnocancel(
-                        "UPOZORENJE - DUPLIKAT",
-                        "Već postoji unos sa identifikatorom %s i datumom %s:\n\n"
-                        "• Ime/Naziv: %s\n"
-                        "• Opština: %s\n"
-                        "• Datum: %s do %s\n"
-                        "• Iznos: %s RSD\n\n"
-                        "Zameni = obriši staro i snimi novo\n"
-                        "Dodaj kao novi = snimi bez brisanja\n"
-                        "Preskoči = nemoj ništa snimiti" % (
-                            broj_id,
-                            datum_iso,
-                            duplikat.get('ime_naziv', ''),
-                            duplikat.get('opstina', ''),
-                            duplikat.get('datum', ''),
-                            duplikat.get('datum_do', ''),
-                            format(duplikat.get('iznos_prometa', 0), ",").replace(",", ".")),
-                        parent=win)
-                    if odgovor is None:  # Preskoči
-                        return
-                    elif not odgovor:  # Zameni
-                        self.db.obrisi_osobu(duplikat['id'])
-                    # True = Dodaj kao novi, nastavi sa snimanjem
-
-            r = {
-                "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
-                "vrsta_identifikatora": vrste_id[tip],
-                "identifikator": broj_id,
-                "ime_naziv": entries["ime_naziv"].get().strip(),
-                "opstina": entries["opstina"].get().strip(),
-                "adresa": entries["adresa"].get().strip(),
-                "email_osobe": entries["email_osobe"].get().strip(),
-                "telefon": entries["telefon"].get().strip(),
-                "broj_gazdinstva": entries["broj_gazdinstva"].get().strip(),
-                "naziv_gazdinstva": entries["naziv_gazdinstva"].get().strip(),
-                "datum": datum_iso,
-                "datum_do": datum_do_iso,
-                "iznos_prometa": iznos,
-            }
-            obavezna = ["vrsta_prometa", "vrsta_identifikatora", "identifikator",
-                        "ime_naziv", "opstina", "adresa", "telefon",
-                        "datum", "datum_do", "iznos_prometa"]
-            for k in obavezna:
-                if not r[k]:
-                    messagebox.showwarning("Upozorenje", "Popunite sva obavezna polja!", parent=win)
-                    return
-            if indeks_izmene is not None:
-                stari = next((o for o in self.db.ucitaj_ljude() if o['id'] == indeks_izmene), None)
-                if stari:
-                    self.undo_stack.push("izmeni", {"id": indeks_izmene, "stari": stari, "novi": r})
-                self.db.izmeni_osobu(indeks_izmene, r)
-            else:
-                self.db.dodaj_osobu(r)
-                novi_id = self.db.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                self.undo_stack.push("dodaj", {"id": novi_id, **r})
-            self.osvezi_tabelu()
             for key, w in entries.items():
                 if key in ("datum_unos", "datum_do"):
                     w.delete(0, "end")
@@ -1284,7 +915,7 @@ class MainWindow(tk.Tk):
 
         redosled_tab = [entries[k] for k, _, _ in redovi] + [btn_sacuvaj]
 
-        def tab_napred(ev: tk.Event) -> None:
+        def tab_napred(ev: tk.Event) -> str:
             try:
                 idx = redosled_tab.index(win.focus_get())
             except ValueError:
@@ -1295,7 +926,7 @@ class MainWindow(tk.Tk):
                 sledeci.select_range(0, "end")
             return "break"
 
-        def tab_nazad(ev: tk.Event) -> None:
+        def tab_nazad(ev: tk.Event) -> str:
             try:
                 idx = redosled_tab.index(win.focus_get())
             except ValueError:
@@ -1317,11 +948,3 @@ class MainWindow(tk.Tk):
         btn_sacuvaj.bind("<Return>", enter_sacuvaj)
         btn_sacuvaj.bind("<space>", enter_sacuvaj)
         entries["vrsta_tip"].focus_set()
-
-    def generisi(self) -> None:
-        """Generiše XML fajl iz baze podataka i čuva ga na disk."""
-        xml = generisi_xml(self.db, self.godina)
-        fajl = f"OPPS_prijava_{self.godina}.xml"
-        with open(fajl, 'w', encoding='utf-8') as f:
-            f.write(xml)
-        messagebox.showinfo("XML generisan", f"XML fajl sačuvan: {fajl}\n\nMožete ga upload-ovati na portal ePorezi.")
