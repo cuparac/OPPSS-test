@@ -118,9 +118,20 @@ class Database:
         self.conn.commit()
 
     def _auto_backup(self) -> None:
-        """Automatski backup baze pri pokretanju."""
+        """Automatski backup baze pri pokretanju. Briše stari backup pre kreiranja novog."""
         try:
             if os.path.exists(self._db_file):
+                # Obriši sve stare backup fajlove za ovu godinu
+                import glob
+                stari_backup = glob.glob(f"backup_baza_{self.godina}_*.db")
+                for fajl in stari_backup:
+                    try:
+                        os.remove(fajl)
+                        logging.info("Obrisan stari backup: %s", fajl)
+                    except Exception as e:
+                        logging.warning("Nije moguće obrisati stari backup %s: %s", fajl, e)
+
+                # Kreiraj novi backup
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 backup_file = f"backup_baza_{self.godina}_{timestamp}.db"
                 shutil.copy2(self._db_file, backup_file)
