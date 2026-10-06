@@ -765,6 +765,7 @@ class App(tk.Tk):
 
         alat_meni = tk.Menu(meni, tearoff=0)
         meni.add_cascade(label="Alat", menu=alat_meni)
+        self.alat_meni = alat_meni
         alat_meni.add_command(label="Pretraga (Ctrl+F)", command=self.pretraga)
         alat_meni.add_command(label="Napredni filteri", command=self.otvori_filtere)
         alat_meni.add_command(label="Statistika", command=self.statistika)
@@ -1273,19 +1274,9 @@ class App(tk.Tk):
         style = ttk.Style()
 
         # Ažuriraj tekst dugme u meniju
-        alat_meni = self.nametowidget("!menu")  # Glavni meni
-        # Pronađi Alat meni
-        for i in range(alat_meni.index("end") + 1):
-            try:
-                label = alat_meni.entrycascade(i, "label")
-                if label == "Alat":
-                    alat_menu = alat_meni.nametowidget(alat_meni.entrycascade(i, "menu"))
-                    # Tema je poslednja stavka
-                    theme_idx = alat_menu.index("end")
-                    alat_menu.entryconfigure(theme_idx, label="☀️ Light theme" if self.dark_theme else "🌙 Dark theme")
-                    break
-            except (tk.TclError, KeyError):
-                continue
+        theme_idx = self.alat_meni.index("end")
+        if theme_idx is not None:
+            self.alat_meni.entryconfigure(theme_idx, label="☀️ Light theme" if self.dark_theme else "🌙 Dark theme")
 
         if self.dark_theme:
             # Tamna tema
