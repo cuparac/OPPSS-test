@@ -19,9 +19,9 @@ logging.basicConfig(
     ]
 )
 
-from gui import App
+from view.main_window import MainWindow
 
 if __name__ == "__main__":
     logging.info("OPPSS Generator v15.9 pokrenut")
-    app = App()
+    app = MainWindow()
     app.mainloop()
