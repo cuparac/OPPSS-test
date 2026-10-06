@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.8-blue)
+![Version](https://img.shields.io/badge/verzija-15.9-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.8** donosi indekse u bazi, lazy loading (paginaciju) i keširanje XSD seme. Prethodne verzije: v15.5 (više podnosioca u bazi), v15.6 (napredni filteri po datumu), v15.7 (tabovi, grafikoni, dark theme). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.9.py` (entry point).
+**Verzija 15.9** donosi pravi PDF export (ReportLab), auto-backup fix (briše stari backup) i dark theme fix. Prethodne verzije: v15.5 (više podnosioca), v15.6 (napredni filteri), v15.7 (tabovi, grafikoni, dark theme), v15.8 (indeksi, lazy loading, keširanje). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.9.py` (entry point).
 
 ---
 
@@ -88,9 +88,12 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - **Tabovi** (v15.7) - Notebook sa 5 tabova (Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni)
 - **Grafikoni** (v15.7) - Matplotlib bar/pie chart-ovi
 - **Dark theme** (v15.7) - Tamna tema preko Alat menija
-- **Indeksi u bazi** (v15.9) - UNIQUE constraint + 5 indeksa
-- **Lazy loading** (v15.9) - Paginacija (100 unosa po stranici)
-- **Keširanje XSD** (v15.9) - XSD šema se učitava samo jednom
+- **Indeksi u bazi** (v15.8) - UNIQUE constraint + 5 indeksa
+- **Lazy loading** (v15.8) - Paginacija (100 unosa po stranici)
+- **Keširanje XSD** (v15.8) - XSD šema se učitava samo jednom
+- **Pravi PDF export** (v15.9) - ReportLab umesto HTML izveštaja
+- **Auto-backup fix** (v15.9) - Briše stari backup pre kreiranja novog
+- **Dark theme fix** (v15.9) - Tekst dugme u meniju se menja (Dark/Light)
 
 ---
 
@@ -100,13 +103,14 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - Python 3.6 ili noviji
 - `lxml` paket
 - `matplotlib` paket (za grafikone, v15.7+)
+- `reportlab` paket (za PDF export, v15.9+)
 
 ### Instalacija na Ubuntu/Debian
 
 ```bash
 git clone https://github.com/cuparac/OPPSS-test.git
 cd OPPSS-test
-sudo apt install -y python3-lxml python3-matplotlib
+sudo apt install -y python3-lxml python3-matplotlib python3-reportlab
 ```
 
 ### Instalacija na Windows/Mac
@@ -267,10 +271,15 @@ python opps_generator_cli_v15.py
 - **Grafikoni** - Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
 - **Dark theme** - Tamna tema preko Alat menija (🌙 Dark theme)
 
-### v15.9 - Indeksi, lazy loading i keširanje
+### v15.8 - Indeksi, lazy loading i keširanje
 - **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina) + 5 indeksa (godina, identifikator, datum, opstina, vrsta_prometa)
 - **Lazy loading** - Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
 - **Keširanje XSD seme** - XSD šema se učitava samo jednom i kešira u memoriji
+
+### v15.9 - Pravi PDF export i popravke
+- **Pravi PDF export** - ReportLab umesto HTML izveštaja (Datoteka → PDF izveštaj)
+- **Auto-backup fix** - Automatski briše stari backup pre kreiranja novog
+- **Dark theme fix** - Tekst dugme u Alat meniju se menja (🌙 Dark theme / ☀️ Light theme)
 
 ---
 
@@ -284,11 +293,6 @@ OPPSS-test/
 ├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
 ├── xml_generator.py             # XML/HTML generator (ePorezi prijave, izveštaji)
 ├── opps.xsd                     # XSD šema za validaciju XML-a
-├── tests/                       # Pytest testovi
-│   ├── test_database.py
-│   ├── test_validacije.py
-│   └── test_xml.py
-├── docs/                        # Dokumentacija (specovi, planovi)
 ├── KorisnikouputstvoOPPSS.pdf   # Korisničko uputstvo
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt
@@ -363,7 +367,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.8
+- **Verzija:** 15.9
 
 ---
 
