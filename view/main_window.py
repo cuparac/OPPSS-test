@@ -267,6 +267,7 @@ class MainWindow(tk.Tk):
         self.controller = controller
         self.db = controller.db
         self.osvezi_sve()
+        self.proveri_migraciju()
 
     def _ctrl(self) -> Any:
         """Vraća Controller ili None ako još nije postavljen.

@@ -399,13 +399,13 @@ class ProzorStatistike(tk.Toplevel):
 
         ttk.Label(okvir, text="STATISTIKA", font=("Segoe UI", 14, "bold")).pack(pady=10)
 
-        ttk.Label(okvir, text=f"Ukupno unosa: {stat['ukupno_unosa']}", font=("Segoe UI", 11)).pack(anchor="w")
-        ttk.Label(okvir, text=f"Ukupan iznos: {stat['ukupno_iznos']} RSD", font=("Segoe UI", 11)).pack(anchor="w")
+        ttk.Label(okvir, text=f"Ukupno unosa: {stat['ukupno']}", font=("Segoe UI", 11)).pack(anchor="w")
+        ttk.Label(okvir, text=f"Ukupan iznos: {stat['ukupan_iznos']} RSD", font=("Segoe UI", 11)).pack(anchor="w")
 
         ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
 
         ttk.Label(okvir, text="Po vrsti prometa:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        for v in stat['po_vrsti']:
+        for v in stat['po_vrsti_prometa']:
             vrsta = "Poljoprivreda" if v['vrsta_prometa'] == '1' else "Sirovine"
             ttk.Label(okvir, text=f"  {vrsta}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
 

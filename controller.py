@@ -353,7 +353,7 @@ class Controller:
             text = naslovi[k]
             if k == self.view.sort_column:
                 text += " ▼" if self.view.sort_reverse else " ▲"
-            self.view.tree.heading(k, text)
+            self.view.tree.heading(k, text=text)
 
         # Ažuriraj status label (tooltip)
         if self.view.sort_column:
