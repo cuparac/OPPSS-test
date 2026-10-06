@@ -4,6 +4,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [15.9] — 2026-10-06
+
+### Nove funkcionalnosti
+- **Pravi PDF export** — ReportLab umesto HTML izveštaja (v15.9)
+- **Dark theme fix** — Tekst dugme u meniju se sada menja (Dark/Light)
+- **requirements.txt** — Dodat reportlab u zavisnosti
+
+---
+
 ## [15.8] — 2026-10-05
 
 ### Nove funkcionalnosti

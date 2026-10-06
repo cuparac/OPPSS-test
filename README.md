@@ -114,7 +114,7 @@ sudo apt install -y python3-lxml python3-matplotlib
 ```bash
 git clone https://github.com/cuparac/OPPSS-test.git
 cd OPPSS-test
-pip install lxml matplotlib
+pip install lxml matplotlib reportlab
 ```
 
 ---

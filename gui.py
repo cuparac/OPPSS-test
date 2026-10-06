@@ -16,7 +16,7 @@ from tkinter import ttk, messagebox, filedialog
 
 from database import Database, migriraj_json_u_sqlite
 from validacije import validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema
-from xml_generator import generisi_xml, generisi_html_izvestaj
+from xml_generator import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
 
 
 class UndoStack:
@@ -1053,26 +1053,21 @@ class App(tk.Tk):
             webbrowser.open(f"file://{os.path.abspath(fajl)}")
 
     def export_pdf(self) -> None:
-        """Generiše HTML izveštaj i otvara ga u pregledaču za štampu (PDF preko pregledača).
-
-        Ne zahteva dodatne biblioteke — koristi pregledač za štampu.
-        """
-        html = generisi_html_izvestaj(self, self.db, self.godina)
-
+        """Generiše pravi PDF izveštaj koristeći ReportLab."""
         fajl = filedialog.asksaveasfilename(
-            defaultextension=".html",
-            filetypes=[("HTML fajlovi", "*.html"), ("Svi fajlovi", "*.*")],
-            initialfile=f"OPPS_izvestaj_{self.godina}.html"
+            defaultextension=".pdf",
+            filetypes=[("PDF fajlovi", "*.pdf"), ("Svi fajlovi", "*.*")],
+            initialfile=f"OPPS_izvestaj_{self.godina}.pdf"
         )
 
         if fajl:
-            with open(fajl, 'w', encoding='utf-8') as f:
-                f.write(html)
-            messagebox.showinfo("PDF izveštaj",
-                f"Izveštaj sačuvan: {fajl}\n\n"
-                "Otvorite ga u pregledaču i štampate (Ctrl+P).\n"
-                "Odaberite 'Sačuvaj kao PDF' u dijalogu štampe.")
-            webbrowser.open(f"file://{os.path.abspath(fajl)}")
+            try:
+                generisi_pdf_izvestaj(self.db, self.godina, fajl)
+                messagebox.showinfo("PDF izveštaj", f"PDF izveštaj sačuvan: {fajl}")
+            except ImportError:
+                messagebox.showerror("Greška", "ReportLab nije instaliran.\nInstalirajte: pip install reportlab")
+            except Exception as e:
+                messagebox.showerror("Greška", f"Greška pri generisanju PDF-a: {e}")
 
     def export_xml(self) -> None:
         """Generiše XML fajl za upload na ePorezi portal."""

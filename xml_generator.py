@@ -184,3 +184,65 @@ def generisi_html_izvestaj(app: Any, db: Database, godina: str) -> str:
 </html>"""
 
     return html_str
+
+
+def generisi_pdf_izvestaj(db: Database, godina: str, fajl: str) -> None:
+    """Generiše pravi PDF izveštaj koristeći ReportLab.
+
+    Args:
+        db: Database objekat
+        godina: Godina za koju se generiše izveštaj
+        fajl: Putanja do PDF fajla
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+
+    ljudi = db.ucitaj_ljude()
+    stat = db.statistika()
+
+    doc = SimpleDocTemplate(fajl, pagesize=A4,
+                            leftMargin=2*cm, rightMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Naslov
+    elements.append(Paragraph(f"OPPSS Generator - Izveštaj {godina}", styles['Title']))
+    elements.append(Spacer(1, 0.5*cm))
+
+    # Statistika
+    elements.append(Paragraph(f"<b>Ukupno unosa:</b> {stat['ukupno']}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Ukupan iznos:</b> {stat['ukupan_iznos']} RSD", styles['Normal']))
+    elements.append(Spacer(1, 0.5*cm))
+
+    # Tabela
+    data = [["ID", "Ime/Naziv", "Opština", "Datum", "Iznos"]]
+    for osoba in ljudi:
+        data.append([
+            str(osoba.get('id', '')),
+            str(osoba.get('ime_naziv', '')),
+            str(osoba.get('opstina', '')),
+            str(osoba.get('datum', '')),
+            str(osoba.get('iznos_prometa', 0))
+        ])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f2f2f2')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('TOPPADDING', (0, 1), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+    ]))
+    elements.append(table)
+
+    doc.build(elements)
