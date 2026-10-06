@@ -27,7 +27,7 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.8** donosi indekse u bazi, lazy loading (paginaciju) i keširanje XSD seme. Prethodne verzije: v15.5 (više podnosioca u bazi), v15.6 (napredni filteri po datumu), v15.7 (tabovi, grafikoni, dark theme). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.8.py` (entry point).
+**Verzija 15.8** donosi indekse u bazi, lazy loading (paginaciju) i keširanje XSD seme. Prethodne verzije: v15.5 (više podnosioca u bazi), v15.6 (napredni filteri po datumu), v15.7 (tabovi, grafikoni, dark theme). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.9.py` (entry point).
 
 ---
 
@@ -70,7 +70,7 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - Broj poljoprivrednog gazdinstva
 - Naziv poljoprivrednog gazdinstva
 
-### Dodatne funkcionalnosti (v15.2–v15.8)
+### Dodatne funkcionalnosti (v15.2–v15.9)
 - **SQLite baza** - brža i sigurnija od JSON
 - **CSV export** - izvoz u Excel format
 - **CSV import** - uvoz podataka iz CSV fajla
@@ -88,9 +88,9 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 - **Tabovi** (v15.7) - Notebook sa 5 tabova (Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni)
 - **Grafikoni** (v15.7) - Matplotlib bar/pie chart-ovi
 - **Dark theme** (v15.7) - Tamna tema preko Alat menija
-- **Indeksi u bazi** (v15.8) - UNIQUE constraint + 5 indeksa
-- **Lazy loading** (v15.8) - Paginacija (100 unosa po stranici)
-- **Keširanje XSD** (v15.8) - XSD šema se učitava samo jednom
+- **Indeksi u bazi** (v15.9) - UNIQUE constraint + 5 indeksa
+- **Lazy loading** (v15.9) - Paginacija (100 unosa po stranici)
+- **Keširanje XSD** (v15.9) - XSD šema se učitava samo jednom
 
 ---
 
@@ -124,7 +124,7 @@ pip install lxml matplotlib reportlab
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.8.py
+python opps_generator_gui_v15.9.py
 ```
 
 **Glavni meni:**
@@ -234,7 +234,7 @@ python opps_generator_cli_v15.py
 - **Kontekstni meni** - Desni klik na red (izmeni, obriši, kopiraj ID, pretraga) ili prazan prostor (dodaj, osveži, statistika)
 
 ### v15.3 - Kvalitet koda
-- **Modularna arhitektura** - Podela na 5 modula: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py`, `opps_generator_gui_v15.8.py` (entry point)
+- **Modularna arhitektura** - Podela na 5 modula: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py`, `opps_generator_gui_v15.9.py` (entry point)
 - **Type hintovi** - Anotacije na svim javnim funkcijama i klasama
 - **Docstringovi** - Google stil dokumentacije za sve klase i javne metode
 - **Logging** - Zamena `print()` sa `logging` modulom (log fajl: `opps_generator.log`)
@@ -267,7 +267,7 @@ python opps_generator_cli_v15.py
 - **Grafikoni** - Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
 - **Dark theme** - Tamna tema preko Alat menija (🌙 Dark theme)
 
-### v15.8 - Indeksi, lazy loading i keširanje
+### v15.9 - Indeksi, lazy loading i keširanje
 - **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina) + 5 indeksa (godina, identifikator, datum, opstina, vrsta_prometa)
 - **Lazy loading** - Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
 - **Keširanje XSD seme** - XSD šema se učitava samo jednom i kešira u memoriji
@@ -278,7 +278,7 @@ python opps_generator_cli_v15.py
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.8.py   # Entry point (pokreće aplikaciju)
+├── opps_generator_gui_v15.9.py   # Entry point (pokreće aplikaciju)
 ├── gui.py                       # GUI komponente (App, DatumEntry, Kalendar, Prozori)
 ├── database.py                  # Database operacije (CRUD, pretraga, statistika, CSV)
 ├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
@@ -348,7 +348,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.8.py  # bez sudo
+python opps_generator_gui_v15.9.py  # bez sudo
 ```
 
 ---

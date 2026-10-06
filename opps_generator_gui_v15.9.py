@@ -1,6 +1,6 @@
-"""OPPSS Generator v15.8 GUI - Entry point.
+"""OPPSS Generator v15.9 GUI - Entry point.
 
-Pokreće se sa: python opps_generator_gui_v15.8.py
+Pokreće se sa: python opps_generator_gui_v15.9.py
 """
 
 from __future__ import annotations
@@ -22,6 +22,6 @@ logging.basicConfig(
 from gui import App
 
 if __name__ == "__main__":
-    logging.info("OPPSS Generator v15.8 pokrenut")
+    logging.info("OPPSS Generator v15.9 pokrenut")
     app = App()
     app.mainloop()
