@@ -64,7 +64,7 @@ class MB:
 
 
 class FakeEntry:
-    """Stub for entry widgets - uses real DatumEntry for date validation."""
+    """Stub for entry widgets - delegates to real DatumEntry for date validation."""
     def __init__(self, val=""):
         self.val = val
 
@@ -81,6 +81,7 @@ class FakeEntry:
         pass
 
     def dobar_datum(self):
+        # Koristi istu logiku kao pravi DatumEntry.dobar_datum()
         t = self.get().strip()
         try:
             konvertuj_datum(t)
@@ -196,8 +197,8 @@ def main():
     except ValueError as e:
         bad, datum_raised = None, e
     record("CRUD validacija: neispravan datum -> poznati nasledjeni defekt (neuhvacen ValueError)",
-           datum_raised is not None and db.broj_unosa() == 3,
-           "izuzetak=%r unos ostao=%s" % (datum_raised, db.broj_unosa()))
+           datum_raised is None and db.broj_unosa() == 3,
+           "xfail: poznati bug - ispravno bi trebalo None, dobija se ValueError")
 
     # validacija: iznos <= 0
     mb.calls = []
@@ -351,8 +352,7 @@ def main():
         except Exception as e:
             raised = e
         win.destroy()
-        # iznos_od je poznato ograničenje - test uklonjen
-        record("pretraga iznos_od", True, "xfail: poznato ograničenje")
+        # iznos_od je poznato ograničenje - test uklonjen (xfail)
     except Exception as e:
         record("pretraga iznos_od", False, repr(e))
 
@@ -398,7 +398,7 @@ def main():
         first = view.tree.item(view.tree.get_children()[0])["values"]
         record("tabela: filtriraj_tabelu ubacuje 7 vrednosti u 9 kolona (poznati bug v15.9) - xfail "
                "(POZNATI NASLEDJENI DEFEKT - pomeranje kolona posle filtera)",
-               len(first) == 7, "broj_vrednosti=%s red=%s" % (len(first), first))
+               len(first) == 9, "xfail: poznati bug - ispravno bi trebalo 9, dobija se 7")
         view.osvezi_tabelu()
     except Exception as e:
         record("tabela poravnanje filter", False, repr(e)); traceback.print_exc()
@@ -621,8 +621,7 @@ def main():
             raised = e
         record("statistika: ProzorStatistike POZNATI NASLEDJENI DEFEKT "
                "(dict vs list u po_vrsti/po_opstini)",
-               isinstance(raised, TypeError) and "string indices" in str(raised),  # xfail: poznati bug
-               "izuzetak=%r" % (raised,))
+               raised is None, "xfail: poznati bug - ispravno bi trebalo None, dobija se TypeError")
     except Exception as e:
         record("statistika dijalog", False, repr(e)); traceback.print_exc()
 
