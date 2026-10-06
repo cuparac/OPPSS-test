@@ -426,10 +426,7 @@ class ProzorPodnosioca(tk.Toplevel):
         self.podnosioc_var = tk.StringVar()
         self.podnosioc_combo = ttk.Combobox(gornji, textvariable=self.podnosioc_var, state="readonly", width=30)
         self.podnosioc_combo.pack(side="left", padx=5)
-        self.podnosioc_combo.bind("<<ComboboxSelected>>", self._izabran_podnosioc)
-        ttk.Button(gornji, text="+ Novi", command=self._dodaj_podnosioca).pack(side="left", padx=2)
-        ttk.Button(gornji, text="- Obriši", command=self._obrisi_podnosioca).pack(side="left", padx=2)
-        ttk.Button(gornji, text="Aktivan", command=self._postavi_aktivnog).pack(side="left", padx=2)
+        self.podnosioc_combo.bind("<<ComboboxSelected>>", self._izabran_podnosioca)
 
         # Forma za podatke
         forma = ttk.Frame(okvir)
