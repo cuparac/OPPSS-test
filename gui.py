@@ -14,9 +14,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
-from database import Database, migriraj_json_u_sqlite
-from validacije import validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema
-from xml_generator import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
+from model import Database, migriraj_json_u_sqlite
+from model import validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema
+from model import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
 
 
 class UndoStack:
