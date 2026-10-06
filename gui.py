@@ -777,7 +777,7 @@ class App(tk.Tk):
         # Dark theme toggle
         self.dark_theme = False
         alat_meni.add_separator()
-        alat_meni.add_command(label="🌙 Dark theme", command=self.promeni_temu)
+        self.theme_menu_item = alat_meni.add_command(label="🌙 Dark theme", command=self.promeni_temu)
 
         # Undo/Redo
         self.undo_stack = UndoStack()
@@ -1271,6 +1271,21 @@ class App(tk.Tk):
         """Menja između svetle i tamne teme."""
         self.dark_theme = not self.dark_theme
         style = ttk.Style()
+
+        # Ažuriraj tekst dugme u meniju
+        alat_meni = self.nametowidget("!menu")  # Glavni meni
+        # Pronađi Alat meni
+        for i in range(alat_meni.index("end") + 1):
+            try:
+                label = alat_meni.entrycascade(i, "label")
+                if label == "Alat":
+                    alat_menu = alat_meni.nametowidget(alat_meni.entrycascade(i, "menu"))
+                    # Tema je poslednja stavka
+                    theme_idx = alat_menu.index("end")
+                    alat_menu.entryconfigure(theme_idx, label="☀️ Light theme" if self.dark_theme else "🌙 Dark theme")
+                    break
+            except (tk.TclError, KeyError):
+                continue
 
         if self.dark_theme:
             # Tamna tema
