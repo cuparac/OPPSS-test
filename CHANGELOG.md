@@ -36,6 +36,19 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 - **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) — ono je
   sprečavalo opciju „Dodaj kao novi". Postojeća baza se automatski migrira bez
   gubitka podataka.
+- **Statistika prozor** — pucao sa `TypeError` / `KeyError 'ukupno_unosa'` jer je
+  dijalog tražio ključeve koje baza ne vraća (`po_vrsti`, `ukupno_unosa`,
+  `COUNT(*)`). `Database.statistika()` sada vraća liste reči sa ključevima
+  `opstina`/`vrsta_prometa`, `broj` i `iznos`, a dijalog ih tako i čita.
+- **Malformiran datum** — `konvertuj_datum()` je bacao neuhvaćen `ValueError`
+  pre provere `dobar_datum()`, pa je umesto poruke „Neispravan datum" iskakala
+  ružna greška. Sada je poziv u `try/except` i prikazuje se poruka.
+- **Kolone posle filtera** — `filtriraj_tabelu` je upisivao 7 vrednosti u tabelu
+  sa 9 kolona, pa su se Adresa, Telefon i Datum pomerale. Sada upisuje svih 9.
+- **Pretraga** — `ProzorPretrage` je pucao sa `ProgrammingError` (goli string
+  umesto liste parametara) i `no such column: ime` (kriterijumi dijaloga nisu
+  imena kolona). Dodata `Database.pretrazi_po()` koja prevodi kriterijume
+  (`ime` → `ime_naziv`, `iznos_od` → `iznos_prometa >= ?`, datumi u ISO).
 
 ---
 

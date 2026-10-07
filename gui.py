@@ -654,7 +654,7 @@ class ProzorPretrage(tk.Toplevel):
         if not vrednost:
             return
 
-        rezultati = self.db.pretraga(kriterijum, vrednost)
+        rezultati = self.db.pretrazi_po(kriterijum, vrednost)
         self.tree.delete(*self.tree.get_children())
         for r in rezultati:
             self.tree.insert("", "end", values=(
@@ -699,21 +699,21 @@ class ProzorStatistike(tk.Toplevel):
 
         ttk.Label(okvir, text="STATISTIKA", font=("Segoe UI", 14, "bold")).pack(pady=10)
 
-        ttk.Label(okvir, text=f"Ukupno unosa: {stat['ukupno_unosa']}", font=("Segoe UI", 11)).pack(anchor="w")
-        ttk.Label(okvir, text=f"Ukupan iznos: {stat['ukupno_iznos']} RSD", font=("Segoe UI", 11)).pack(anchor="w")
+        ttk.Label(okvir, text=f"Ukupno unosa: {stat['ukupno']}", font=("Segoe UI", 11)).pack(anchor="w")
+        ttk.Label(okvir, text=f"Ukupan iznos: {stat['ukupan_iznos']} RSD", font=("Segoe UI", 11)).pack(anchor="w")
 
         ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
 
         ttk.Label(okvir, text="Po vrsti prometa:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        for v in stat['po_vrsti']:
-            vrsta = "Poljoprivreda" if v['vrsta_prometa'] == '1' else "Sirovine"
-            ttk.Label(okvir, text=f"  {vrsta}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
+        for v in stat['po_vrsti_prometa']:
+            vrsta = "Poljoprivreda" if str(v['vrsta_prometa']) == '1' else "Sirovine"
+            ttk.Label(okvir, text=f"  {vrsta}: {v['broj']} unosa, {v['iznos']} RSD").pack(anchor="w")
 
         ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
 
         ttk.Label(okvir, text="Po opštini:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
         for v in stat['po_opstini']:
-            ttk.Label(okvir, text=f"  {v['opstina']}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
+            ttk.Label(okvir, text=f"  {v['opstina']}: {v['broj']} unosa, {v['iznos']} RSD").pack(anchor="w")
 
 
 class ProzorDuplikata(tk.Toplevel):
@@ -1589,7 +1589,9 @@ class App(tk.Tk):
                 sledeci = sada.replace(month=sada.month + 1, day=1)
             datum_do_limit = (sledeci - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
-        for o in ljudi:
+        # Kolone tabele: rb, tip, identifikator, ime_naziv, opstina, adresa,
+        # telefon, datum, iznos — mora svih 9, inače se kolone pomere.
+        for rb, o in enumerate(ljudi, start=1):
             if vrsta and o.get("vrsta_prometa") != vrsta:
                 continue
             if opstina and o.get("opstina", "") != opstina:
@@ -1612,9 +1614,10 @@ class App(tk.Tk):
                     prikaz = o["datum"]
 
             self.tree.insert("", "end", iid=str(o['id']),
-                            values=(o['id'], tipovi.get(o["vrsta_prometa"], "?"),
+                            values=(rb, tipovi.get(o["vrsta_prometa"], "?"),
                                     o["identifikator"], o.get("ime_naziv", ""),
-                                    o.get("opstina", ""), prikaz,
+                                    o.get("opstina", ""), o.get("adresa", ""),
+                                    o.get("telefon", ""), prikaz,
                                     format(o.get("iznos_prometa", 0), ",").replace(",", ".")))
 
     def osvezi_info(self) -> None:
@@ -2023,11 +2026,17 @@ class App(tk.Tk):
             azuriraj_limit()
 
         def sacuvaj() -> None:
-            datum_iso = konvertuj_datum(entries["datum_unos"].get())
+            try:
+                datum_iso = konvertuj_datum(entries["datum_unos"].get())
+            except ValueError:
+                datum_iso = None
             if not datum_iso or not entries["datum_unos"].dobar_datum():
                 messagebox.showerror("Greska", "Neispravan datum OD!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
                 return
-            datum_do_iso = konvertuj_datum(entries["datum_do"].get())
+            try:
+                datum_do_iso = konvertuj_datum(entries["datum_do"].get())
+            except ValueError:
+                datum_do_iso = None
             if not datum_do_iso or not entries["datum_do"].dobar_datum():
                 messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=win)
                 return
