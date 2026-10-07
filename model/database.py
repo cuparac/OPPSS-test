@@ -365,6 +365,61 @@ class Database:
             return dict(row)
         return None
 
+    def ucitaj_po_identifikatoru(self, identifikator: str) -> List[Dict[str, Any]]:
+        """Učitava SVE unose sa datim identifikatorom za tekuću godinu.
+
+        Args:
+            identifikator: JMBG/PIB/EBS.
+
+        Returns:
+            Lista unosa, sortirana po datumu.
+        """
+        c = self.conn.cursor()
+        c.execute('''SELECT * FROM ljudi WHERE identifikator = ? AND godina = ?
+                     ORDER BY datum, id''',
+                  (identifikator, self.godina))
+        return [dict(row) for row in c.fetchall()]
+
+    def razlike_po_identifikatoru(self, identifikator: str) -> Dict[str, List[tuple]]:
+        """Traži polja koja se razlikuju među unosima istog identifikatora.
+
+        Ista osoba treba da ima iste podatke (ime, opština, adresa, telefon…) u
+        svim unosima tokom godine. Ako se neko polje razlikuje, verovatno je
+        negde pogrešno uneto — pa se to prijavljuje korisniku.
+
+        Datumi i iznos se NE proveravaju: oni se po definiciji razlikuju između
+        unosa (svaki unos pokriva svoj period).
+
+        Args:
+            identifikator: JMBG/PIB/EBS.
+
+        Returns:
+            Dict {ime_polja: [(vrednost, broj_pojavljivanja), ...]} samo za polja
+            koja imaju više od jedne različite vrednosti. Prazan dict ako je sve isto.
+        """
+        polja = ("ime_naziv", "opstina", "adresa", "email_osobe", "telefon",
+                 "broj_gazdinstva", "naziv_gazdinstva", "vrsta_prometa",
+                 "vrsta_identifikatora")
+        unosi = self.ucitaj_po_identifikatoru(identifikator)
+        razlike: Dict[str, List[tuple]] = {}
+        if len(unosi) < 2:
+            return razlike
+
+        for polje in polja:
+            # Grupiši po normalizovanoj vrednosti (bez razlike u velikim slovima
+            # i praznim mestima), a prikaži originalnu.
+            grupe: Dict[str, List] = {}
+            for o in unosi:
+                original = (o.get(polje) or "").strip()
+                kljuc = original.casefold()
+                if kljuc not in grupe:
+                    grupe[kljuc] = [original, 0]
+                grupe[kljuc][1] += 1
+            if len(grupe) > 1:
+                razlike[polje] = sorted(((v, n) for v, n in grupe.values()),
+                                        key=lambda t: (-t[1], t[0]))
+        return razlike
+
     def ima_duplikat(self, identifikator: str, datum: str) -> Optional[Dict[str, Any]]:
         """Proverava da li već postoji unos sa istim identifikatorom i datumom.
 

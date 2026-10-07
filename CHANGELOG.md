@@ -29,6 +29,11 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   „Ne snimaj". Kod duplikata se forma popunjava podacima postojećeg unosa
 - **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) da bi
   „Dodaj kao novi" mogao da radi; postojeća baza se automatski migrira
+- **Upozorenje na različite podatke istog identifikatora** — ista osoba treba da
+  ima iste podatke u svim unosima tokom godine. Ako se opština, adresa, ime,
+  telefon ili gazdinstvo razlikuju među unosima sa istim JMBG/PIB/EBS, pri
+  kucanju tog identifikatora prikazuje se upozorenje sa svim pronađenim
+  vrednostima i brojem pojavljivanja. Datumi i iznos se ne proveravaju
 - **Enter prelazi na sledeće polje** — ranije je Enter odmah snimao unos, pa je
   pritisnut na pola forme prikazivao „Popunite sva obavezna polja!". Sada Enter
   ide na sledeće polje (kao Tab), a snimanje je na dugmetu „Sačuvaj"
@@ -39,7 +44,7 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   „↻ Podaci prepisani iz prethodnog unosa"
 
 ### Testovi
-- **Integracioni testovi** — 58 testova kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 62 testa kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 

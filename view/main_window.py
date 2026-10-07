@@ -412,6 +412,55 @@ class MainWindow(tk.Tk):
     # ------------------------------------------------------------------
     # GUI: tabele, tabovi, grafikoni, info
     # ------------------------------------------------------------------
+    def _proveri_razlike(self, entries: Dict[str, Any], identifikator: str,
+                         parent: Any = None) -> None:
+        """Prijavljuje ako se podaci istog identifikatora razlikuju između unosa.
+
+        Ista osoba treba da ima iste podatke u svim unosima tokom godine. Ako se
+        opština, adresa, ime ili telefon razlikuju, verovatno je negde pogrešno
+        uneto — pa se prikazuje upozorenje sa svim pronađenim vrednostima.
+
+        Args:
+            entries: Rečnik widget-a forme (ključ -> widget).
+            identifikator: JMBG/PIB/EBS.
+            parent: Roditeljski prozor za dijalog.
+        """
+        try:
+            razlike = self.db.razlike_po_identifikatoru(identifikator)
+        except Exception:
+            return
+        if not razlike:
+            return
+
+        nazivi = {
+            "ime_naziv": "Ime / Naziv", "opstina": "Opština", "adresa": "Adresa",
+            "email_osobe": "E-pošta", "telefon": "Telefon",
+            "broj_gazdinstva": "Broj gazdinstva", "naziv_gazdinstva": "Naziv gazdinstva",
+            "vrsta_prometa": "Vrsta prometa", "vrsta_identifikatora": "Vrsta identifikatora",
+        }
+        vrste_pr = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+        vrste_id = {"1": "JMBG", "0": "PIB", "5": "EBS"}
+
+        redovi = []
+        for polje, vrednosti in razlike.items():
+            delovi = []
+            for vrednost, broj in vrednosti:
+                prikaz = vrednost
+                if polje == "vrsta_prometa":
+                    prikaz = vrste_pr.get(str(vrednost), str(vrednost))
+                elif polje == "vrsta_identifikatora":
+                    prikaz = vrste_id.get(str(vrednost), str(vrednost))
+                delovi.append("„%s\" (%d×)" % (prikaz, broj))
+            redovi.append("• %s: %s" % (nazivi.get(polje, polje), ", ".join(delovi)))
+
+        messagebox.showwarning(
+            "Različiti podaci za isti identifikator",
+            "Za identifikator %s postoje unosi sa RAZLIČITIM podacima:\n\n%s\n\n"
+            "Ista osoba treba da ima iste podatke u svim unosima. Proverite koji je "
+            "tačan i ispravite pogrešan unos u tabeli (dvoklik na red)."
+            % (identifikator, "\n".join(redovi)),
+            parent=parent)
+
     def _popuni_iz_duplikata(self, entries: Dict[str, Any], osoba: Dict[str, Any],
                              zadrzi_datume: bool = False) -> None:
         """Popunjava formu podacima postojećeg unosa iz baze.
@@ -894,6 +943,7 @@ class MainWindow(tk.Tk):
                         info_dupli.config(
                             text="↻ Podaci prepisani iz prethodnog unosa — unesite datum/iznos",
                             foreground="#0a6b0a")
+                        self._proveri_razlike(entries, broj, parent=win)
                     else:
                         info_dupli.config(text="")
                 else:
