@@ -236,11 +236,19 @@ class Controller:
         vrste_pr = {"Poljoprivredni proizvodi/usluge": "1", "Sekundarne sirovine": "2"}
         vrste_id = {"JMBG": "1", "PIB": "0", "EBS": "5"}
 
-        datum_iso = konvertuj_datum(entries["datum_unos"].get())
+        datum_iso = None
+        try:
+            datum_iso = konvertuj_datum(entries["datum_unos"].get())
+        except ValueError:
+            datum_iso = None
         if not datum_iso or not entries["datum_unos"].dobar_datum():
             messagebox.showerror("Greska", "Neispravan datum OD!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=parent)
             return "greska"
-        datum_do_iso = konvertuj_datum(entries["datum_do"].get())
+        datum_do_iso = None
+        try:
+            datum_do_iso = konvertuj_datum(entries["datum_do"].get())
+        except ValueError:
+            datum_do_iso = None
         if not datum_do_iso or not entries["datum_do"].dobar_datum():
             messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=parent)
             return "greska"
@@ -436,7 +444,9 @@ class Controller:
                 sledeci = sada.replace(month=sada.month + 1, day=1)
             datum_do_limit = (sledeci - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
-        for o in ljudi:
+        # Kolone tabele: rb, tip, identifikator, ime_naziv, opstina, adresa,
+        # telefon, datum, iznos — mora svih 9, inače se kolone pomere.
+        for rb, o in enumerate(ljudi, start=1):
             if vrsta and o.get("vrsta_prometa") != vrsta:
                 continue
             if opstina and o.get("opstina", "") != opstina:
@@ -459,9 +469,10 @@ class Controller:
                     prikaz = o["datum"]
 
             self.view.tree.insert("", "end", iid=str(o['id']),
-                                  values=(o['id'], tipovi.get(o["vrsta_prometa"], "?"),
+                                  values=(rb, tipovi.get(o["vrsta_prometa"], "?"),
                                           o["identifikator"], o.get("ime_naziv", ""),
-                                          o.get("opstina", ""), prikaz,
+                                          o.get("opstina", ""), o.get("adresa", ""),
+                                          o.get("telefon", ""), prikaz,
                                           format(o.get("iznos_prometa", 0), ",").replace(",", ".")))
 
     # ------------------------------------------------------------------

@@ -31,8 +31,8 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   „Dodaj kao novi" mogao da radi; postojeća baza se automatski migrira
 
 ### Testovi
-- **Integracioni testovi** — 54 testa kroz ceo Model + View + Controller stack:
-  51 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL.
+- **Integracioni testovi** — 55 testova kroz ceo Model + View + Controller stack:
+  svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
 ### Uklonjeno iz v16
@@ -44,13 +44,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 ### Preimenovano
 - `opps_generator_cli_v15.py` → `opps_generator_cli.py`
 
-### Poznati bugovi (nasleđeni iz v15.9, nisu regresije)
-| # | Bug | Greška |
-|---|-----|--------|
-| 1 | Statistika prozor | `TypeError: string indices must be integers` |
-| 2 | Pretraga prozor | `sqlite3.ProgrammingError: Incorrect number of bindings` |
-| 3 | Malformiran datum | `ValueError` (neuhvaćen) |
-| 4 | Kolone posle filtera | 7 vrednosti u 9 kolona (pomeranje) |
+### Ispravljeni bugovi nasleđeni iz v15.9
+Sva četiri su popravljena (i u v16 i u v15.9):
+
+| # | Bug | Greška (pre) | Rešenje |
+|---|-----|--------------|---------|
+| 1 | Statistika prozor | `TypeError: string indices must be integers` / `KeyError 'ukupno_unosa'` | `Database.statistika()` vraća liste reči (`opstina`/`vrsta_prometa`, `broj`, `iznos`), dijalog ih tako čita |
+| 2 | Pretraga prozor | `sqlite3.ProgrammingError` / `no such column: ime` | nova `Database.pretrazi_po()` prevodi kriterijume u SQL uslov i parametre |
+| 3 | Malformiran datum | neuhvaćen `ValueError` | `konvertuj_datum()` u `try/except`, prikazuje se poruka |
+| 4 | Kolone posle filtera | 7 vrednosti u 9 kolona (pomeranje) | `filtriraj_tabelu` upisuje svih 9 kolona |
 
 ### Starije verzije
 Starije verzije (v13.5–v15.9) su dostupne kao git tagovi:

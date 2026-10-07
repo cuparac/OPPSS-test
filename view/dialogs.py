@@ -367,7 +367,7 @@ class ProzorPretrage(tk.Toplevel):
         if not vrednost:
             return
 
-        rezultati = self.db.pretraga(kriterijum, vrednost)
+        rezultati = self.db.pretrazi_po(kriterijum, vrednost)
         self.tree.delete(*self.tree.get_children())
         for r in rezultati:
             self.tree.insert("", "end", values=(
@@ -419,14 +419,14 @@ class ProzorStatistike(tk.Toplevel):
 
         ttk.Label(okvir, text="Po vrsti prometa:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
         for v in stat['po_vrsti_prometa']:
-            vrsta = "Poljoprivreda" if v['vrsta_prometa'] == '1' else "Sirovine"
-            ttk.Label(okvir, text=f"  {vrsta}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
+            vrsta = "Poljoprivreda" if str(v['vrsta_prometa']) == '1' else "Sirovine"
+            ttk.Label(okvir, text=f"  {vrsta}: {v['broj']} unosa, {v['iznos']} RSD").pack(anchor="w")
 
         ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=10)
 
         ttk.Label(okvir, text="Po opštini:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
         for v in stat['po_opstini']:
-            ttk.Label(okvir, text=f"  {v['opstina']}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
+            ttk.Label(okvir, text=f"  {v['opstina']}: {v['broj']} unosa, {v['iznos']} RSD").pack(anchor="w")
 
 
 class ProzorDuplikata(tk.Toplevel):

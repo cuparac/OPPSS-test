@@ -14,6 +14,8 @@ import shutil
 import sqlite3
 from typing import Any, Dict, List, Optional, Tuple
 
+from .validacije import konvertuj_datum
+
 
 class Database:
     """SQLite baza podataka za OPPSS Generator.
@@ -415,11 +417,56 @@ class Database:
                   (self.godina, *(parametri or [])))
         return [dict(row) for row in c.fetchall()]
 
+    def pretrazi_po(self, kriterijum: str, vrednost: str) -> List[Dict[str, Any]]:
+        """Pretražuje unose po imenovanom kriterijumu iz ProzorPretrage.
+
+        Kriterijumi dijaloga nisu imena kolona u bazi ('ime' -> ime_naziv,
+        'iznos_od' -> iznos_prometa >= ...), pa se ovde prevode u SQL uslov i
+        parametre. Bez ovog prevoda pretraga je pucala sa
+        ``no such column: ime`` / ``Incorrect number of bindings``.
+
+        Args:
+            kriterijum: "opstina", "ime", "identifikator", "iznos_od",
+                "iznos_do", "datum_od" ili "datum_do".
+            vrednost: Uneta vrednost.
+
+        Returns:
+            List sa rezultatima.
+        """
+        vrednost = (vrednost or "").strip()
+        if kriterijum == "opstina":
+            return self.pretraga("opstina LIKE ?", [f"%{vrednost}%"])
+        if kriterijum == "ime":
+            return self.pretraga("ime_naziv LIKE ?", [f"%{vrednost}%"])
+        if kriterijum == "identifikator":
+            return self.pretraga("identifikator LIKE ?", [f"%{vrednost}%"])
+        if kriterijum in ("iznos_od", "iznos_do"):
+            try:
+                broj = int(vrednost)
+            except ValueError:
+                return []
+            if kriterijum == "iznos_od":
+                return self.pretraga("iznos_prometa >= ?", [broj])
+            return self.pretraga("iznos_prometa <= ?", [broj])
+        if kriterijum in ("datum_od", "datum_do"):
+            # datumi se u bazi čuvaju kao ISO (YYYY-MM-DD)
+            try:
+                datum = konvertuj_datum(vrednost)
+            except ValueError:
+                return []
+            if kriterijum == "datum_od":
+                return self.pretraga("datum >= ?", [datum])
+            return self.pretraga("datum <= ?", [datum])
+        # Nepoznat kriterijum — pretraži po identifikatoru (bezbedan fallback)
+        return self.pretraga("identifikator LIKE ?", [f"%{vrednost}%"])
+
     def statistika(self) -> Dict[str, Any]:
         """Vraća statistiku za trenutnu godinu.
 
         Returns:
-            Dict sa statistikom (ukupno, ukupan_iznos, po_opstini, po_vrsti_prometa)
+            Dict sa statistikom: ukupno, ukupan_iznos, po_opstini i po_vrsti_prometa
+            (obe grupacije kao lista reči sa ključevima 'opstina'/'vrsta_prometa',
+            'broj' i 'iznos', spremna za prikaz u ProzorStatistike)
         """
         c = self.conn.cursor()
         c.execute("SELECT COUNT(*), COALESCE(SUM(iznos_prometa), 0) FROM ljudi WHERE godina = ?",
@@ -428,19 +475,23 @@ class Database:
         ukupno = row[0]
         ukupan_iznos = row[1]
 
-        c.execute("SELECT opstina, COUNT(*), SUM(iznos_prometa) FROM ljudi WHERE godina = ? GROUP BY opstina",
+        c.execute("SELECT opstina, COUNT(*), COALESCE(SUM(iznos_prometa), 0) FROM ljudi "
+                  "WHERE godina = ? GROUP BY opstina ORDER BY opstina",
                   (self.godina,))
-        po_opstini = {r[0]: {'broj': r[1], 'iznos': r[2]} for r in c.fetchall()}
+        po_opstini = [{'opstina': r[0] or "Bez opštine", 'broj': r[1], 'iznos': r[2]}
+                      for r in c.fetchall()]
 
-        c.execute("SELECT vrsta_prometa, COUNT(*), SUM(iznos_prometa) FROM ljudi WHERE godina = ? GROUP BY vrsta_prometa",
+        c.execute("SELECT vrsta_prometa, COUNT(*), COALESCE(SUM(iznos_prometa), 0) FROM ljudi "
+                  "WHERE godina = ? GROUP BY vrsta_prometa ORDER BY vrsta_prometa",
                   (self.godina,))
-        po_vrsti_prometa = {r[0]: {'broj': r[1], 'iznos': r[2]} for r in c.fetchall()}
+        po_vrsti_prometa = [{'vrsta_prometa': r[0], 'broj': r[1], 'iznos': r[2]}
+                            for r in c.fetchall()]
 
         return {
             'ukupno': ukupno,
             'ukupan_iznos': ukupan_iznos,
             'po_opstini': po_opstini,
-            'po_vrsti_prometa': po_vrsti_prometa
+            'po_vrsti_prometa': po_vrsti_prometa,
         }
 
     def export_csv(self, fajl_putanja: str) -> None:

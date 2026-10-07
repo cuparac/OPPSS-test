@@ -32,9 +32,9 @@
 - **UNIQUE ograničenje uklonjeno** — omogućeno „Dodaj kao novi"
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 54 testa kroz ceo Model + View + Controller stack
-  - 51 prolazi
-  - 3 poznata buga nasleđena iz v15.9, markirana kao XFAIL
+- **Integracioni testovi** (`tests/test_integration.py`) — 55 testova kroz ceo Model + View + Controller stack
+  - 55 prolazi
+  - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
 
@@ -50,14 +50,16 @@
 
 ---
 
-## Poznati bugovi (nasleđeni iz v15.9, nisu regresije)
+## Ispravljeni bugovi nasleđeni iz v15.9
 
-| # | Bug | Trigger | Greška |
-|---|-----|---------|--------|
-| 1 | Statistika prozor | Otvaranje Statistika | `TypeError: string indices must be integers` |
-| 2 | Pretraga prozor | Bilo koja pretraga | `sqlite3.ProgrammingError: Incorrect number of bindings` |
-| 3 | Malformiran datum | Snimanje sa lošim datumom | `ValueError` (neuhvaćen) |
-| 4 | Kolone posle filtera | Filtriranje tabele | 7 vrednosti u 9 kolona (pomeranje) |
+Sva četiri su popravljena u v16 (i u v15.9):
+
+| # | Bug | Trigger | Greška (pre) | Rešenje |
+|---|-----|---------|--------------|---------|
+| 1 | Statistika prozor | Otvaranje Statistika | `TypeError` / `KeyError 'ukupno_unosa'` | `statistika()` vraća liste reči, dijalog ih tako čita |
+| 2 | Pretraga prozor | Bilo koja pretraga | `ProgrammingError` / `no such column: ime` | nova `Database.pretrazi_po()` |
+| 3 | Malformiran datum | Snimanje sa lošim datumom | neuhvaćen `ValueError` | `konvertuj_datum()` u `try/except` |
+| 4 | Kolone posle filtera | Filtriranje tabele | 7 vrednosti u 9 kolona | upisuje svih 9 kolona |
 
 ---
 
@@ -79,7 +81,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (54)
+│   └── test_integration.py      # Integracioni testovi (55)
 ├── KorisnikouputstvoOPPSS.pdf
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt
@@ -128,7 +130,7 @@ git checkout main       # povratak na trenutnu verziju
 3. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Poznati bugovi
-4. **Statistika / Pretraga / filter kolone / datum** - 4 buga nasleđena iz v15.9 (vidi tabelu gore)
+Nema — sva četiri nasleđena buga iz v15.9 su popravljena (statistika, pretraga, filter kolone, datum).
 
 ---
 
