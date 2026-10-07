@@ -714,7 +714,7 @@ class App(tk.Tk):
     def __init__(self) -> None:
         """Inicijalizuje glavnu aplikaciju."""
         super().__init__()
-        self.title("OPPSS Generator v15.3 GUI STANDALONE - ePorezi prijava")
+        self.title("OPPSS Generator v15.9 GUI STANDALONE - ePorezi prijava")
         self.geometry("1000x700")
 
         self._godina = str(datetime.date.today().year)
@@ -1254,10 +1254,10 @@ class App(tk.Tk):
         import sys
         import platform
         messagebox.showinfo("O aplikaciji",
-                            "OPPSS Generator v15.7 GUI STANDALONE\n\n"
+                            "OPPSS Generator v15.9 GUI STANDALONE\n\n"
                             "Aplikacija za generisanje OOPSS prijava\n"
                             "za portal ePorezi (Poreska uprava RS)\n\n"
-                            "Verzija: 15.7\n"
+                            "Verzija: 15.9\n"
                             "Baza: SQLite\n"
                             "XSD šema: ugrađena\n\n"
                             "Python: " + sys.version.split()[0] + "\n"

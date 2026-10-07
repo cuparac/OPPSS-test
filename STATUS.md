@@ -1,7 +1,7 @@
-# STATUS — OPPS Generator v15.8
+# STATUS — OPPS Generator v15.9
 
-**Poslednji put ažurirano:** 05.10.2026.
-**Trenutna verzija:** v15.8
+**Poslednji put ažurirano:** 07.10.2026.
+**Trenutna verzija:** v15.9
 **Lokacija koda:** `/home/ai/OPPSS-test/gui.py`
 **GitHub:** https://github.com/cuparac/OPPSS-test
 **Git commit:** `c0f466d`
@@ -112,6 +112,10 @@
 - **Lazy loading** - Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
 - **Keširanje XSD seme** - XSD šema se učitava samo jednom i kešira u memoriji
 
+### v15.9 — PDF export i ispravke (ZAVRŠENO 05.10.2026)
+- **Pravi PDF export** - ReportLab umesto HTML izveštaja
+- **Auto-backup fix** - briše stari backup pre kreiranja novog
+
 ---
 
 ## ❌ ŠTA NIJE URAĐENO — Preporuke za unapređenja
@@ -140,7 +144,7 @@
 13. **Keširanje XSD seme** - Jedno učitavanje pri startu aplikacije
 
 ### Refaktoring (odložiti za kasnije)
-14. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku)
+14. **MVC pattern** - Razdvojiti Model (baza), View (GUI), Controller (logiku) — **urađeno u v16 (grana `mvc-preview`)**
 
 ---
 
@@ -194,7 +198,7 @@ python gui.py
 
 ---
 
-## 🎯 PREOSTALI ZADACI ZA v15.9
+## 🎯 PREOSTALI ZADACI (za v16)
 
 ### Sigurnost (odložiti za kasnije)
 1. **Lozinka za pristup bazi** - Šifrovanje baze lozinkom
