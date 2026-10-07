@@ -49,6 +49,12 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   umesto liste parametara) i `no such column: ime` (kriterijumi dijaloga nisu
   imena kolona). Dodata `Database.pretrazi_po()` koja prevodi kriterijume
   (`ime` → `ime_naziv`, `iznos_od` → `iznos_prometa >= ?`, datumi u ISO).
+- **Upozorenje na različite podatke istog identifikatora** — ista osoba treba da
+  ima iste podatke u svim unosima tokom godine. Ako se opština, adresa, ime,
+  telefon ili gazdinstvo razlikuju među unosima sa istim JMBG/PIB/EBS, pri
+  kucanju tog identifikatora prikazuje se upozorenje sa svim pronađenim
+  vrednostima i brojem pojavljivanja. Datumi i iznos se ne proveravaju (oni se
+  po definiciji razlikuju).
 - **Enter prelazi na sledeće polje** — ranije je Enter odmah snimao unos, pa je
   pritisnut na pola forme prikazivao „Popunite sva obavezna polja!" i korisnik je
   morao da koristi Tab. Sada Enter ide na sledeće polje (kao Tab), a snimanje je
