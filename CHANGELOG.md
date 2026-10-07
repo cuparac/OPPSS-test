@@ -25,6 +25,17 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 - **Brisanje aktivnog podnosioca** — ako je obrisani bio aktivan, prvi preostali
   preuzima aktivnost; ranije je baza ostajala bez aktivnog podnosioca i
   generisanje XML je grešilo iako podnosilac postoji.
+- **Prozor za duplikat sa tri jasne opcije** — ranije je izlazio sistemski dijalog
+  sa dugmadima Yes/No/Cancel koja ne govore šta znače, a tekst sa objašnjenjem
+  („Zameni = obriši staro…") je bio u telu poruke. Sada je pravi prozor sa tri
+  dugmeta: **„Zameni (obriši staro, snimi novo)"**, **„Dodaj kao novi (snimi bez
+  brisanja)"** i **„Ne snimaj (odustani)"**.
+- **Popunjavanje polja kod duplikata** — kada se unese isti JMBG/PIB/EBS, a polja
+  su prazna, forma se popunjava podacima unosa koji je već u bazi (ime, opština,
+  adresa, telefon, datumi, iznos, vrste) umesto da ostane prazna.
+- **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) — ono je
+  sprečavalo opciju „Dodaj kao novi". Postojeća baza se automatski migrira bez
+  gubitka podataka.
 
 ---
 

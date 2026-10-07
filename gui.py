@@ -716,6 +716,125 @@ class ProzorStatistike(tk.Toplevel):
             ttk.Label(okvir, text=f"  {v['opstina']}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
 
 
+class ProzorDuplikata(tk.Toplevel):
+    """Prozor koji se prikazuje kada unos sa istim identifikatorom i datumom
+    već postoji.
+
+    Umesto sistemskog dijaloga sa dugmadima Yes/No/Cancel (koja ne govore šta
+    znače), ovaj prozor nudi tri jasno opisane opcije:
+
+    - **Zameni** — briše postojeći unos i snima novi
+    - **Dodaj kao novi** — snima novi unos bez brisanja postojećeg
+    - **Ne snimaj** — odustaje od snimanja
+
+    Attributes:
+        rezultat: Izabrana opcija — "zameni", "dodaj", "preskoci" ili "zatvori".
+        podaci: Podaci postojećeg (duplog) unosa, za popunjavanje forme.
+    """
+
+    def __init__(self, parent: tk.Widget, identifikator: str, datum: str,
+                 duplikat: dict, blokiraj: bool = True) -> None:
+        """Inicijalizuje ProzorDuplikata.
+
+        Args:
+            parent: Roditeljski widget.
+            identifikator: JMBG/PIB/EBS koji je već u bazi.
+            datum: Datum unosa koji je već u bazi (ISO format).
+            duplikat: Dict sa postojećim unosom iz baze.
+            blokiraj: Ako je True, čeka da korisnik izabere opciju (wait_window).
+        """
+        super().__init__(parent)
+        self.title("Unos već postoji")
+        self.resizable(False, False)
+        self.rezultat: str = "zatvori"
+        self.podaci: dict = duplikat
+        self.transient(parent)
+
+        okvir = ttk.Frame(self, padding=20)
+        okvir.pack(fill="both", expand=True)
+
+        ttk.Label(okvir, text="⚠  Unos već postoji",
+                  font=("Segoe UI", 13, "bold"), foreground="#b35c00").pack(anchor="w")
+        ttk.Label(okvir,
+                  text="U bazi već postoji unos sa identifikatorom %s i datumom %s."
+                       % (identifikator, datum),
+                  font=("Segoe UI", 10)).pack(anchor="w", pady=(8, 0))
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=12)
+
+        ttk.Label(okvir, text="Postojeći unos u bazi:",
+                  font=("Segoe UI", 10, "bold")).pack(anchor="w")
+
+        info = ttk.Frame(okvir)
+        info.pack(fill="x", pady=(6, 0))
+        polja = [
+            ("Ime / Naziv:", duplikat.get("ime_naziv", "")),
+            ("Opština:", duplikat.get("opstina", "")),
+            ("Adresa:", duplikat.get("adresa", "")),
+            ("Telefon:", duplikat.get("telefon", "")),
+            ("Datum:", "%s do %s" % (duplikat.get("datum", ""), duplikat.get("datum_do", ""))),
+            ("Iznos:", "%s RSD" % format(duplikat.get("iznos_prometa", 0), ",").replace(",", ".")),
+        ]
+        for red, (naziv, vrednost) in enumerate(polja):
+            ttk.Label(info, text=naziv, font=("Segoe UI", 9)).grid(
+                row=red, column=0, sticky="w", padx=(0, 8))
+            ttk.Label(info, text=str(vrednost), font=("Segoe UI", 9, "bold")).grid(
+                row=red, column=1, sticky="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=12)
+
+        ttk.Label(okvir, text="Šta želite da uradite?",
+                  font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 8))
+
+        dugmad = ttk.Frame(okvir)
+        dugmad.pack(fill="x")
+
+        btn_zameni = ttk.Button(dugmad, text="Zameni (obriši staro, snimi novo)",
+                                command=lambda: self._izaberi("zameni"))
+        btn_zameni.pack(fill="x", pady=3)
+        btn_dodaj = ttk.Button(dugmad, text="Dodaj kao novi (snimi bez brisanja)",
+                               command=lambda: self._izaberi("dodaj"))
+        btn_dodaj.pack(fill="x", pady=3)
+        btn_preskoci = ttk.Button(dugmad, text="Ne snimaj (odustani)",
+                                  command=lambda: self._izaberi("preskoci"))
+        btn_preskoci.pack(fill="x", pady=3)
+
+        btn_zameni.focus_set()
+        self.bind("<Escape>", lambda e: self._izaberi("preskoci"))
+        self.protocol("WM_DELETE_WINDOW", lambda: self._izaberi("preskoci"))
+
+        self.update_idletasks()
+        self._centriraj(parent)
+        self.grab_set()
+        if blokiraj:
+            self.wait_window(self)
+
+    def _centriraj(self, parent: tk.Widget) -> None:
+        """Postavlja prozor u sredinu roditeljskog prozora."""
+        try:
+            self.update_idletasks()
+            sirina = self.winfo_width()
+            visina = self.winfo_height()
+            x = parent.winfo_rootx() + (parent.winfo_width() - sirina) // 2
+            y = parent.winfo_rooty() + (parent.winfo_height() - visina) // 3
+            self.geometry("+%d+%d" % (max(x, 0), max(y, 0)))
+        except Exception:
+            pass
+
+    def _izaberi(self, opcija: str) -> None:
+        """Beleži izabranu opciju i zatvara prozor.
+
+        Args:
+            opcija: "zameni", "dodaj" ili "preskoci".
+        """
+        self.rezultat = opcija
+        try:
+            self.grab_release()
+        except Exception:
+            pass
+        self.destroy()
+
+
 class App(tk.Tk):
     """Glavna aplikacija OPPSS Generator.
 
@@ -949,6 +1068,46 @@ class App(tk.Tk):
                   font=("Segoe UI", 8), foreground="gray").pack(side="left", padx=10)
 
         self.osvezi_sve()
+
+    def _popuni_iz_duplikata(self, entries: Dict[str, Any], osoba: Dict[str, Any]) -> None:
+        """Popunjava formu podacima postojećeg unosa iz baze.
+
+        Koristi se kada korisnik izabere "Ne snimaj" u prozoru za duplikat —
+        polja se popune podacima unosa koji je već u bazi, da korisnik vidi
+        šta tamo stoji i može da ga izmeni umesto da kuca ispočetka.
+
+        Args:
+            entries: Rečnik widget-a forme (ključ -> widget).
+            osoba: Dict sa postojećim unosom iz baze.
+        """
+        vrste_pr = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+        vrste_id = {"1": "JMBG", "0": "PIB", "5": "EBS"}
+
+        for key, w in entries.items():
+            if key in ("datum_unos", "datum_do"):
+                datum_key = "datum" if key == "datum_unos" else "datum_do"
+                w.delete(0, "end")
+                vrednost = osoba.get(datum_key, "")
+                if vrednost:
+                    try:
+                        w.insert(0, datetime.datetime.strptime(vrednost, "%Y-%m-%d").strftime("%d/%m/%Y"))
+                    except ValueError:
+                        w.insert(0, str(vrednost))
+                continue
+
+            if key == "vrsta_tip":
+                vrednost = vrste_pr.get(str(osoba.get("vrsta_prometa", "")), "")
+            elif key == "id_tip":
+                vrednost = vrste_id.get(str(osoba.get("vrsta_identifikatora", "")), "")
+            else:
+                vrednost = osoba.get(key, "")
+
+            if hasattr(w, "set"):
+                if vrednost != "" and vrednost is not None:
+                    w.set(str(vrednost))
+            elif hasattr(w, "delete"):
+                w.delete(0, "end")
+                w.insert(0, str(vrednost if vrednost is not None else ""))
 
     def prikazi_kontekstni_meni(self, event: tk.Event) -> None:
         """Prikazuje kontekstni meni na osnovu pozicije klika.
@@ -1903,29 +2062,15 @@ class App(tk.Tk):
             if indeks_izmene is None:
                 duplikat = self.db.ima_duplikat(broj_id, datum_iso)
                 if duplikat:
-                    odgovor = messagebox.askyesnocancel(
-                        "UPOZORENJE - DUPLIKAT",
-                        "Već postoji unos sa identifikatorom %s i datumom %s:\n\n"
-                        "• Ime/Naziv: %s\n"
-                        "• Opština: %s\n"
-                        "• Datum: %s do %s\n"
-                        "• Iznos: %s RSD\n\n"
-                        "Zameni = obriši staro i snimi novo\n"
-                        "Dodaj kao novi = snimi bez brisanja\n"
-                        "Preskoči = nemoj ništa snimiti" % (
-                            broj_id,
-                            datum_iso,
-                            duplikat.get('ime_naziv', ''),
-                            duplikat.get('opstina', ''),
-                            duplikat.get('datum', ''),
-                            duplikat.get('datum_do', ''),
-                            format(duplikat.get('iznos_prometa', 0), ",").replace(",", ".")),
-                        parent=win)
-                    if odgovor is None:  # Preskoči
+                    dlg = ProzorDuplikata(win, broj_id, datum_iso, duplikat)
+                    if dlg.rezultat == "preskoci":
+                        # Popuni polja podacima postojećeg unosa da korisnik vidi
+                        # šta je već u bazi i može da ga izmeni.
+                        self._popuni_iz_duplikata(entries, dlg.podaci)
                         return
-                    elif not odgovor:  # Zameni
+                    elif dlg.rezultat == "zameni":
                         self.db.obrisi_osobu(duplikat['id'])
-                    # True = Dodaj kao novi, nastavi sa snimanjem
+                    # "dodaj" = snimi bez brisanja, nastavi sa snimanjem
 
             r = {
                 "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
