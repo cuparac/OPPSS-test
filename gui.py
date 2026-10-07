@@ -799,9 +799,56 @@ class ProzorDuplikata(tk.Toplevel):
                                   command=lambda: self._izaberi("preskoci"))
         btn_preskoci.pack(fill="x", pady=3)
 
-        btn_zameni.focus_set()
+        # Enter potvrđuje izabrano dugme, strelice gore/dole (i Tab) prelaze
+        # između njih, Escape odustaje. Bez ovoga je radilo samo Space
+        # (podrazumevano ponašanje Tk dugmeta).
+        # Izbor se pamti u self._izbor_idx umesto da se čita focus_get() — fokus
+        # ne postoji dok prozor nije prikazan, pa bi Enter na samom otvaranju
+        # promašio dugme.
+        self._dugmad = [btn_zameni, btn_dodaj, btn_preskoci]
+        self._izbor_idx = 0
+
+        # Stil za izabrano dugme da se vidi koje će Enter potvrditi.
+        try:
+            stil = ttk.Style()
+            stil.configure("Izabrano.TButton", font=("Segoe UI", 9, "bold"))
+        except Exception:
+            pass
+
+        def osvezi_fokus() -> None:
+            for i, b in enumerate(self._dugmad):
+                b.configure(style="Izabrano.TButton" if i == self._izbor_idx else "TButton")
+            try:
+                self._dugmad[self._izbor_idx].focus_set()
+            except Exception:
+                pass
+
+        def potvrdi(ev: Optional[tk.Event] = None) -> str:
+            self._dugmad[self._izbor_idx].invoke()
+            return "break"
+
+        def pomeri(ev: Optional[tk.Event] = None, smer: int = 1) -> str:
+            self._izbor_idx = (self._izbor_idx + smer) % len(self._dugmad)
+            osvezi_fokus()
+            return "break"
+
+        for b in self._dugmad:
+            b.bind("<Return>", potvrdi)
+            b.bind("<KP_Enter>", potvrdi)
+            b.bind("<Up>", lambda e: pomeri(e, -1))
+            b.bind("<Down>", lambda e: pomeri(e, 1))
+            b.bind("<Tab>", lambda e: pomeri(e, 1))
+            b.bind("<Shift-Tab>", lambda e: pomeri(e, -1))
+        self.bind("<Return>", potvrdi)
+        self.bind("<KP_Enter>", potvrdi)
+        self.bind("<Up>", lambda e: pomeri(e, -1))
+        self.bind("<Down>", lambda e: pomeri(e, 1))
         self.bind("<Escape>", lambda e: self._izaberi("preskoci"))
         self.protocol("WM_DELETE_WINDOW", lambda: self._izaberi("preskoci"))
+        # Izloženo i kao atributi radi testiranja bez dostave događaja.
+        self._pomeri_izbor = pomeri
+        self._potvrdi_izbor = potvrdi
+        osvezi_fokus()
 
         self.update_idletasks()
         self._centriraj(parent)
