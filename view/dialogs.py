@@ -140,7 +140,9 @@ class ProzorPodnosioca(tk.Toplevel):
         self.podnosioc_combo = ttk.Combobox(gornji, textvariable=self.podnosioc_var, state="readonly", width=30)
         self.podnosioc_combo.pack(side="left", padx=5)
         self.podnosioc_combo.bind("<<ComboboxSelected>>", self._izabran_podnosioca)
+        ttk.Button(gornji, text="+ Novi", command=self._dodaj_podnosioca).pack(side="left", padx=2)
         ttk.Button(gornji, text="- Obriši", command=self._obrisi_podnosioca).pack(side="left", padx=2)
+        ttk.Button(gornji, text="Aktivan", command=self._postavi_aktivnog).pack(side="left", padx=2)
 
         # Forma za podatke
         forma = ttk.Frame(okvir)
@@ -262,10 +264,13 @@ class ProzorPodnosioca(tk.Toplevel):
 
     def sacuvaj(self) -> None:
         """Čuva podatke o podnosiocu u bazu."""
-        if self.trenutni_id is None:
+        d = {k: e.get().strip() for k, e in self.entries.items()}
+        # Ako je baza prazna, dozvoljeno je kreiranje prvog podnosioca direktno
+        # iz forme (korisnik ne mora prvo da klikne "+ Novi").
+        novi = self.trenutni_id is None and not self.podnosioci
+        if self.trenutni_id is None and not novi:
             messagebox.showwarning("Upozorenje", "Nije izabran podnosioc.", parent=self)
             return
-        d = {k: e.get().strip() for k, e in self.entries.items()}
         if not all(d.values()):
             messagebox.showwarning("Upozorenje", "Popunite SVA polja!", parent=self)
             return
@@ -278,7 +283,15 @@ class ProzorPodnosioca(tk.Toplevel):
         if not (len(broj) in (9, 13) and broj.isdigit()):
             messagebox.showerror("Greska", "Polje 'PIB ili JMBG' mora imati TACNO 9 cifara (PIB) ili TACNO 13 cifara (JMBG)!", parent=self)
             return
-        self.db.sacuvaj_podnosioca(d, self.trenutni_id)
+        if novi:
+            # Red se kreira tek posle svih provera, da ne ostane prazan zapis.
+            self.trenutni_id = self.db.dodaj_podnosioca(d)
+        else:
+            self.db.sacuvaj_podnosioca(d, self.trenutni_id)
+        # Ako nijedan podnosilac nije aktivan, ovaj postaje aktivan - inače
+        # generisanje XML prijave ne može da nađe podnosioca.
+        if self.db.ucitaj_podnosioca() is None and self.trenutni_id is not None:
+            self.db.postavi_aktivnog(self.trenutni_id)
         self._osvezi_listu()
         messagebox.showinfo("Sacuvano", "Podaci o podnosiocu su sacuvani.", parent=self)
 

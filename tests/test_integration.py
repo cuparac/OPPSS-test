@@ -555,6 +555,70 @@ def main():
     # ==================================================================
     # 5. Podnosioc
     # ==================================================================
+
+    # Regression: prazna baza je ranije bila corsokak - ProzorPodnosioca nije
+    # imao nacin da napravi PRVOG podnosioca ("+ Novi" je bio uklonjen, a
+    # "Sacuvaj" je odbijao sa "Nije izabran podnosioc"), pa generisanje XML
+    # nije moglo da se zavrsi. Ovaj test to pokriva.
+    try:
+        db.obrisi_sve()
+        for p in db.ucitaj_sve_podnosioca():
+            db.obrisi_podnosioca(p["id"])
+        view.osvezi_sve()
+
+        prazan = ProzorPodnosioca(view, db, "2026")
+        prazan.update()
+        record("podnosioc: prazna baza - dijalog nudi kreiranje prvog podnosioca",
+               len(prazan.podnosioci) == 0 and prazan.trenutni_id is None,
+               "podnosioca=%d trenutni_id=%s" % (len(prazan.podnosioci), prazan.trenutni_id))
+
+        prazan.entries["naziv"].insert(0, "Prvi Podnosilac")
+        prazan.entries["pib_jmbg"].insert(0, "100000009")
+        prazan.entries["email"].insert(0, "prvi@example.com")
+        prazan.entries["telefon"].insert(0, "0601112223")
+        prazan.entries["jmbg"].insert(0, valid_jmbg())
+        mb.calls = []
+        mb.answer_yesno = True
+        prazan.sacuvaj()
+
+        svi = db.ucitaj_sve_podnosioca()
+        aktivan = db.ucitaj_podnosioca()
+        record("podnosioc: Sacuvaj na praznoj bazi kreira i aktivira podnosioca",
+               len(svi) == 1 and aktivan is not None
+               and aktivan["naziv"] == "Prvi Podnosilac"
+               and len(mb.errors()) == 0,
+               "ukupno=%d aktivan=%r greske=%d"
+               % (len(svi), aktivan and aktivan["naziv"], len(mb.errors())))
+        prazan.destroy()
+    except Exception as e:
+        record("podnosioc prazna baza", False, repr(e)); traceback.print_exc()
+
+    # generisanje XML odmah posle kreiranja prvog podnosioca (bez rucnog
+    # postavljanja aktivnog) - ranije je pucalo sa ValueError
+    try:
+        mb.calls = []
+        ctrl.sacuvaj_osobu(make_entries(ident="888888888", ime="Prvi Unos"))
+        record("podnosioc: unos se cuva posle kreiranja prvog podnosioca",
+               db.broj_unosa() == 1 and len(mb.errors()) == 0,
+               "unosa=%d greske=%d" % (db.broj_unosa(), len(mb.errors())))
+        mb.calls = []
+        ctrl.generisi()
+        p = os.path.join(WORK, "OPPS_prijava_2026.xml")
+        record("podnosioc: XML se generise odmah posle prvog podnosioca",
+               os.path.exists(p) and len(mb.errors()) == 0,
+               "fajl=%s greske=%d" % (os.path.exists(p), len(mb.errors())))
+    except Exception as e:
+        record("podnosioc XML posle prvog podnosioca", False, repr(e)); traceback.print_exc()
+
+    # ocisti za sobom - ostatak suite-a ocekuje pocetno stanje
+    try:
+        for p in db.ucitaj_sve_podnosioca():
+            db.obrisi_podnosioca(p["id"])
+        db.obrisi_sve()
+        view.osvezi_sve()
+    except Exception:
+        pass
+
     try:
         mb.answer_yesno = True
         pid = db.dodaj_podnosioca({
@@ -612,11 +676,16 @@ def main():
         record("podnosioc brisanje", False, repr(e)); traceback.print_exc()
 
     # statistika dijalog
-    # NAPOMENA: ProzorStatistike indeksira stat['po_vrsti_prometa'] kao listu
-    # dict-ova, ali Database.statistika() vraća dict (i vraća 'po_vrsti_prometa',
-    # dok dijalog traži 'po_vrsti'). Iteracija po dict-u daje string ključeve ->
-    # TypeError. Isti kod postoji i u v15.9 (gui.py:695). Nasleđeni defekt.
+    # NAPOMENA: ProzorStatistike iterira stat['po_vrsti_prometa'] kao listu
+    # dict-ova, ali Database.statistika() vraća dict ({vrsta: {...}}).
+    # Iteracija po dict-u daje string ključeve -> TypeError. Isti kod postoji
+    # i u v15.9. Nasleđeni defekt.
+    # Vazno: bug se vidi samo ako baza ima unosa - sa praznom bazom petlja se
+    # ne izvrsi ni jednom i dijalog se otvori bez greske. Zato se pre ovog
+    # testa ubacuje bar jedan unos.
     try:
+        if db.broj_unosa() == 0:
+            ctrl.sacuvaj_osobu(make_entries(ident="999999999", ime="Za statistiku"))
         raised = None
         try:
             ws = ProzorStatistike(view, db)
