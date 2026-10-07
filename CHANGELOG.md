@@ -16,10 +16,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 ### Ispravke
 - **Naslov prozora** — prikazivao je v15.3, sada v16
 - **Dijalog O aplikaciji** — prikazivao je v15.7, sada v16
+- **Prvi podnosilac na praznoj bazi** — na praznoj bazi nije bilo načina da se
+  napravi prvi podnosilac (dugme „+ Novi" je bilo uklonjeno, a „Sacuvaj" je
+  odbijao sa „Nije izabran podnosioc"), pa generisanje XML prijave nije moglo da
+  se završi. Vraćena dugmad „+ Novi" i „Aktivan"; „Sacuvaj" na praznoj bazi
+  kreira prvog podnosioca i postavlja ga kao aktivnog
 
 ### Testovi
-- **Integracioni testovi** — 41 test kroz ceo Model + View + Controller stack:
-  38 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL
+- **Integracioni testovi** — 45 testova kroz ceo Model + View + Controller stack:
+  42 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL
 
 ### Uklonjeno iz v16
 - `gui.py` — backward-compat shim više nije potreban

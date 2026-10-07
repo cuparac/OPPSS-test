@@ -121,6 +121,15 @@ pip install -r requirements.txt
 python opps_generator_gui_v16.py
 ```
 
+**Prvi koraci (važno):**
+
+1. **Unesi podnosioca** — `Datoteka → Podaci o podnosiocu` (ili `Ctrl+P`).
+   Na praznoj bazi je dovoljno popuniti polja i kliknuti **Sacuvaj** — podnosilac
+   se kreira i automatski postaje aktivan. Bez podnosioca XML prijava ne može da
+   se generiše.
+2. **Dodaj unose** — `+ Dodaj unos` (ili `Ctrl+N`).
+3. **Generiši XML** — `GENERISI XML` (ili `Ctrl+G`), pa fajl uploaduj na ePorezi.
+
 **Prečice tastature:**
 | Prečica | Akcija |
 |---------|--------|
@@ -160,7 +169,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (41)
+│   └── test_integration.py      # Integracioni testovi (45)
 ├── requirements.txt
 ├── CHANGELOG.md
 ├── README.md
@@ -183,7 +192,7 @@ Korisnik → View (klik, unos) → Controller (logika) → Model (baza) → Cont
 xvfb-run -a python tests/test_integration.py
 ```
 
-Rezultat: 38 prolazi, 3 poznata buga nasleđena iz v15.9 (XFAIL).
+Rezultat: 42 prolazi, 3 poznata buga nasleđena iz v15.9 (XFAIL).
 
 ---
 

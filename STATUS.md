@@ -23,16 +23,24 @@
 ### Ispravke
 - **Naslov prozora** — prikazivao je v15.3, sada v16
 - **Dijalog O aplikaciji** — prikazivao je v15.7, sada v16
+- **Prvi podnosilac na praznoj bazi** — bez ovoga generisanje XML prijave nije
+  moglo da se završi (vidi CHANGELOG)
 
 ### Testovi
-- **Integracioni testovi** (`tests/test_integration.py`) — 41 test kroz ceo Model + View + Controller stack
-  - 38 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 45 testova kroz ceo Model + View + Controller stack
+  - 42 prolazi
   - 3 poznata buga nasleđena iz v15.9, markirana kao XFAIL
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
 
 ### Struktura repozitorijuma
 - Uklonjeno: `gui.py` (shim), `opps_generator_gui_v15.9.py`, `opps.xsd` (šema je u kodu), `docs/superpowers/`
 - Preimenovano: `opps_generator_cli_v15.py` → `opps_generator_cli.py`
+
+### Važno pri korišćenju
+- Prvi podnosilac se unosi preko **Datoteka → Podaci o podnosiocu** (ili Ctrl+P).
+  Na praznoj bazi je dovoljno popuniti polja i kliknuti **Sacuvaj** — podnosilac
+  se kreira i automatski postaje aktivan. Bez podnosioca XML prijava ne može da
+  se generiše.
 
 ---
 
@@ -65,7 +73,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (41)
+│   └── test_integration.py      # Integracioni testovi (45)
 ├── KorisnikouputstvoOPPSS.pdf
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt
