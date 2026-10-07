@@ -412,22 +412,27 @@ class MainWindow(tk.Tk):
     # ------------------------------------------------------------------
     # GUI: tabele, tabovi, grafikoni, info
     # ------------------------------------------------------------------
-    def _popuni_iz_duplikata(self, entries: Dict[str, Any], osoba: Dict[str, Any]) -> None:
+    def _popuni_iz_duplikata(self, entries: Dict[str, Any], osoba: Dict[str, Any],
+                             zadrzi_datume: bool = False) -> None:
         """Popunjava formu podacima postojećeg unosa iz baze.
 
-        Koristi se kada korisnik izabere "Ne snimaj" u prozoru za duplikat —
-        polja se popune podacima unosa koji je već u bazi, da korisnik vidi
-        šta tamo stoji i može da ga izmeni umesto da kuca ispočetka.
+        Koristi se u dva slučaja:
+        - korisnik izabere "Ne snimaj" u prozoru za duplikat (isti JMBG i datum)
+        - korisnik ukuca JMBG/PIB/EBS koji već postoji (prepis podataka za novi
+          period) — tada se datumi i iznos NE prepisuju
 
         Args:
             entries: Rečnik widget-a forme (ključ -> widget).
             osoba: Dict sa postojećim unosom iz baze.
+            zadrzi_datume: Ako je True, polja datuma i iznosa ostaju netaknuta.
         """
         vrste_pr = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
         vrste_id = {"1": "JMBG", "0": "PIB", "5": "EBS"}
 
         for key, w in entries.items():
             if key in ("datum_unos", "datum_do"):
+                if zadrzi_datume:
+                    continue
                 datum_key = "datum" if key == "datum_unos" else "datum_do"
                 w.delete(0, "end")
                 vrednost = osoba.get(datum_key, "")
@@ -436,6 +441,9 @@ class MainWindow(tk.Tk):
                         w.insert(0, datetime.datetime.strptime(vrednost, "%Y-%m-%d").strftime("%d/%m/%Y"))
                     except ValueError:
                         w.insert(0, str(vrednost))
+                continue
+
+            if key == "iznos_prometa" and zadrzi_datume:
                 continue
 
             if key == "vrsta_tip":
@@ -878,12 +886,14 @@ class MainWindow(tk.Tk):
 
                 broj = entries["identifikator"].get().strip()
                 if len(broj) == lim:
-                    ljudi = self.db.ucitaj_ljude()
-                    nadjen = next((o for o in ljudi if o["identifikator"] == broj), None)
+                    nadjen = self.db.pronadji_po_identifikatoru(broj)
                     if nadjen:
+                        # Popuni podatke iz prethodnog unosa istog JMBG/PIB/EBS —
+                        # datumi i iznos se NE prepisuju (novi period je različit).
+                        self._popuni_iz_duplikata(entries, nadjen, zadrzi_datume=True)
                         info_dupli.config(
-                            text="⚠ Postoji unos sa ovim ID-jem (razlika u datumu/iznosu)",
-                            foreground="orange")
+                            text="↻ Podaci prepisani iz prethodnog unosa — unesite datum/iznos",
+                            foreground="#0a6b0a")
                     else:
                         info_dupli.config(text="")
                 else:

@@ -30,10 +30,12 @@
 - **Prozor za duplikat** — tri jasne opcije (Zameni / Dodaj kao novi / Ne snimaj)
   i popunjavanje forme podacima postojećeg unosa
 - **UNIQUE ograničenje uklonjeno** — omogućeno „Dodaj kao novi"
+- **Prepis podataka** — ponovni unos istog JMBG/PIB/EBS prepisuje podatke iz
+  prethodnog unosa (datumi i iznos ostaju prazni za novi period)
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 55 testova kroz ceo Model + View + Controller stack
-  - 55 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 58 testova kroz ceo Model + View + Controller stack
+  - 58 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
@@ -81,7 +83,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (55)
+│   └── test_integration.py      # Integracioni testovi (58)
 ├── KorisnikouputstvoOPPSS.pdf
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt

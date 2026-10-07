@@ -193,7 +193,7 @@ repozitorijumu. Pokreću se iz korena projekta:
 xvfb-run -a python tests/test_integration.py
 ```
 
-Rezultat: 55 prolazi (0 padova). Sva četiri nasleđena buga iz v15.9 su popravljena.
+Rezultat: 58 prolazi (0 padova). Sva četiri nasleđena buga iz v15.9 su popravljena.
 
 ---
 

@@ -29,9 +29,14 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   „Ne snimaj". Kod duplikata se forma popunjava podacima postojećeg unosa
 - **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) da bi
   „Dodaj kao novi" mogao da radi; postojeća baza se automatski migrira
+- **Prepis podataka kod ponovnog unosa istog JMBG/PIB/EBS** — čim se ukuca ceo
+  identifikator, ostali podaci (ime/naziv, opština, adresa, e-pošta, telefon,
+  gazdinstvo, vrste) prepisuju se iz poslednjeg unosa sa tim identifikatorom;
+  **datumi i iznos se ne prepisuju** (unose se za novi period). Poruka:
+  „↻ Podaci prepisani iz prethodnog unosa"
 
 ### Testovi
-- **Integracioni testovi** — 55 testova kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 58 testova kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
