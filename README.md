@@ -131,6 +131,15 @@ pip install lxml matplotlib reportlab
 python opps_generator_gui_v15.9.py
 ```
 
+**Prvi koraci (važno):**
+
+1. **Unesi podnosioca** — `Datoteka → Podaci o podnosiocu` (ili `Ctrl+P`).
+   Na praznoj bazi je dovoljno popuniti polja i kliknuti **Sacuvaj** — podnosilac
+   se kreira i automatski postaje aktivan. Bez podnosioca XML prijava ne može da
+   se generiše.
+2. **Dodaj unose** — `+ Dodaj unos` (ili `Ctrl+N`).
+3. **Generiši XML** — `GENERISI XML` (ili `Ctrl+G`), pa fajl uploaduj na ePorezi.
+
 **Glavni meni:**
 1. Prikaži tabelu unosa
 2. Dodaj novi unos
