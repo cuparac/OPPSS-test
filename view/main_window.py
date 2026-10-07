@@ -9,13 +9,15 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from typing import Any, Dict, Optional
 
 from model import Database, validan_jmbg, validan_ebs
 from view.widgets import DatumEntry, Kalendar
-from view.dialogs import ProzorFiltera, ProzorPodnosioca, ProzorPretrage, ProzorStatistike
+from view.dialogs import (ProzorFiltera, ProzorPodnosioca, ProzorPretrage,
+                          ProzorStatistike, ProzorDuplikata)
 
 logger = logging.getLogger(__name__)
 
@@ -410,6 +412,46 @@ class MainWindow(tk.Tk):
     # ------------------------------------------------------------------
     # GUI: tabele, tabovi, grafikoni, info
     # ------------------------------------------------------------------
+    def _popuni_iz_duplikata(self, entries: Dict[str, Any], osoba: Dict[str, Any]) -> None:
+        """Popunjava formu podacima postojećeg unosa iz baze.
+
+        Koristi se kada korisnik izabere "Ne snimaj" u prozoru za duplikat —
+        polja se popune podacima unosa koji je već u bazi, da korisnik vidi
+        šta tamo stoji i može da ga izmeni umesto da kuca ispočetka.
+
+        Args:
+            entries: Rečnik widget-a forme (ključ -> widget).
+            osoba: Dict sa postojećim unosom iz baze.
+        """
+        vrste_pr = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
+        vrste_id = {"1": "JMBG", "0": "PIB", "5": "EBS"}
+
+        for key, w in entries.items():
+            if key in ("datum_unos", "datum_do"):
+                datum_key = "datum" if key == "datum_unos" else "datum_do"
+                w.delete(0, "end")
+                vrednost = osoba.get(datum_key, "")
+                if vrednost:
+                    try:
+                        w.insert(0, datetime.datetime.strptime(vrednost, "%Y-%m-%d").strftime("%d/%m/%Y"))
+                    except ValueError:
+                        w.insert(0, str(vrednost))
+                continue
+
+            if key == "vrsta_tip":
+                vrednost = vrste_pr.get(str(osoba.get("vrsta_prometa", "")), "")
+            elif key == "id_tip":
+                vrednost = vrste_id.get(str(osoba.get("vrsta_identifikatora", "")), "")
+            else:
+                vrednost = osoba.get(key, "")
+
+            if hasattr(w, "set"):
+                if vrednost != "" and vrednost is not None:
+                    w.set(str(vrednost))
+            elif hasattr(w, "delete"):
+                w.delete(0, "end")
+                w.insert(0, str(vrednost if vrednost is not None else ""))
+
     def prikazi_kontekstni_meni(self, event: tk.Event) -> None:
         """Prikazuje kontekstni meni na osnovu pozicije klika.
 
@@ -894,7 +936,25 @@ class MainWindow(tk.Tk):
         def sacuvaj() -> None:
             ok = False
             if self.controller:
-                ok = self.controller.sacuvaj_osobu(entries, indeks_izmene, parent=win)
+                ishod = self.controller.sacuvaj_osobu(entries, indeks_izmene, parent=win)
+                if ishod == "duplikat":
+                    # Postoji unos sa istim identifikatorom i datumom - pokaži
+                    # prozor sa tri jasne opcije (Zameni / Dodaj kao novi / Ne snimaj).
+                    dlg = ProzorDuplikata(win, entries["identifikator"].get().strip(),
+                                          self.controller._podaci_za_snimanje["datum"],
+                                          self.controller._duplikat)
+                    if dlg.rezultat == "zameni":
+                        ok = self.controller.resi_duplikat("zameni")
+                    elif dlg.rezultat == "dodaj":
+                        ok = self.controller.resi_duplikat("dodaj")
+                    else:
+                        # "Ne snimaj" - popuni polja podacima postojećeg unosa
+                        # da korisnik vidi šta je već u bazi i može da izmeni.
+                        self._popuni_iz_duplikata(entries, dlg.podaci)
+                        self.controller.resi_duplikat("preskoci")
+                        return
+                elif ishod == "snimljeno":
+                    ok = True
             if not ok:
                 return
             for key, w in entries.items():

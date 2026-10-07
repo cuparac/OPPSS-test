@@ -21,10 +21,18 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   odbijao sa „Nije izabran podnosioc"), pa generisanje XML prijave nije moglo da
   se završi. Vraćena dugmad „+ Novi" i „Aktivan"; „Sacuvaj" na praznoj bazi
   kreira prvog podnosioca i postavlja ga kao aktivnog
+- **Id podnosioca se ponovo koristi** posle brisanja (AUTOINCREMENT je čuvao
+  najveći ikad upotrebljeni broj)
+- **Brisanje aktivnog podnosioca** — prvi preostali preuzima aktivnost
+- **Prozor za duplikat sa tri jasne opcije** — umesto sistemskog dijaloga sa
+  dugmadima Yes/No/Cancel (koja ne govore šta znače): „Zameni", „Dodaj kao novi",
+  „Ne snimaj". Kod duplikata se forma popunjava podacima postojećeg unosa
+- **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) da bi
+  „Dodaj kao novi" mogao da radi; postojeća baza se automatski migrira
 
 ### Testovi
-- **Integracioni testovi** — 45 testova kroz ceo Model + View + Controller stack:
-  42 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL.
+- **Integracioni testovi** — 54 testa kroz ceo Model + View + Controller stack:
+  51 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
 ### Uklonjeno iz v16

@@ -12,6 +12,7 @@ import datetime
 import logging
 import os
 import shutil
+import sqlite3
 import webbrowser
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
@@ -21,7 +22,8 @@ from tkinter import messagebox, filedialog
 from model import Database, migriraj_json_u_sqlite
 from model import validan_jmbg, validan_ebs, konvertuj_datum
 from model import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
-from view.dialogs import ProzorFiltera, ProzorPodnosioca, ProzorPretrage, ProzorStatistike
+from view.dialogs import (ProzorFiltera, ProzorPodnosioca, ProzorPretrage,
+                          ProzorStatistike, ProzorDuplikata)
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
@@ -216,7 +218,7 @@ class Controller:
                 messagebox.showinfo("Obrisano", "Svi unosi za %s. godinu su obrisani." % self.view.godina)
 
     def sacuvaj_osobu(self, entries: Dict[str, Any], indeks_izmene: Optional[int] = None,
-                      parent: Any = None) -> bool:
+                      parent: Any = None) -> str:
         """Validira i čuva unos osobe (dodavanje ili izmena).
 
         Args:
@@ -225,7 +227,11 @@ class Controller:
             parent: Roditeljski prozor za dijaloge.
 
         Returns:
-            True ako je unos sačuvan, inače False.
+            Ishod snimanja:
+            - ``"snimljeno"`` — unos je sačuvan
+            - ``"duplikat"`` — postoji isti identifikator i datum; pozivalac treba
+              da pita korisnika i pozove :meth:`resi_duplikat`
+            - ``"greska"`` — validacija nije prošla ili je korisnik odustao
         """
         vrste_pr = {"Poljoprivredni proizvodi/usluge": "1", "Sekundarne sirovine": "2"}
         vrste_id = {"JMBG": "1", "PIB": "0", "EBS": "5"}
@@ -233,65 +239,37 @@ class Controller:
         datum_iso = konvertuj_datum(entries["datum_unos"].get())
         if not datum_iso or not entries["datum_unos"].dobar_datum():
             messagebox.showerror("Greska", "Neispravan datum OD!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=parent)
-            return False
+            return "greska"
         datum_do_iso = konvertuj_datum(entries["datum_do"].get())
         if not datum_do_iso or not entries["datum_do"].dobar_datum():
             messagebox.showerror("Greska", "Neispravan datum DO!\nKucajte 8 cifara: DDMMYYYY\nPrimer: 01012026", parent=parent)
-            return False
+            return "greska"
         if datum_do_iso < datum_iso:
             messagebox.showerror("Greska", "Datum DO ne moze biti pre datuma OD!", parent=parent)
-            return False
+            return "greska"
         broj_id = entries["identifikator"].get().strip()
         tip = entries["id_tip"].get()
         ocekivano = 13 if tip == "JMBG" else 9
         if not broj_id.isdigit() or len(broj_id) != ocekivano:
             messagebox.showerror("Greska", "Identifikator mora imati TACNO %d cifara!\n(Uneseno: %d)" % (ocekivano, len(broj_id)), parent=parent)
-            return False
+            return "greska"
         if tip == "JMBG" and not validan_jmbg(broj_id):
             if not messagebox.askyesno("Upozorenje",
                                        "JMBG (%s) NE prolazi proveru kontrolne cifre!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
                                        parent=parent):
-                return False
+                return "greska"
         if tip == "EBS" and not validan_ebs(broj_id):
             if not messagebox.askyesno("Upozorenje",
                                        "EBS (%s) NIJE ispravan (mora imati 9 cifara)!\n\nDa li IPAK zelite da sacuvate ovaj unos?" % broj_id,
                                        parent=parent):
-                return False
+                return "greska"
         try:
             iznos = int(entries["iznos_prometa"].get().strip())
             if iznos <= 0:
                 raise ValueError
         except ValueError:
             messagebox.showerror("Greska", "Iznos mora biti pozitivan ceo broj!", parent=parent)
-            return False
-
-        # Provera duplikata (identifikator + datum)
-        if indeks_izmene is None:
-            duplikat = self.db.ima_duplikat(broj_id, datum_iso)
-            if duplikat:
-                odgovor = messagebox.askyesnocancel(
-                    "UPOZORENJE - DUPLIKAT",
-                    "Već postoji unos sa identifikatorom %s i datumom %s:\n\n"
-                    "• Ime/Naziv: %s\n"
-                    "• Opština: %s\n"
-                    "• Datum: %s do %s\n"
-                    "• Iznos: %s RSD\n\n"
-                    "Zameni = obriši staro i snimi novo\n"
-                    "Dodaj kao novi = snimi bez brisanja\n"
-                    "Preskoči = nemoj ništa snimiti" % (
-                        broj_id,
-                        datum_iso,
-                        duplikat.get('ime_naziv', ''),
-                        duplikat.get('opstina', ''),
-                        duplikat.get('datum', ''),
-                        duplikat.get('datum_do', ''),
-                        format(duplikat.get('iznos_prometa', 0), ",").replace(",", ".")),
-                    parent=parent)
-                if odgovor is None:  # Preskoči
-                    return False
-                elif not odgovor:  # Zameni
-                    self.db.obrisi_osobu(duplikat['id'])
-                # True = Dodaj kao novi, nastavi sa snimanjem
+            return "greska"
 
         r = {
             "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
@@ -314,19 +292,74 @@ class Controller:
         for k in obavezna:
             if not r[k]:
                 messagebox.showwarning("Upozorenje", "Popunite sva obavezna polja!", parent=parent)
-                return False
+                return "greska"
 
+        # Provera duplikata (identifikator + datum). Odluku o duplikatu donosi
+        # pozivalac (dijalog sa tri jasne opcije), pa se ovde samo prijavljuje.
+        if indeks_izmene is None:
+            duplikat = self.db.ima_duplikat(broj_id, datum_iso)
+            if duplikat:
+                self._podaci_za_snimanje = r
+                self._duplikat = duplikat
+                return "duplikat"
+
+        return "snimljeno" if self._upisi_osobu(r, indeks_izmene) else "greska"
+
+    def _upisi_osobu(self, r: Dict[str, Any], indeks_izmene: Optional[int]) -> bool:
+        """Upisuje unos u bazu (novi ili izmena) i osvežava tabelu.
+
+        Args:
+            r: Pripremljeni podaci unosa.
+            indeks_izmene: ID unosa koji se menja ili None za novi unos.
+
+        Returns:
+            True ako je unos upisan, False ako ga je baza odbila.
+        """
         if indeks_izmene is not None:
             stari = next((o for o in self.db.ucitaj_ljude() if o['id'] == indeks_izmene), None)
             if stari:
                 self.undo_stack.push("izmeni", {"id": indeks_izmene, "stari": stari, "novi": r})
             self.db.izmeni_osobu(indeks_izmene, r)
         else:
-            self.db.dodaj_osobu(r)
+            try:
+                self.db.dodaj_osobu(r)
+            except sqlite3.IntegrityError:
+                messagebox.showerror(
+                    "Unos nije moguć",
+                    "Baza ne dozvoljava dva unosa sa istim identifikatorom (%s) i datumom (%s).\n\n"
+                    "Izaberite „Zameni\" da zamenite postojeći unos, ili izmenite datum."
+                    % (r.get("identifikator", ""), r.get("datum", "")))
+                return False
             novi_id = self.db.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             self.undo_stack.push("dodaj", {"id": novi_id, **r})
         self.view.osvezi_tabelu()
         return True
+
+    def resi_duplikat(self, odluka: str) -> bool:
+        """Rešava prethodno prijavljen duplikat.
+
+        Args:
+            odluka: "zameni" (obriši staro i snimi novo), "dodaj" (snimi kao novi
+                bez brisanja) ili "preskoci" (ne snimaj ništa).
+
+        Returns:
+            True ako je unos sačuvan, inače False. Kod "dodaj" vraća False ako
+            baza odbije unos (npr. UNIQUE ograničenje na identifikator+datum).
+        """
+        r = getattr(self, "_podaci_za_snimanje", None)
+        duplikat = getattr(self, "_duplikat", None)
+        if r is None:
+            return False
+        if odluka == "zameni" and duplikat:
+            self.db.obrisi_osobu(duplikat['id'])
+        elif odluka == "preskoci":
+            self._podaci_za_snimanje = None
+            self._duplikat = None
+            return False
+        upisano = self._upisi_osobu(r, None)
+        self._podaci_za_snimanje = None
+        self._duplikat = None
+        return upisano
 
     # ------------------------------------------------------------------
     # Sortiranje / filtriranje

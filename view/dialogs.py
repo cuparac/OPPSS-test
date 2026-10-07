@@ -427,3 +427,123 @@ class ProzorStatistike(tk.Toplevel):
         ttk.Label(okvir, text="Po opštini:", font=("Segoe UI", 10, "bold")).pack(anchor="w")
         for v in stat['po_opstini']:
             ttk.Label(okvir, text=f"  {v['opstina']}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD").pack(anchor="w")
+
+
+class ProzorDuplikata(tk.Toplevel):
+    """Prozor koji se prikazuje kada unos sa istim identifikatorom i datumom
+    već postoji.
+
+    Umesto sistemskog dijaloga sa dugmadima Yes/No/Cancel (koja ne govore šta
+    znače), ovaj prozor nudi tri jasno opisane opcije:
+
+    - **Zameni** — briše postojeći unos i snima novi
+    - **Dodaj kao novi** — snima novi unos bez brisanja postojećeg
+    - **Ne snimaj** — odustaje od snimanja
+
+    Attributes:
+        rezultat: Izabrana opcija — "zameni", "dodaj", "preskoci" ili "zatvori".
+        podaci: Podaci postojećeg (duplog) unosa, za popunjavanje forme.
+    """
+
+    def __init__(self, parent: tk.Widget, identifikator: str, datum: str,
+                 duplikat: dict, blokiraj: bool = True) -> None:
+        """Inicijalizuje ProzorDuplikata.
+
+        Args:
+            parent: Roditeljski widget.
+            identifikator: JMBG/PIB/EBS koji je već u bazi.
+            datum: Datum unosa koji je već u bazi (ISO format).
+            duplikat: Dict sa postojećim unosom iz baze.
+            blokiraj: Ako je True, čeka da korisnik izabere opciju (wait_window).
+                Testovi postavljaju False pa sami pozovu ``_izaberi``.
+        """
+        super().__init__(parent)
+        self.title("Unos već postoji")
+        self.resizable(False, False)
+        self.rezultat: str = "zatvori"
+        self.podaci: dict = duplikat
+        self.transient(parent)
+
+        okvir = ttk.Frame(self, padding=20)
+        okvir.pack(fill="both", expand=True)
+
+        ttk.Label(okvir, text="⚠  Unos već postoji",
+                  font=("Segoe UI", 13, "bold"), foreground="#b35c00").pack(anchor="w")
+        ttk.Label(okvir,
+                  text="U bazi već postoji unos sa identifikatorom %s i datumom %s."
+                       % (identifikator, datum),
+                  font=("Segoe UI", 10)).pack(anchor="w", pady=(8, 0))
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=12)
+
+        ttk.Label(okvir, text="Postojeći unos u bazi:",
+                  font=("Segoe UI", 10, "bold")).pack(anchor="w")
+
+        info = ttk.Frame(okvir)
+        info.pack(fill="x", pady=(6, 0))
+        polja = [
+            ("Ime / Naziv:", duplikat.get("ime_naziv", "")),
+            ("Opština:", duplikat.get("opstina", "")),
+            ("Adresa:", duplikat.get("adresa", "")),
+            ("Telefon:", duplikat.get("telefon", "")),
+            ("Datum:", "%s do %s" % (duplikat.get("datum", ""), duplikat.get("datum_do", ""))),
+            ("Iznos:", "%s RSD" % format(duplikat.get("iznos_prometa", 0), ",").replace(",", ".")),
+        ]
+        for red, (naziv, vrednost) in enumerate(polja):
+            ttk.Label(info, text=naziv, font=("Segoe UI", 9)).grid(
+                row=red, column=0, sticky="w", padx=(0, 8))
+            ttk.Label(info, text=str(vrednost), font=("Segoe UI", 9, "bold")).grid(
+                row=red, column=1, sticky="w")
+
+        ttk.Separator(okvir, orient="horizontal").pack(fill="x", pady=12)
+
+        ttk.Label(okvir, text="Šta želite da uradite?",
+                  font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 8))
+
+        dugmad = ttk.Frame(okvir)
+        dugmad.pack(fill="x")
+
+        btn_zameni = ttk.Button(dugmad, text="Zameni (obriši staro, snimi novo)",
+                                command=lambda: self._izaberi("zameni"))
+        btn_zameni.pack(fill="x", pady=3)
+        btn_dodaj = ttk.Button(dugmad, text="Dodaj kao novi (snimi bez brisanja)",
+                               command=lambda: self._izaberi("dodaj"))
+        btn_dodaj.pack(fill="x", pady=3)
+        btn_preskoci = ttk.Button(dugmad, text="Ne snimaj (odustani)",
+                                  command=lambda: self._izaberi("preskoci"))
+        btn_preskoci.pack(fill="x", pady=3)
+
+        btn_zameni.focus_set()
+        self.bind("<Escape>", lambda e: self._izaberi("preskoci"))
+        self.protocol("WM_DELETE_WINDOW", lambda: self._izaberi("preskoci"))
+
+        self.update_idletasks()
+        self._centriraj(parent)
+        self.grab_set()
+        if blokiraj:
+            self.wait_window(self)
+
+    def _centriraj(self, parent: tk.Widget) -> None:
+        """Postavlja prozor u sredinu roditeljskog prozora."""
+        try:
+            self.update_idletasks()
+            sirina = self.winfo_width()
+            visina = self.winfo_height()
+            x = parent.winfo_rootx() + (parent.winfo_width() - sirina) // 2
+            y = parent.winfo_rooty() + (parent.winfo_height() - visina) // 3
+            self.geometry("+%d+%d" % (max(x, 0), max(y, 0)))
+        except Exception:
+            pass
+
+    def _izaberi(self, opcija: str) -> None:
+        """Beleži izabranu opciju i zatvara prozor.
+
+        Args:
+            opcija: "zameni", "dodaj" ili "preskoci".
+        """
+        self.rezultat = opcija
+        try:
+            self.grab_release()
+        except Exception:
+            pass
+        self.destroy()

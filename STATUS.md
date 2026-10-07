@@ -25,10 +25,15 @@
 - **Dijalog O aplikaciji** — prikazivao je v15.7, sada v16
 - **Prvi podnosilac na praznoj bazi** — bez ovoga generisanje XML prijave nije
   moglo da se završi (vidi CHANGELOG)
+- **Id podnosioca se ponovo koristi** posle brisanja
+- **Brisanje aktivnog podnosioca** — preostali preuzima aktivnost
+- **Prozor za duplikat** — tri jasne opcije (Zameni / Dodaj kao novi / Ne snimaj)
+  i popunjavanje forme podacima postojećeg unosa
+- **UNIQUE ograničenje uklonjeno** — omogućeno „Dodaj kao novi"
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 45 testova kroz ceo Model + View + Controller stack
-  - 42 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 54 testa kroz ceo Model + View + Controller stack
+  - 51 prolazi
   - 3 poznata buga nasleđena iz v15.9, markirana kao XFAIL
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
@@ -74,7 +79,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (45)
+│   └── test_integration.py      # Integracioni testovi (54)
 ├── KorisnikouputstvoOPPSS.pdf
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt

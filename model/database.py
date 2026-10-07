@@ -106,9 +106,47 @@ class Database:
             naziv_gazdinstva TEXT,
             datum TEXT,
             datum_do TEXT,
-            iznos_prometa INTEGER,
-            UNIQUE (identifikator, datum, godina)
+            iznos_prometa INTEGER
         )''')
+
+        # Migracija: ranije je postojalo UNIQUE ograničenje na
+        # (identifikator, datum, godina), zbog koga nisu mogla da postoje dva
+        # ista unosa. Opcija "Dodaj kao novi" u prozoru za duplikat to zahteva,
+        # pa se ograničenje uklanja prepisivanjem tabele.
+        c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='ljudi'")
+        red = c.fetchone()
+        if red and red[0] and "UNIQUE" in red[0].upper():
+            c.execute("ALTER TABLE ljudi RENAME TO ljudi_stara")
+            c.execute('''CREATE TABLE ljudi (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                godina TEXT,
+                vrsta_prometa TEXT,
+                vrsta_identifikatora TEXT,
+                identifikator TEXT,
+                ime_naziv TEXT,
+                opstina TEXT,
+                adresa TEXT,
+                email_osobe TEXT,
+                telefon TEXT,
+                broj_gazdinstva TEXT,
+                naziv_gazdinstva TEXT,
+                datum TEXT,
+                datum_do TEXT,
+                iznos_prometa INTEGER
+            )''')
+            c.execute('''INSERT INTO ljudi (id, godina, vrsta_prometa, vrsta_identifikatora,
+                             identifikator, ime_naziv, opstina, adresa, email_osobe,
+                             telefon, broj_gazdinstva, naziv_gazdinstva, datum, datum_do,
+                             iznos_prometa)
+                         SELECT id, godina, vrsta_prometa, vrsta_identifikatora,
+                             identifikator, ime_naziv, opstina, adresa, email_osobe,
+                             telefon, broj_gazdinstva, naziv_gazdinstva, datum, datum_do,
+                             iznos_prometa
+                         FROM ljudi_stara''')
+            c.execute("DROP TABLE ljudi_stara")
+            logging.info("Migracija tabele ljudi: uklonjeno UNIQUE ograničenje "
+                         "(dozvoljeni isti identifikator i datum)")
+
         # Indeksi za bržu pretragu
         c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_godina ON ljudi(godina)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_ljudi_identifikator ON ljudi(identifikator)')
