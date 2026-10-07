@@ -2,7 +2,7 @@
 
 **Aplikacija za generisanje OPPS prijava (Обавештење о промету пољопривредних производа и секундарних сировина)**
 
-![Version](https://img.shields.io/badge/verzija-15.9-blue)
+![Version](https://img.shields.io/badge/verzija-16.0-blue)
 ![Python](https://img.shields.io/badge/python-3.6+-green)
 ![License](https://img.shields.io/badge/licence-MIT-orange)
 
@@ -14,10 +14,10 @@
 - [Funkcionalnosti](#funkcionalnosti)
 - [Instalacija](#instalacija)
 - [Korišćenje](#korišćenje)
-- [Istorija unapređenja](#istorija-unapređenja)
 - [Struktura projekta](#struktura-projekta)
 - [Generisani fajlovi](#generisani-fajlovi)
 - [Kreiranje .exe fajla](#kreiranje-exe-fajla-portable)
+- [Starije verzije](#starije-verzije)
 - [Rešavanje problema](#rešavanje-problema)
 - [Licenca](#licenca)
 
@@ -27,7 +27,9 @@
 
 OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih upload-u na portal **ePorezi** (Poreska uprava Republike Srbije). Aplikacija omogućava unos podataka o podnosiocu i izvršiocima prometa, validaciju unetih podataka, i generisanje XML fajla u skladu sa XSD semom.
 
-**Verzija 15.9** donosi pravi PDF export (ReportLab), auto-backup fix (briše stari backup) i dark theme fix. Prethodne verzije: v15.5 (više podnosioca), v15.6 (napredni filteri), v15.7 (tabovi, grafikoni, dark theme), v15.8 (indeksi, lazy loading, keširanje). Aplikacija je podeljena na: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py` i `opps_generator_gui_v15.9.py` (entry point).
+**Verzija 16.0** donosi MVC arhitekturu: monolitni `gui.py` (2008 linija) razdvojen je na tri sloja — `model/` (baza, validacije, generator), `view/` (GUI komponente) i `controller.py` (business logika). Time je omogućeno testiranje logike bez GUI-a i lakše održavanje.
+
+Istorija svih verzija je u [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -44,7 +46,7 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 ### Vrste identifikatora
 | Tip | Opis | Dužina |
 |-----|------|--------|
-| JMBG | Jedinstveni matični broj građana | 13 cifara |
+| JMBG | Jedinstveni matrični broj građana | 13 cifara |
 | PIB | Poreski identifikacioni broj | 9 cifara |
 | EBS | Jedinstveni broj subjekta | 9 cifara |
 
@@ -55,45 +57,35 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 | 2 | Unos prometa sekundarnih sirovina |
 
 ### Obavezna polja
-- Vrsta prometa
-- Identifikator (JMBG/PIB/EBS)
-- Ime i prezime / Naziv
-- Opština
-- Adresa
-- Telefon
-- Datum OD
-- Datum DO
-- Iznos prometa
+Vrsta prometa, identifikator (JMBG/PIB/EBS), ime i prezime / naziv, opština, adresa, telefon, datum OD, datum DO, iznos prometa.
 
 ### Opciona polja
-- E-posta osobe
-- Broj poljoprivrednog gazdinstva
-- Naziv poljoprivrednog gazdinstva
+E-posta osobe, broj poljoprivrednog gazdinstva, naziv poljoprivrednog gazdinstva.
 
-### Dodatne funkcionalnosti (v15.2–v15.9)
-- **SQLite baza** - brža i sigurnija od JSON
-- **CSV export** - izvoz u Excel format
-- **CSV import** - uvoz podataka iz CSV fajla
-- **Pretraga** - po opštini, imenu, identifikatoru, iznosu
+### Rad sa podacima
+- **SQLite baza** - po godinama, sa indeksima i UNIQUE constraint-om
+- **Više podnosioca** - selektor, dodavanje, brisanje, aktivni podnosilac
+- **CSV export / import** - izvoz i uvoz podataka (Excel)
+- **Pretraga** - po opštini, imenu, identifikatoru, iznosu, datumu
 - **Statistika** - ukupno po godini, vrsti prometa, opštini
-- **Migracija** - automatska konverzija JSON → SQLite
-- **Brisanje svih unosa** - sa dva nivoa potvrde
-- **Backup baze** - ručno kopiranje SQLite fajla sa timestamp-om
-- **Izveštaj za štampu** - HTML izveštaj (štampa se kroz pregledač)
+- **Napredni filteri** - po vrsti prometa, opštini, rasponu iznosa i datumu
 - **Sortiranje tabele** - klikom na zaglavlje kolone
+- **Paginacija** - 100 unosa po stranici
+- **Undo/Redo** - Ctrl+Z / Ctrl+Y
+- **Auto-backup** - backup baze pri svakom pokretanju
+- **Migracija** - automatska konverzija JSON → SQLite
+- **Drag & drop XML** - povlačenje XML fajla na prozor (Windows)
+
+### Prikaz i izveštaji
+- **Tabovi** - Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni
+- **Grafikoni** - Matplotlib bar/pie chart-ovi
+- **Dark theme** - tamna tema preko Alat menija
+- **Izveštaji** - HTML (za štampu), PDF (ReportLab), XML (za ePorezi)
+
+### Interfejs
 - **Kontekstni meni** - desni klik na red ili prazan prostor
 - **Dvoklik izmena** - brza izmena unosa iz tabele
-- **Više podnosioca** (v15.5) - migracija na `id` PK, selektor, upravljanje
-- **Napredni filteri** (v15.6) - filter po datumu (samo ove godine/meseca)
-- **Tabovi** (v15.7) - Notebook sa 5 tabova (Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni)
-- **Grafikoni** (v15.7) - Matplotlib bar/pie chart-ovi
-- **Dark theme** (v15.7) - Tamna tema preko Alat menija
-- **Indeksi u bazi** (v15.8) - UNIQUE constraint + 5 indeksa
-- **Lazy loading** (v15.8) - Paginacija (100 unosa po stranici)
-- **Keširanje XSD** (v15.8) - XSD šema se učitava samo jednom
-- **Pravi PDF export** (v15.9) - ReportLab umesto HTML izveštaja
-- **Auto-backup fix** (v15.9) - Briše stari backup pre kreiranja novog
-- **Dark theme fix** (v15.9) - Tekst dugme u meniju se menja (Dark/Light)
+- **Kalendar** - widget za izbor datuma
 
 ---
 
@@ -101,9 +93,7 @@ OPPS Generator je desktop i CLI aplikacija za generisanje XML fajlova namenjenih
 
 ### Preduvodi
 - Python 3.6 ili noviji
-- `lxml` paket
-- `matplotlib` paket (za grafikone, v15.7+)
-- `reportlab` paket (za PDF export, v15.9+)
+- `lxml`, `matplotlib`, `reportlab` paketi
 
 ### Instalacija na Ubuntu/Debian
 
@@ -118,7 +108,7 @@ sudo apt install -y python3-lxml python3-matplotlib python3-reportlab
 ```bash
 git clone https://github.com/cuparac/OPPSS-test.git
 cd OPPSS-test
-pip install lxml matplotlib reportlab
+pip install -r requirements.txt
 ```
 
 ---
@@ -128,18 +118,8 @@ pip install lxml matplotlib reportlab
 ### GUI verzija (desktop)
 
 ```bash
-python opps_generator_gui_v15.9.py
+python opps_generator_gui_v16.py
 ```
-
-**Glavni meni:**
-1. Prikaži tabelu unosa
-2. Dodaj novi unos
-3. Izmeni unos (ili dvoklik na red u tabeli)
-4. Obriši unos
-5. Obriši SVE unose (sa potvrdom)
-6. Podaci o podnosiocu
-7. Generiši XML
-8. Promeni godinu
 
 **Prečice tastature:**
 | Prečica | Akcija |
@@ -147,139 +127,18 @@ python opps_generator_gui_v15.9.py
 | Ctrl+N | Novi unos |
 | Ctrl+D | Obriši unos |
 | Ctrl+G | Generiši XML |
-| Ctrl+P | Podaci o podnosioca |
+| Ctrl+P | Podaci o podnosiocu |
 | Ctrl+F | Pretraga |
+| Ctrl+Z / Ctrl+Y | Undo / Redo |
+| F1 | O aplikaciji |
 | Dvoklik | Izmeni unos |
 | Desni klik | Kontekstni meni |
-
-**Kontekstni meni (desni klik na red):**
-- ✏️ Izmeni unos
-- 🗑️ Obriši unos
-- 📋 Kopiraj identifikator
-- 🔍 Pretraga po ID-ju
-
-**Kontekstni meni (desni klik na prazan prostor):**
-- ➕ Dodaj novi
-- 🔄 Osveži
-- 📊 Statistika
-
-**Sortiranje tabele:**
-Kliknite na zaglavlje bilo koje kolone za sortiranje. Ponovni klik menja redosled (rastajući/opadajući).
 
 ### CLI verzija (terminal/server)
 
 ```bash
-python opps_generator_cli_v15.py
+python opps_generator_cli.py
 ```
-
----
-
-## Istorija unapređenja
-
-### v13.5 - Originalna verzija
-- GUI aplikacija sa tkinter interfejsom
-- JMBG validacija (osnovna)
-- JSON baza podataka
-- XML generisanje sa XSD validacijom
-- Kalendar widget za izbor datuma
-
-### v13.6 - Ispravke validacije
-- **JMBG validacija** - ekstrahuje godinu iz JMBG-a, probava oba raspona (1000-1999 i 2000-2999)
-- **tree.index()** - ispravno indeksiranje nakon brisanja reda
-- **Datum OD/DO** - dva posebna polja sa kalendar dugmadima
-- **File lock** - fcntl.flock() za atomicno čuvanje
-
-### v13.7 - Cross-platform kompatibilnost
-- **fcntl na Windows** - atomic write umesto fcntl
-- **assert → if** - ispravna validacija iznosa
-- **Provera datuma** - sprečava unos krajjeg datuma pre početnog
-- **Tabela** - prikaz oba datuma u formatu "DD/MM/YYYY - DD/MM/YYYY"
-- **XSD iz memorije** - validacija bez čitanja fajla sa diska
-- **strip()** - uklanja sve whitespace umesto samo space
-- **Error handling** - za korumpirani JSON
-
-### v13.8 - Nova polja i XSD usklađenost
-- **EBS identifikator** - podrška za Jedinstveni broj subjekta (9 cifara)
-- **Poljoprivredno gazdinstvo** - opciona polja za broj i naziv
-- **Email osobe** - opciono polje za kontakt osobe
-- **Validacija JSON strukture** - provera ključeva u bazi
-
-### v13.9 - CLI verzija i prečice
-- **CLI verzija** - command-line interfejs za terminal/server
-- **Prečice tastature** - Ctrl+N, Ctrl+D, Ctrl+G, Ctrl+P, F1
-- **About dijalog** - informacije o aplikaciji
-- **Error handling za lxml** - bolje rukovanje greškama
-
-### v14.0 - Standalone verzije
-- **CLI standalone** - XSD šema ugrađena u kod
-- **GUI standalone** - XSD šema ugrađena u kod
-- **.exe kompatibilnost** - spreman za PyInstaller
-
-### v15.0 - SQLite baza i napredne funkcionalnosti
-- **SQLite baza** - zamena za JSON (brža, sigurnija, SQL upiti)
-- **CSV export** - izvoz u Excel format (sa `;` delimiterom)
-- **Pretraga** - po opštini, imenu, identifikatoru, iznosu, datumu
-- **Statistika** - ukupno po godini, vrsti prometa, opštini
-- **Migracija** - automatska konverzija JSON → SQLite
-- **Meni** - Datoteka, Unos, Alat, Pomoć
-- **Property ispravke** - ispravan redosled inicijalizacije
-
-### v15.1 - Ispravke bugova iz v15.0
-- **Bug 1: DatumEntry kursor** - Kursor se sada može pozicionirati bilo gde u polju za datum. Navigacioni tasteri (⬅ ➡ Home End BackSpace Delete) ne okidaju formatiranje.
-- **Bug 2: Provera duplikata** - Upozorenje prilikom unosa postojećeg identifikatora. Ne blokira unos (razlika može biti u datumu/iznosu) ali prikazuje detalje postojećeg unosa.
-- **Bug 3: Dvoklik za izmenu** - Dvoklik na red u tabeli otvara formu za izmenu. Dugme menja tekst: "Sačuvaj" za novi unos, "Sačuvaj izmene" za izmenu. Popravljena greška gde polja za datum nisu bila popunjena prilikom izmene.
-
-### v15.2 - Nove funkcionalnosti
-- **Brisanje svih unosa** - Opcija za brisanje svih unosa za izabranu godinu sa dva nivoa potvrde
-- **Backup baze** - Ručno kopiranje SQLite baze u odabrani folder sa timestamp-om
-- **Import iz CSV** - Uvoz podataka iz CSV fajla (podržava različite formate datuma i nazive kolona)
-- **Izveštaj za štampu** - HTML izveštaj sa svim podacima, po opštini, i dugmetom za štampu
-- **Sortiranje tabele** - Klikom na zaglavlje kolone sortira se tabela (rastajuće/opadajuće)
-- **Kontekstni meni** - Desni klik na red (izmeni, obriši, kopiraj ID, pretraga) ili prazan prostor (dodaj, osveži, statistika)
-
-### v15.3 - Kvalitet koda
-- **Modularna arhitektura** - Podela na 5 modula: `gui.py`, `database.py`, `validacije.py`, `xml_generator.py`, `opps_generator_gui_v15.9.py` (entry point)
-- **Type hintovi** - Anotacije na svim javnim funkcijama i klasama
-- **Docstringovi** - Google stil dokumentacije za sve klase i javne metode
-- **Logging** - Zamena `print()` sa `logging` modulom (log fajl: `opps_generator.log`)
-- **Pytest testovi** - 25 testova pokrivajući Database, validacije i XML generator
-- **HTML injection fix** - `html.escape()` na sve dinamičke vrednosti u HTML izveštaju
-- **Placeholder podnosioc fix** - `ValueError` umesto podrazumevanih vrednosti kada podnosioc ne postoji
-
-### v15.4 - Nove funkcionalnosti
-- **Auto-backup baze** - Automatski backup pri svakom pokretanju (`backup_baza_{godina}_{timestamp}.db`)
-- **Pametni duplikati** - Provera identifikator + datum pri unosu, dijalog sa opcijama Zameni / Dodaj kao novi / Preskoči
-- **PDF export** - PDF izveštaj preko pregledača (bez dodatnih biblioteka)
-- **Undo/Redo** - Ctrl+Z / Ctrl+Y za poništavanje i ponavljanje operacija (dodaj, izmeni, obriši)
-- **Drag & drop XML upload** - Povuci XML fajl na prozor za učitavanje (Windows, `windnd` opciono)
-- **Napredni filteri** - Filter po vrsti prometa, opštini i range iznosa (min/max)
-
-### v15.5 - Više podnosioca u bazi
-- **Više podnosioca** - Podržano više podnosioca (različiti PIB/JMBG, opštine, vrste prometa). Migracija tabele `podnosioc` sa `godina` PK na `id` PK, dodata `naziv` i `aktivan` polja
-- **Selektor podnosioca** - Combobox u ProzorPodnosioca za izbor između podnosioca
-- **Upravljanje podnosiocima** - Dugmad + Novi / - Obriši / Aktivan
-- **XML import** - Podnosioc iz XML-a se dodaje kao novi i postavlja kao aktivan
-- **XML export** - Koristi se aktivni podnosilac za generisanje prijave
-- **Migracija postojeće baze** - Automatska konverzija stare tabele (godina PK → id PK)
-
-### v15.6 - Napredni filteri i sortiranje
-- **Napredni filteri** - Filter po datumu: "Samo ove godine", "Samo ovog meseca"
-- **Sortiranje tabele** - Status label ispod tabele prikazuje trenutno sortiranje (kolona + smer)
-
-### v15.7 - Tabovi, grafikoni i dark theme
-- **Tabovi (kartice)** - Notebook sa 5 tabova: Svi unosi, Po opštini, Po vrsti prometa, Po datumu, Grafikoni
-- **Grafikoni** - Matplotlib bar/pie chart-ovi po opštini i vrsti prometa
-- **Dark theme** - Tamna tema preko Alat menija (🌙 Dark theme)
-
-### v15.8 - Indeksi, lazy loading i keširanje
-- **Indeksi u bazi** - UNIQUE constraint na (identifikator, datum, godina) + 5 indeksa (godina, identifikator, datum, opstina, vrsta_prometa)
-- **Lazy loading** - Paginacija tabele (100 unosa po stranici) sa dugmadima << Prva / < Prethodna / Sledeća > / Poslednja >>
-- **Keširanje XSD seme** - XSD šema se učitava samo jednom i kešira u memoriji
-
-### v15.9 - Pravi PDF export i popravke
-- **Pravi PDF export** - ReportLab umesto HTML izveštaja (Datoteka → PDF izveštaj)
-- **Auto-backup fix** - Automatski briše stari backup pre kreiranja novog
-- **Dark theme fix** - Tekst dugme u Alat meniju se menja (🌙 Dark theme / ☀️ Light theme)
 
 ---
 
@@ -287,19 +146,44 @@ python opps_generator_cli_v15.py
 
 ```
 OPPSS-test/
-├── opps_generator_gui_v15.9.py   # Entry point (pokreće aplikaciju)
-├── gui.py                       # GUI komponente (App, DatumEntry, Kalendar, Prozori)
-├── database.py                  # Database operacije (CRUD, pretraga, statistika, CSV)
-├── validacije.py                # Validacione funkcije (JMBG, EBS, datum, XSD)
-├── xml_generator.py             # XML/HTML generator (ePorezi prijave, izveštaji)
-├── opps.xsd                     # XSD šema za validaciju XML-a
-├── KorisnikouputstvoOPPSS.pdf   # Korisničko uputstvo
-├── instalacija_ubuntu_server.txt
-├── kreiranje_exe_uputstvo.txt
+├── opps_generator_gui_v16.py    # Entry point (GUI)
+├── opps_generator_cli.py        # CLI verzija
+├── controller.py                # Controller — business logika
+├── model/
+│   ├── __init__.py
+│   ├── database.py              # SQLite operacije (CRUD, pretraga, statistika, CSV)
+│   ├── validacije.py            # JMBG, EBS, datum, ugrađena XSD šema
+│   └── xml_generator.py         # XML / HTML / PDF generator
+├── view/
+│   ├── __init__.py
+│   ├── main_window.py           # Glavni prozor, tabovi, tabela
+│   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
+│   └── widgets.py               # DatumEntry, Kalendar
+├── tests/
+│   └── test_integration.py      # Integracioni testovi (41)
+├── requirements.txt
 ├── CHANGELOG.md
 ├── README.md
 └── STATUS.md
 ```
+
+### Arhitektura
+
+```
+Korisnik → View (klik, unos) → Controller (logika) → Model (baza) → Controller → View (ažuriranje)
+```
+
+- **Model** — nema GUI zavisnosti
+- **View** — ne zavisi od Controller-a (koristi `set_controller()` injekciju)
+- **Controller** — zavisi od Model i View (prima kao argumente)
+
+### Pokretanje testova
+
+```bash
+xvfb-run -a python tests/test_integration.py
+```
+
+Rezultat: 38 prolazi, 3 poznata buga nasleđena iz v15.9 (XFAIL).
 
 ---
 
@@ -311,25 +195,32 @@ OPPSS-test/
 | `OPPS_prijava_2026.xml` | Generisani XML fajl (za upload na ePorezi) |
 | `OPPS_2026.csv` | CSV izveštaj (za Excel) |
 | `OPPS_izvestaj_2026.html` | HTML izveštaj (za štampu) |
+| `OPPS_izvestaj_2026.pdf` | PDF izveštaj |
 | `baza_2026_backup_YYYYMMDD_HHMMSS.db` | Backup baze |
 
 ---
 
 ## Kreiranje .exe fajla (portable)
 
-### Šta je "portable"?
-Portable verzija znači da je **sve ugrađeno u jedan fajl**. Ne treba:
-- Instalacija
-- .NET Framework
-- Visual C++ Redistributable
-- lxml paketi
-- Poseban .xsd fajl
-- Bilo koja druga zavisnost
+Portable verzija znači da je **sve ugrađeno u jedan fajl** — nije potrebna instalacija, .NET Framework, Visual C++ Redistributable, lxml paketi ni poseban .xsd fajl.
 
-Samo pokrenute `.exe` fajl i radi odmah.
+```bash
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v16" opps_generator_gui_v16.py
+```
 
-### Uputstvo za kreiranje
-Pogledajte `kreiranje_exe_uputstvo.txt` za detaljna uputstva.
+Detaljnije uputstvo: `kreiranje_exe_uputstvo.txt`.
+
+---
+
+## Starije verzije
+
+Starije verzije su sačuvane kao git tagovi:
+
+```bash
+git tag                 # lista svih verzija (v13.5 ... v15.9)
+git checkout v15.9      # preuzimanje stare verzije
+git checkout main       # povratak na trenutnu verziju
+```
 
 ---
 
@@ -352,7 +243,7 @@ sudo apt install -y python3-pip
 
 ### "Permission denied"
 ```bash
-python opps_generator_gui_v15.9.py  # bez sudo
+python opps_generator_gui_v16.py  # bez sudo
 ```
 
 ---
@@ -367,7 +258,7 @@ MIT License - slobodno korišćenje i modifikacija.
 
 - **GitHub:** https://github.com/cuparac/OPPSS-test
 - **Autor:** cuparac
-- **Verzija:** 15.9
+- **Verzija:** 16.0
 
 ---
 

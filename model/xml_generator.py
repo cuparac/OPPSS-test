@@ -11,8 +11,8 @@ from typing import Any
 
 from lxml import etree
 
-from database import Database
-from validacije import get_xsd_schema
+from .database import Database
+from .validacije import get_xsd_schema
 
 # Namespace za XML
 NS = "http://pid.purs.gov.rs"

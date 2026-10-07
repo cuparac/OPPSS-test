@@ -1,16 +1,16 @@
 ================================================================================
-KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v15.8
+KREIRANJE .exe FAJLA ZA WINDOWS (32/64 bit) — v16.0
 ================================================================================
 
 ================================================================================
 1. PREUZIMANJE FAJLOVA NA WINDOWS
 ================================================================================
 
-# Klonirajte repozitorijum ili preuzmite fajl:
+# Klonirajte repozitorijum:
 https://github.com/cuparac/OPPSS-test
 
-# Preuzmite fajl:
-opps_generator_gui_v15.8.py
+# Potrebni su svi fajlovi iz repozitorijuma (MVC struktura):
+opps_generator_gui_v16.py, controller.py, model/, view/
 
 
 ================================================================================
@@ -30,7 +30,8 @@ https://www.python.org/downloads/
 
 # Otvorite Command Prompt (cmd) ili PowerShell i ukucajte:
 
-pip install lxml matplotlib pyinstaller
+pip install -r requirements.txt
+pip install pyinstaller
 
 
 ================================================================================
@@ -41,11 +42,11 @@ pip install lxml matplotlib pyinstaller
 
 cd C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test
 
-# Za 32-bit Windows:
-pyinstaller --onefile --windowed --name "OPPSS_Generator_v15.8" opps_generator_gui_v15.8.py
+# GUI verzija (bez konzole):
+pyinstaller --onefile --windowed --name "OPPSS_Generator_v16" opps_generator_gui_v16.py
 
-# Za 64-bit Windows:
-pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15.8" opps_generator_cli_v15.py
+# CLI verzija (sa konzolom):
+pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v16" opps_generator_cli.py
 
 
 ================================================================================
@@ -53,7 +54,7 @@ pyinstaller --onefile --console --name "OPPSS_Generator_CLI_v15.8" opps_generato
 ================================================================================
 
 # Kreirani .exe fajl nalazi se u:
-C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test\dist\OPPSS_Generator.exe
+C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test\dist\OPPSS_Generator_v16.exe
 
 
 ================================================================================
@@ -61,10 +62,11 @@ C:\Users\VašeKorisničkoIme\Downloads\OPPSS-test\dist\OPPSS_Generator.exe
 ================================================================================
 
 # Pokrenite .exe fajl dvoklikom
-# Aplikacija će otvoriti command prompt prozor
-# Sledite uputstva na ekranu
+# GUI verzija otvara prozor aplikacije
+# CLI verzija otvara command prompt sa menijem
 
-# Generisani fajlovi (XML, JSON) nalaze se u istom direktorijumu gde je .exe
+# Generisani fajlovi (XML, CSV, HTML, PDF, baza) nalaze se u istom
+# direktorijumu gde je .exe
 
 
 ================================================================================
@@ -78,7 +80,7 @@ Problem: "lxml se ne instalira"
 Resenje:  pip install lxml --only-binary :all:
 
 Problem: "pyinstaller nije pronađen"
-Resenje:  python -m pyinstaller --onefile opps_generator_gui_v15.8.py
+Resenje:  python -m pyinstaller --onefile --windowed opps_generator_gui_v16.py
 
 Problem: "Antivirus blokira .exe"
 Resenje:  Dodajte .exe u izuzetke antivirusa
@@ -88,7 +90,7 @@ Resenje:  Dodajte .exe u izuzetke antivirusa
 8. INFORMACIJE O IZVRŠNOM FAJLU
 ================================================================================
 
-# Veličina: ~15-25 MB (zavisi od Python verzije)
+# Veličina: ~25-40 MB (zavisi od Python verzije; uključuje lxml, matplotlib, reportlab)
 # Platforma: Windows 7/8/10/11 (32/64 bit)
 # Zavisnosti: Nisu potrebne (sve je ugrađeno u .exe)
 
@@ -98,6 +100,6 @@ KONTAKT
 ================================================================================
 
 GitHub: https://github.com/cuparac/OPPSS-test
-Verzija: 15.8 STANDALONE
+Verzija: 16.0 STANDALONE
 
 ================================================================================
