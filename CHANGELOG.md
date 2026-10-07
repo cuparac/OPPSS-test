@@ -11,6 +11,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 - **Dark theme fix** — Tekst dugme u meniju se sada menja (Dark/Light)
 - **requirements.txt** — Dodat reportlab u zavisnosti
 
+### Ispravke (07.10.2026)
+- **Prvi podnosilac na praznoj bazi** — ProzorPodnosioca nije imao način da napravi
+  prvog podnosioca (dugme „+ Novi" je bilo uklonjeno, a „Sacuvaj" je odbijao sa
+  „Nije izabran podnosioc"). Zbog toga generisanje XML prijave nije moglo da se
+  završi — prijavljivalo je „Podnosioc nije registrovan".
+  - Vraćeno dugme **„+ Novi"** i dugme **„Aktivan"**
+  - **„Sacuvaj"** na praznoj bazi kreira prvog podnosioca direktno iz forme
+  - Ako nijedan podnosilac nije aktivan, sačuvani postaje aktivan
+
 ---
 
 ## [15.8] — 2026-10-05
