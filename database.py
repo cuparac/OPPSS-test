@@ -178,8 +178,19 @@ class Database:
             ID novog podnosioca
         """
         c = self.conn.cursor()
-        c.execute('''INSERT INTO podnosioc (naziv, pib_jmbg, email, telefon, jmbg, aktivan)
-                     VALUES (?, ?, ?, ?, ?, ?)''',
+        # Red se upisuje sa eksplicitnim id-jem = prvi slobodan broj, tako da se
+        # id obrisanog podnosioca ponovo koristi (SQLite bi inače, zbog
+        # AUTOINCREMENT, nastavio od najvećeg ikad upotrebljenog broja).
+        # Kandidati: 1 (ako je slobodan) i svaki id+1 iza kog postoji rupa.
+        c.execute('''INSERT INTO podnosioc (id, naziv, pib_jmbg, email, telefon, jmbg, aktivan)
+                     VALUES ((SELECT COALESCE(MIN(k), 1) FROM (
+                                 SELECT 1 AS k WHERE NOT EXISTS
+                                     (SELECT 1 FROM podnosioc WHERE id = 1)
+                                 UNION ALL
+                                 SELECT id + 1 FROM podnosioc x WHERE NOT EXISTS
+                                     (SELECT 1 FROM podnosioc y WHERE y.id = x.id + 1)
+                             )),
+                             ?, ?, ?, ?, ?, ?)''',
                   (podaci['naziv'], podaci['pib_jmbg'], podaci['email'],
                    podaci['telefon'], podaci['jmbg'], 0))
         self.conn.commit()
@@ -210,11 +221,22 @@ class Database:
     def obrisi_podnosioca(self, id: int) -> None:
         """Briše podnosioca.
 
+        Ako je obrisani podnosilac bio aktivan, prvi preostali postaje aktivan —
+        bez toga baza ostaje bez aktivnog podnosioca i generisanje XML prijave
+        prijavljuje da podnosilac nije registrovan iako postoji.
+
         Args:
             id: ID podnosioca
         """
         c = self.conn.cursor()
+        c.execute("SELECT aktivan FROM podnosioc WHERE id = ?", (id,))
+        red = c.fetchone()
         c.execute("DELETE FROM podnosioc WHERE id = ?", (id,))
+        if red is not None and red[0] == 1:
+            c.execute("SELECT MIN(id) FROM podnosioc")
+            sledeci = c.fetchone()[0]
+            if sledeci is not None:
+                c.execute("UPDATE podnosioc SET aktivan = 1 WHERE id = ?", (sledeci,))
         self.conn.commit()
 
     def postavi_aktivnog(self, id: int) -> None:

@@ -19,6 +19,12 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   - Vraćeno dugme **„+ Novi"** i dugme **„Aktivan"**
   - **„Sacuvaj"** na praznoj bazi kreira prvog podnosioca direktno iz forme
   - Ako nijedan podnosilac nije aktivan, sačuvani postaje aktivan
+- **Id podnosioca se ponovo koristi posle brisanja** — `AUTOINCREMENT` je čuvao
+  najveći ikad upotrebljeni broj, pa je novi podnosilac uvek dobijao novi id
+  (1, 2, 3 → obrišeš 3 → sledeći je 4). Sada se upisuje prvi slobodan broj.
+- **Brisanje aktivnog podnosioca** — ako je obrisani bio aktivan, prvi preostali
+  preuzima aktivnost; ranije je baza ostajala bez aktivnog podnosioca i
+  generisanje XML je grešilo iako podnosilac postoji.
 
 ---
 
