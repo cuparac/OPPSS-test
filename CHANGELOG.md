@@ -49,6 +49,10 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   umesto liste parametara) i `no such column: ime` (kriterijumi dijaloga nisu
   imena kolona). Dodata `Database.pretrazi_po()` koja prevodi kriterijume
   (`ime` → `ime_naziv`, `iznos_od` → `iznos_prometa >= ?`, datumi u ISO).
+- **Enter prelazi na sledeće polje** — ranije je Enter odmah snimao unos, pa je
+  pritisnut na pola forme prikazivao „Popunite sva obavezna polja!" i korisnik je
+  morao da koristi Tab. Sada Enter ide na sledeće polje (kao Tab), a snimanje je
+  na dugmetu „Sačuvaj" (Enter ili Space kad je dugme u fokusu).
 - **Prepis podataka kod ponovnog unosa istog JMBG/PIB/EBS** — ranije se pri
   kucanju istog identifikatora samo pojavila poruka „Postoji unos sa ovim ID-jem",
   a polja su ostajala prazna. Prozor sa opcijama se pojavljivao samo kad se
