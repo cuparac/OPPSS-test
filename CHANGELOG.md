@@ -29,6 +29,9 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   „Ne snimaj". Kod duplikata se forma popunjava podacima postojećeg unosa
 - **Uklonjeno UNIQUE ograničenje** na (identifikator, datum, godina) da bi
   „Dodaj kao novi" mogao da radi; postojeća baza se automatski migrira
+- **Enter prelazi na sledeće polje** — ranije je Enter odmah snimao unos, pa je
+  pritisnut na pola forme prikazivao „Popunite sva obavezna polja!". Sada Enter
+  ide na sledeće polje (kao Tab), a snimanje je na dugmetu „Sačuvaj"
 - **Prepis podataka kod ponovnog unosa istog JMBG/PIB/EBS** — čim se ukuca ceo
   identifikator, ostali podaci (ime/naziv, opština, adresa, e-pošta, telefon,
   gazdinstvo, vrste) prepisuju se iz poslednjeg unosa sa tim identifikatorom;

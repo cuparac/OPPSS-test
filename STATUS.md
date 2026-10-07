@@ -32,6 +32,7 @@
 - **UNIQUE ograničenje uklonjeno** — omogućeno „Dodaj kao novi"
 - **Prepis podataka** — ponovni unos istog JMBG/PIB/EBS prepisuje podatke iz
   prethodnog unosa (datumi i iznos ostaju prazni za novi period)
+- **Enter prelazi na sledeće polje** (kao Tab); snimanje je na dugmetu „Sačuvaj"
 
 ### Testovi (lokalno)
 - **Integracioni testovi** (`tests/test_integration.py`) — 58 testova kroz ceo Model + View + Controller stack

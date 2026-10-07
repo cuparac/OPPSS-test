@@ -1012,10 +1012,17 @@ class MainWindow(tk.Tk):
             sacuvaj()
             return "break"
 
+        def enter_napred(ev: tk.Event) -> str:
+            # Enter prelazi na sledeće polje (kao Tab). Ranije je Enter odmah
+            # snimao, pa je pritisnut na pola forme davao "Popunite sva obavezna
+            # polja!" — korisnik je morao da koristi Tab da bi prošao kroz polja.
+            return tab_napred(ev)
+
         for w in redosled_tab[:-1]:
             w.bind("<Tab>", tab_napred)
             w.bind("<Shift-Tab>", tab_nazad)
-            w.bind("<Return>", enter_sacuvaj)
+            w.bind("<Return>", enter_napred)
+        # Snimanje samo na dugme: Enter ili Space kad je dugme u fokusu.
         btn_sacuvaj.bind("<Return>", enter_sacuvaj)
         btn_sacuvaj.bind("<space>", enter_sacuvaj)
         entries["vrsta_tip"].focus_set()
