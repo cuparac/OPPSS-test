@@ -35,10 +35,11 @@
 - **Upozorenje na različite podatke** — ako isti JMBG ima različitu opštinu/adresu/
   ime/telefon u svojim unosima, prikazuje se upozorenje sa svim vrednostima
 - **Enter prelazi na sledeće polje** (kao Tab); snimanje je na dugmetu „Sačuvaj"
+- **Prozor za duplikat: Enter potvrđuje**, strelice/Tab pomeraju između opcija
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 62 testa kroz ceo Model + View + Controller stack
-  - 62 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 63 testa kroz ceo Model + View + Controller stack
+  - 63 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
@@ -86,7 +87,7 @@ OPPSS-test/
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
 ├── tests/
-│   └── test_integration.py      # Integracioni testovi (62)
+│   └── test_integration.py      # Integracioni testovi (63)
 ├── KorisnikouputstvoOPPSS.pdf
 ├── instalacija_ubuntu_server.txt
 ├── kreiranje_exe_uputstvo.txt
