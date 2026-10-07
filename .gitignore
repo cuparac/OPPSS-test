@@ -21,6 +21,9 @@ OPPS_izvestaj_*.pdf
 # Logovi
 *.log
 
+# Lokalno testiranje (ne ide na GitHub)
+tests/
+
 # Alati
 .superpowers/
 .idea/

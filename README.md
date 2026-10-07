@@ -168,8 +168,6 @@ OPPSS-test/
 │   ├── main_window.py           # Glavni prozor, tabovi, tabela
 │   ├── dialogs.py               # Prozori: filteri, podnosioc, pretraga, statistika
 │   └── widgets.py               # DatumEntry, Kalendar
-├── tests/
-│   └── test_integration.py      # Integracioni testovi (45)
 ├── requirements.txt
 ├── CHANGELOG.md
 ├── README.md
@@ -187,6 +185,9 @@ Korisnik → View (klik, unos) → Controller (logika) → Model (baza) → Cont
 - **Controller** — zavisi od Model i View (prima kao argumente)
 
 ### Pokretanje testova
+
+Integracioni testovi (`tests/test_integration.py`) su **lokalni** — ne nalaze se u
+repozitorijumu. Pokreću se iz korena projekta:
 
 ```bash
 xvfb-run -a python tests/test_integration.py

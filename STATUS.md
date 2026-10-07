@@ -26,14 +26,15 @@
 - **Prvi podnosilac na praznoj bazi** — bez ovoga generisanje XML prijave nije
   moglo da se završi (vidi CHANGELOG)
 
-### Testovi
+### Testovi (lokalno)
 - **Integracioni testovi** (`tests/test_integration.py`) — 45 testova kroz ceo Model + View + Controller stack
   - 42 prolazi
   - 3 poznata buga nasleđena iz v15.9, markirana kao XFAIL
+  - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
 
 ### Struktura repozitorijuma
-- Uklonjeno: `gui.py` (shim), `opps_generator_gui_v15.9.py`, `opps.xsd` (šema je u kodu), `docs/superpowers/`
+- Uklonjeno: `gui.py` (shim), `opps_generator_gui_v15.9.py`, `opps.xsd` (šema je u kodu), `docs/superpowers/`, `tests/` (lokalno testiranje)
 - Preimenovano: `opps_generator_cli_v15.py` → `opps_generator_cli.py`
 
 ### Važno pri korišćenju
@@ -86,6 +87,8 @@ OPPSS-test/
 ---
 
 ## 🧪 TESTIRANJE
+
+Integracioni testovi su lokalni (`tests/` je u `.gitignore`) i pokreću se iz korena projekta.
 
 ```bash
 # Integracioni testovi (headless)

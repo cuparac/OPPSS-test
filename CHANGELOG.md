@@ -24,7 +24,8 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ### Testovi
 - **Integracioni testovi** — 45 testova kroz ceo Model + View + Controller stack:
-  42 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL
+  42 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL.
+  Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
 ### Uklonjeno iz v16
 - `gui.py` — backward-compat shim više nije potreban
