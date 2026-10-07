@@ -1,5 +1,5 @@
 ================================================================================
-OPPSS GENERATOR v15.8 CLI - Uputstvo za instalaciju na Ubuntu Server
+OPPSS GENERATOR v16.0 CLI - Uputstvo za instalaciju na Ubuntu Server
 ================================================================================
 
 ================================================================================
@@ -12,9 +12,9 @@ git clone https://github.com/cuparac/OPPSS-test.git
 # Uđite u direktorijum
 cd OPPSS-test
 
-# ILI ako nemate git, preuzmite ručno:
-wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps_generator_cli_v15.py
-wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps.xsd
+# ILI ako nemate git, preuzmite samo CLI fajl (radi samostalno,
+# XSD šema je ugrađena u kod):
+wget https://raw.githubusercontent.com/cuparac/OPPSS-test/main/opps_generator_cli.py
 
 
 ================================================================================
@@ -80,7 +80,7 @@ Koraci:
 6. FAJLOVI KOJI SE KREIRAJU
 ================================================================================
 
-baza_2026.db           - SQLite baza podataka
+baza_2026.db            - SQLite baza podataka
 OPPS_prijava_2026.xml   - Generisani XML fajl (za upload na ePorezi)
 
 
@@ -98,7 +98,7 @@ Problem: "ModuleNotFoundError: No module named 'pip'"
 Resenje:  sudo apt install -y python3-pip
 
 Problem: "Permission denied"
-Resenje:  python3 opps_generator_cli_v15.py (bez sudo)
+Resenje:  python3 opps_generator_cli.py (bez sudo)
 
 Problem: "No space left on device"
 Resenje:  df -h (proverite prostor)
@@ -130,7 +130,7 @@ scp korisnik@server:~/OPPSS-test/OPPS_prijava_2026.xml ./
 10. BRISANJE PODATAKA
 ================================================================================
 
-# Obrišite JSON bazu:
+# Obrišite bazu:
 rm baza_2026.db
 
 # Obrišite generisani XML:
@@ -142,6 +142,6 @@ KONTAKT
 ================================================================================
 
 GitHub: https://github.com/cuparac/OPPSS-test
-Verzija: 15.8 CLI
+Verzija: 16.0 CLI
 
 ================================================================================

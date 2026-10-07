@@ -1,4 +1,4 @@
-"""OPPSS GENERATOR v15.0 CLI STANDALONE - SQLite baza, CSV export, pretraga, izveštaji.
+"""OPPSS GENERATOR v16.0 CLI STANDALONE - SQLite baza, CSV export, pretraga, izveštaji.
 Command-line verzija sa ugrađenom XSD semom.
 Ne zahteva poseban .xsd fajl. Kompatibilan sa 32/64 bit Windows.
 Zahteva: pip install lxml"""
@@ -447,7 +447,7 @@ def main():
             print(f"  {poruka}")
     
     print()
-    print("  Dobrodosli u OPPSS Generator v15.0 CLI STANDALONE!")
+    print("  Dobrodosli u OPPSS Generator v16.0 CLI STANDALONE!")
     print(f"  Trenutna godina: {godina}")
     print("  XSD šema je ugrađena u kod - ne treba poseban .xsd fajl.")
     
@@ -460,7 +460,7 @@ def main():
         
         print()
         print("=" * 60)
-        print("  OPPSS GENERATOR v15.0 CLI STANDALONE")
+        print("  OPPSS GENERATOR v16.0 CLI STANDALONE")
         print("=" * 60)
         print("  1. Prikazi tabelu unosa")
         print("  2. Dodaj novi unos")

@@ -4,6 +4,46 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
 
 ---
 
+## [16.0] — 2026-10-07
+
+### Arhitektura
+- **MVC refaktoring** — monolitni `gui.py` (2008 linija) razdvojen na tri sloja:
+  - `model/` — baza, validacije, XML/HTML/PDF generator (bez GUI zavisnosti)
+  - `view/` — GUI komponente (prozori, dijalozi, widget-i)
+  - `controller.py` — business logika koja povezuje Model i View
+- **Entry point** — `opps_generator_gui_v16.py`
+
+### Ispravke
+- **Naslov prozora** — prikazivao je v15.3, sada v16
+- **Dijalog O aplikaciji** — prikazivao je v15.7, sada v16
+
+### Testovi
+- **Integracioni testovi** — 41 test kroz ceo Model + View + Controller stack:
+  38 prolazi, 3 poznata buga nasleđena iz v15.9 markirana kao XFAIL
+
+### Uklonjeno iz v16
+- `gui.py` — backward-compat shim više nije potreban
+- `opps_generator_gui_v15.9.py` — stari entry point
+- `opps.xsd` — XSD šema je ugrađena u kod (`model/validacije.py`)
+- `docs/superpowers/` — interni planning fajlovi
+
+### Preimenovano
+- `opps_generator_cli_v15.py` → `opps_generator_cli.py`
+
+### Poznati bugovi (nasleđeni iz v15.9, nisu regresije)
+| # | Bug | Greška |
+|---|-----|--------|
+| 1 | Statistika prozor | `TypeError: string indices must be integers` |
+| 2 | Pretraga prozor | `sqlite3.ProgrammingError: Incorrect number of bindings` |
+| 3 | Malformiran datum | `ValueError` (neuhvaćen) |
+| 4 | Kolone posle filtera | 7 vrednosti u 9 kolona (pomeranje) |
+
+### Starije verzije
+Starije verzije (v13.5–v15.9) su dostupne kao git tagovi:
+`git checkout v15.9`
+
+---
+
 ## [15.9] — 2026-10-06
 
 ### Nove funkcionalnosti
