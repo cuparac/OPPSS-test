@@ -35,7 +35,7 @@ OPPSS-test/
 │   ├── validacije.py            # Validacije (193 linija)
 │   └── xml_generator.py         # XML/HTML/PDF generator (248 linija)
 ├── tests/
-│   └── test_integration.py      # 42 integration testa (774 linije)
+│   └── test_integration.py      # 41 integration test (774 linije)
 ├── opps_generator_gui_v15.9.py  # Stari entry point (referenca)
 ├── opps_generator_cli_v15.py    # CLI verzija (nepromenjena)
 ├── CHANGELOG.md
@@ -77,7 +77,7 @@ python opps_generator_gui_v16.py
 xvfb-run -a python tests/test_integration.py
 ```
 
-**Rezultat:** 42/42 testova prolazi
+**Rezultat:** 41 test | 38 PASS | 3 XFAIL (poznati nasleđeni bugovi) | 0 neočekivanih padova
 
 ### Ručno testiranje — proveri sledeće
 
@@ -179,7 +179,7 @@ Korisnik → View (klik, unos) → Controller (logika) → Model (baza) → Cont
 
 **Completeness:** All major components extracted. forma_osobe() remains in View (acceptable for minimal MVC).
 
-**Testing:** 42 integration tests pass. 4-5 inherited v15.9 bugs documented as xfail (not regressions).
+**Testing:** 41 integration tests: 38 pass, 3 inherited v15.9 bugs documented as XFAIL (not regressions).
 
 **Minor gaps (non-blocking):**
 - forma_osobe() not extracted to ProzorUnosa dialog

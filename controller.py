@@ -470,10 +470,10 @@ class Controller:
         import sys
         import platform
         messagebox.showinfo("O aplikaciji",
-                            "OPPSS Generator v15.7 GUI STANDALONE\n\n"
+                            "OPPSS Generator v16 GUI STANDALONE\n\n"
                             "Aplikacija za generisanje OOPSS prijava\n"
                             "za portal ePorezi (Poreska uprava RS)\n\n"
-                            "Verzija: 15.7\n"
+                            "Verzija: 16\n"
                             "Baza: SQLite\n"
                             "XSD šema: ugrađena\n\n"
                             "Python: " + sys.version.split()[0] + "\n"

@@ -32,7 +32,7 @@ class MainWindow(tk.Tk):
     def __init__(self) -> None:
         """Inicijalizuje glavnu aplikaciju (samo GUI)."""
         super().__init__()
-        self.title("OPPSS Generator v15.3 GUI STANDALONE - ePorezi prijava")
+        self.title("OPPSS Generator v16 GUI STANDALONE - ePorezi prijava")
         self.geometry("1000x700")
 
         self._godina = str(datetime.date.today().year)

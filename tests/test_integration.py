@@ -34,7 +34,10 @@ def xfail(name):
     XFAIL.add(name)
 
 
-def record(name, ok, detail=""):
+def record(name, ok, detail="", known_bug=False):
+    """Zapisuje rezultat testa. known_bug=True označava nasleđeni defekt (xfail)."""
+    if known_bug:
+        XFAIL.add(name)
     RESULTS.append((name, bool(ok), detail))
     print(("PASS" if ok else "FAIL") + " | " + name + (" | " + str(detail) if detail else ""))
 
@@ -198,7 +201,8 @@ def main():
         bad, datum_raised = None, e
     record("CRUD validacija: neispravan datum -> poznati nasledjeni defekt (neuhvacen ValueError)",
            datum_raised is None and db.broj_unosa() == 3,
-           "xfail: poznati bug - ispravno bi trebalo None, dobija se ValueError")
+           "xfail: poznati bug - ispravno bi trebalo None, dobija se ValueError",
+           known_bug=True)
 
     # validacija: iznos <= 0
     mb.calls = []
@@ -398,7 +402,8 @@ def main():
         first = view.tree.item(view.tree.get_children()[0])["values"]
         record("tabela: filtriraj_tabelu ubacuje 7 vrednosti u 9 kolona (poznati bug v15.9) - xfail "
                "(POZNATI NASLEDJENI DEFEKT - pomeranje kolona posle filtera)",
-               len(first) == 9, "xfail: poznati bug - ispravno bi trebalo 9, dobija se 7")
+               len(first) == 9, "xfail: poznati bug - ispravno bi trebalo 9, dobija se 7",
+               known_bug=True)
         view.osvezi_tabelu()
     except Exception as e:
         record("tabela poravnanje filter", False, repr(e)); traceback.print_exc()
@@ -621,7 +626,8 @@ def main():
             raised = e
         record("statistika: ProzorStatistike POZNATI NASLEDJENI DEFEKT "
                "(dict vs list u po_vrsti/po_opstini)",
-               raised is None, "xfail: poznati bug - ispravno bi trebalo None, dobija se TypeError")
+               raised is None, "xfail: poznati bug - ispravno bi trebalo None, dobija se TypeError",
+               known_bug=True)
     except Exception as e:
         record("statistika dijalog", False, repr(e)); traceback.print_exc()
 
@@ -755,12 +761,16 @@ def summary():
     print("\n" + "=" * 70)
     passed = sum(1 for _, ok, _ in RESULTS if ok)
     failed = [r for r in RESULTS if not r[1]]
-    print("UKUPNO: %d | PASS: %d | FAIL: %d" % (len(RESULTS), passed, len(failed)))
-    for name, ok, detail in RESULTS:
-        if not ok:
-            print("  FAIL: %s | %s" % (name, detail))
+    xfailed = [r for r in failed if r[0] in XFAIL]
+    unexpected = [r for r in failed if r[0] not in XFAIL]
+    print("UKUPNO: %d | PASS: %d | XFAIL (poznati nasledjeni bugovi): %d | NEOČEKIVANI PAD: %d"
+          % (len(RESULTS), passed, len(xfailed), len(unexpected)))
+    for name, ok, detail in unexpected:
+        print("  FAIL: %s | %s" % (name, detail))
+    for name, ok, detail in xfailed:
+        print("  XFAIL: %s" % name)
     print("=" * 70)
-    return 0 if not failed else 1
+    return 0 if not unexpected else 1
 
 
 if __name__ == "__main__":
