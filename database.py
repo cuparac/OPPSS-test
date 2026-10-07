@@ -343,6 +343,28 @@ class Database:
                    podaci['datum'], podaci['datum_do'], podaci['iznos_prometa']))
         self.conn.commit()
 
+    def pronadji_po_identifikatoru(self, identifikator: str) -> Optional[Dict[str, Any]]:
+        """Vraća poslednji unet unos sa datim identifikatorom (JMBG/PIB/EBS).
+
+        Koristi se za popunjavanje forme kod ponovnog unosa iste osobe: dovoljno
+        je ukucati JMBG, a ostali podaci se prepišu iz prethodnog unosa — datumi
+        i iznos ostaju da se unesu za novi period.
+
+        Args:
+            identifikator: JMBG/PIB/EBS.
+
+        Returns:
+            Dict sa poslednjim takvim unosom ili None.
+        """
+        c = self.conn.cursor()
+        c.execute('''SELECT * FROM ljudi WHERE identifikator = ? AND godina = ?
+                     ORDER BY id DESC LIMIT 1''',
+                  (identifikator, self.godina))
+        row = c.fetchone()
+        if row:
+            return dict(row)
+        return None
+
     def ima_duplikat(self, identifikator: str, datum: str) -> Optional[Dict[str, Any]]:
         """Proverava da li već postoji unos sa istim identifikatorom i datumom.
 

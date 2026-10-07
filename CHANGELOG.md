@@ -49,6 +49,13 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   umesto liste parametara) i `no such column: ime` (kriterijumi dijaloga nisu
   imena kolona). Dodata `Database.pretrazi_po()` koja prevodi kriterijume
   (`ime` → `ime_naziv`, `iznos_od` → `iznos_prometa >= ?`, datumi u ISO).
+- **Prepis podataka kod ponovnog unosa istog JMBG/PIB/EBS** — ranije se pri
+  kucanju istog identifikatora samo pojavila poruka „Postoji unos sa ovim ID-jem",
+  a polja su ostajala prazna. Prozor sa opcijama se pojavljivao samo kad se
+  poklapa i datum. Sada se, čim se ukuca ceo identifikator, ostali podaci
+  (ime/naziv, opština, adresa, e-pošta, telefon, gazdinstvo, vrste) prepišu iz
+  poslednjeg unosa sa tim identifikatorom — **datumi i iznos se ne prepisuju**,
+  jer se unose za novi period. Poruka: „↻ Podaci prepisani iz prethodnog unosa".
 
 ---
 
