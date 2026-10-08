@@ -51,12 +51,14 @@
   zagradama; sve se unosi ispočetka
 - **CLI briše ekran pri svakom izboru** — `cls`/`clear` pre menija i posle svakog
   koraka, pa se ispis ne nagomilava
+- **CLI čeka povratak sa ekrana sa rezultatom** — tabela, statistika, pretraga,
+  XML i CSV ostaju na ekranu do `Pritisnite 0 ili Enter za povratak u meni`
 - **CLI ispisuje šta je koji broj** — `0 - PIB (9 cifara)`, `1 - JMBG (13 cifara)`,
   `5 - EBS (9 cifara)` i `Izabrano: PIB` posle izbora
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 107 testova kroz ceo Model + View + Controller stack
-  - 107 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 114 testova kroz ceo Model + View + Controller stack
+  - 114 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
