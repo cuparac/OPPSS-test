@@ -108,6 +108,11 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   stoji spisak: `0 - PIB (9 cifara)`, `1 - JMBG (13 cifara)`, `5 - EBS (9
   cifara)`, a posle izbora ispisuje se i `Izabrano: PIB`. Isto i za vrstu
   prometa.
+- **CLI čeka povratak sa ekrana sa rezultatom** — brisanje ekrana je brisalo i
+  tabelu, statistiku, rezultate pretrage i XML poruku odmah pošto se ispišu, pa
+  je izgledalo kao da se odmah vraća na početni meni. Sada svaki takav ekran
+  čeka `Pritisnite 0 ili Enter za povratak u meni` (isto i posle snimanja unosa,
+  podnosioca, brisanja i promene godine).
 
 ---
 
