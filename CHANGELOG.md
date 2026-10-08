@@ -100,6 +100,14 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   vrednosti u zagradama (`Telefon [0601112223]:`) i prazan Enter ih je zadržavao,
   pa je bilo lako nenamerno snimiti pogrešan telefon ili JMBG od prethodnog
   podnosioca. Sada se sve unosi ispočetka.
+- **CLI briše ekran pri svakom izboru** — ispis se više ne nagomilava u cmd
+  prozoru: pre glavnog menija i posle svakog izabranog koraka ekran se čisti
+  (`cls` na Windowsu, `clear` na Linuxu/macOS), pa svaki korak izgleda kao da se
+  otvara novi prozor.
+- **CLI jasno ispisuje šta je koji broj** — umesto `Izaberite 0, 1 ili 5` sada
+  stoji spisak: `0 - PIB (9 cifara)`, `1 - JMBG (13 cifara)`, `5 - EBS (9
+  cifara)`, a posle izbora ispisuje se i `Izabrano: PIB`. Isto i za vrstu
+  prometa.
 
 ---
 
