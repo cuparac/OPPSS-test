@@ -547,6 +547,20 @@ def unesi_podatak(poruka, obavezno=True):
         return vrednost
 
 
+def sacekaj_povratak():
+    """Čeka da korisnik potvrdi povratak u glavni meni.
+
+    Bez ovoga bi se sadržaj (tabela, statistika, XML poruka) ispisao i odmah
+    obrisao pri sledećem crtanju menija, pa korisnik ne bi stigao da ga pročita.
+    Enter ili 0 vraćaju u meni.
+    """
+    try:
+        input("\n  Pritisnite 0 ili Enter za povratak u meni: ")
+    except EOFError:
+        # Kada se unos ne daje sa tastature (preusmeren ulaz), samo nastavi.
+        pass
+
+
 def unesi_datum(poruka, obavezno=True):
     while True:
         datum = unesi_podatak(poruka + " (DD/MM/YYYY)", obavezno)
@@ -642,6 +656,7 @@ def main():
                 ukupno = sum(o["iznos_prometa"] for o in ljudi)
                 print("  " + "-" * 90)
                 print(f"  {'':>70} Ukupno: {ukupno:>10} RSD")
+            sacekaj_povratak()
         
         elif izbor == "2":
             vrste_pr = {"1": "Poljoprivredni proizvodi/usluge", "2": "Sekundarne sirovine"}
@@ -731,6 +746,7 @@ def main():
             
             db.dodaj_osobu(r)
             print("  ✅ Unos je sacuvan.")
+            sacekaj_povratak()
         
         elif izbor == "3":
             ljudi = db.ucitaj_ljude()
@@ -751,6 +767,7 @@ def main():
                     print("  Pogresan RB.")
             except (ValueError, EOFError):
                 print("  Pogresan unos.")
+            sacekaj_povratak()
         
         elif izbor == "4":
             p = db.ucitaj_podnosioca()
@@ -795,9 +812,11 @@ def main():
                 "jmbg": jmbg
             })
             print("  ✅ Podaci o podnosiocu su sacuvani.")
+            sacekaj_povratak()
         
         elif izbor == "5":
             generisi_xml(db, godina)
+            sacekaj_povratak()
         
         elif izbor == "6":
             print()
@@ -820,6 +839,7 @@ def main():
                         print("  (Nema rezultata)")
             except (ValueError, EOFError):
                 print("  Pogresan unos.")
+            sacekaj_povratak()
         
         elif izbor == "7":
             stat = db.statistika()
@@ -836,12 +856,14 @@ def main():
             print("  Po opštini:")
             for v in stat['po_opstini']:
                 print(f"    {v['opstina']}: {v['COUNT(*)']} unosa, {v['SUM(iznos_prometa)']} RSD")
+            sacekaj_povratak()
         
         elif izbor == "8":
             fajl = input("  Unesite ime CSV fajla (npr. OPPS_2026.csv): ").strip()
             if fajl:
                 db.export_csv(fajl)
                 print(f"  ✅ CSV fajl sačuvan: {fajl}")
+            sacekaj_povratak()
         
         elif izbor == "9":
             nova_godina = input("  Unesite godinu (2023-2035): ").strip()
@@ -852,6 +874,7 @@ def main():
                 print(f"  Godina promenjena na {godina}.")
             else:
                 print("  Pogresna godina.")
+            sacekaj_povratak()
     
     db.zatvori()
 
