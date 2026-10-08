@@ -14,7 +14,20 @@ import shutil
 import sqlite3
 from typing import Any, Dict, List, Optional, Tuple
 
-from validacije import konvertuj_datum
+from validacije import konvertuj_datum, telefon_cifre
+
+
+def _telefon_u_cifre(podaci: Dict[str, Any]) -> None:
+    """Uklanja sve osim cifara iz polja ``telefon`` u rečniku podataka.
+
+    Mesto gde se invarijanta brani: GUI forme odbijaju slova pri kucanju, ali
+    CSV import i CLI idu direktno u bazu, pa se telefon normalizuje i ovde.
+
+    Args:
+        podaci: Rečnik sa podacima (menja se na mestu).
+    """
+    if "telefon" in podaci and podaci["telefon"] is not None:
+        podaci["telefon"] = telefon_cifre(str(podaci["telefon"]))
 
 
 class Database:
@@ -217,6 +230,7 @@ class Database:
         Returns:
             ID novog podnosioca
         """
+        _telefon_u_cifre(podaci)
         c = self.conn.cursor()
         # Red se upisuje sa eksplicitnim id-jem = prvi slobodan broj, tako da se
         # id obrisanog podnosioca ponovo koristi (SQLite bi inače, zbog
@@ -245,6 +259,7 @@ class Database:
             podaci: Dict sa podacima (naziv, pib_jmbg, email, telefon, jmbg)
             id: ID podnosioca. Ako None, ažurira aktivnog podnosioca.
         """
+        _telefon_u_cifre(podaci)
         c = self.conn.cursor()
         if id is not None:
             c.execute('''UPDATE podnosioc SET naziv=?, pib_jmbg=?, email=?, telefon=?, jmbg=?
@@ -331,6 +346,7 @@ class Database:
         Args:
             podaci: Dict sa podacima o osobi
         """
+        _telefon_u_cifre(podaci)
         c = self.conn.cursor()
         c.execute('''INSERT INTO ljudi (godina, vrsta_prometa, vrsta_identifikatora,
                      identifikator, ime_naziv, opstina, adresa, email_osobe,
@@ -443,6 +459,7 @@ class Database:
             id: ID unosa
             podaci: Dict sa novim podacima
         """
+        _telefon_u_cifre(podaci)
         c = self.conn.cursor()
         c.execute('''UPDATE ljudi SET vrsta_prometa=?, vrsta_identifikatora=?,
                      identifikator=?, ime_naziv=?, opstina=?, adresa=?,

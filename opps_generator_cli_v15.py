@@ -159,6 +159,28 @@ def validan_ebs(ebs):
     return ebs.isdigit() and len(ebs) == 9
 
 
+# Dozvoljeni broj cifara u broju telefona (bez razmaka, +, - i /).
+TELEFON_MIN_CIFARA = 6
+TELEFON_MAX_CIFARA = 15
+
+
+def telefon_cifre(telefon):
+    """Vraća samo cifre iz unetog broja telefona (uklanja slova i separatore)."""
+    return "".join(c for c in (telefon or "") if c in "0123456789")
+
+
+def telefon_greska(telefon):
+    """Poruka o grešci za telefon, ili None ako je ispravan (6-15 cifara)."""
+    cifre = telefon_cifre(telefon)
+    if not cifre:
+        return "Broj telefona mora sadržati cifre!"
+    if len(cifre) < TELEFON_MIN_CIFARA or len(cifre) > TELEFON_MAX_CIFARA:
+        return ("Broj telefona mora imati između %d i %d cifara.\n"
+                "Uneto: %d cifara (%s)"
+                % (TELEFON_MIN_CIFARA, TELEFON_MAX_CIFARA, len(cifre), telefon))
+    return None
+
+
 def konvertuj_datum(t):
     try:
         return datetime.datetime.strptime(t.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
@@ -237,6 +259,9 @@ class Database:
         return [dict(row) for row in cursor.fetchall()]
     
     def dodaj_osobu(self, podaci):
+        # Telefon u bazu ide samo sa ciframa (CSV/CLI ne prolaze kroz GUI polje).
+        if podaci.get("telefon") is not None:
+            podaci["telefon"] = telefon_cifre(str(podaci["telefon"]))
         cursor = self.conn.cursor()
         cursor.execute('''
             INSERT INTO ljudi (godina, vrsta_prometa, vrsta_identifikatora, 
@@ -550,7 +575,15 @@ def main():
             opstina = input("  Opstina: ").strip()
             adresa = input("  Adresa: ").strip()
             email_osobe = input("  E-posta osobe (opciono): ").strip()
-            telefon = input("  Broj telefona: ").strip()
+            telefon = ""
+            while True:
+                telefon = input("  Broj telefona: ").strip()
+                greska_tel = telefon_greska(telefon)
+                if greska_tel:
+                    print("  " + greska_tel.replace("\n", "\n  "))
+                    continue
+                break
+            telefon = telefon_cifre(telefon)
             broj_gazdinstva = input("  Broj poljoprivrednog gazdinstva (opciono): ").strip()
             naziv_gazdinstva = input("  Naziv poljoprivrednog gazdinstva (opciono): ").strip()
             
@@ -626,6 +659,16 @@ def main():
             telefon = input(f"  Telefon [{p.get('telefon', '')}]: ").strip()
             if not telefon and p.get("telefon"):
                 telefon = p["telefon"]
+            while True:
+                greska_tel = telefon_greska(telefon)
+                if greska_tel:
+                    print("  " + greska_tel.replace("\n", "\n  "))
+                    telefon = input(f"  Telefon [{p.get('telefon', '')}]: ").strip()
+                    if not telefon and p.get("telefon"):
+                        telefon = p["telefon"]
+                    continue
+                break
+            telefon = telefon_cifre(telefon)
             
             while True:
                 jmbg = input(f"  JMBG podnosioca (13 cifara) [{p.get('jmbg', '')}]: ").strip()
