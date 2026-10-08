@@ -80,6 +80,14 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   `dodaj_podnosioca`, `sacuvaj_podnosioca`) i u CLI, jer CSV uvoz i CLI ne
   prolaze kroz GUI polje — tako telefon bez cifara ne može da uđe u bazu ni
   jednim putem.
+- **PDF izveštaj prikazuje ćirilicu** — PDF je koristio ReportLab-ov ugrađeni
+  `Helvetica`, koji nema ćirilične glifove, pa su se ćirilična imena i opštine
+  ispisivala kao crni kvadratići (`■■■■■`). Latinica sa dijakriticima (č, ć, š,
+  ž, đ) je prolazila, pa se defekt lako prečutao. Sada se registruje sistemski
+  font sa punom ćirilicom (DejaVu / Liberation / Noto na Linuxu; Arial / Tahoma /
+  Verdana / Calibri na Windowsu; Arial na macOS-u) i primenjuje na naslov,
+  statistiku i tabelu. Ako font nije nađen, generisanje se ne prekida — ispisuje
+  se upozorenje u log i koristi Helvetica.
 
 ---
 

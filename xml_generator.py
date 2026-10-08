@@ -7,12 +7,16 @@ i HTML izveštaja za štampu.
 from __future__ import annotations
 
 import html
-from typing import Any
+import logging
+import os
+from typing import Any, Tuple
 
 from lxml import etree
 
 from database import Database
 from validacije import get_xsd_schema
+
+logger = logging.getLogger(__name__)
 
 # Namespace za XML
 NS = "http://pid.purs.gov.rs"
@@ -186,6 +190,65 @@ def generisi_html_izvestaj(app: Any, db: Database, godina: str) -> str:
     return html_str
 
 
+def _registruj_font_za_cirilicu() -> Tuple[str, str]:
+    """Registruje TrueType font sa ćirilicom i vraća (običan, podebljan) naziv.
+
+    ReportLab-ov ugrađeni ``Helvetica`` nema ćirilične glifove, pa se ćirilica
+    ispisuje kao crni kvadratići. Zato se registruje sistemski font koji ima
+    punu ćirilicu (DejaVu, Liberation, Noto na Linuxu; Arial/Tahoma/Verdana/
+    Calibri na Windowsu; Arial na macOS-u).
+
+    Ako nijedan font nije nađen, generisanje se NE prekida — vraća se
+    ``Helvetica`` i ispisuje upozorenje (PDF je izveštaj za štampu, ne ide na
+    ePorezi, pa je bolje dati fajl sa kvadratićima nego nikakav).
+
+    Returns:
+        Tuple (naziv običnog fonta, naziv podebljanog fonta) za ReportLab.
+    """
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    kandidati = [
+        # Linux
+        ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+        ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        ("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+         "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf"),
+        ("/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+         "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"),
+        # Windows
+        ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
+        ("C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/tahomabd.ttf"),
+        ("C:/Windows/Fonts/verdana.ttf", "C:/Windows/Fonts/verdanab.ttf"),
+        ("C:/Windows/Fonts/calibri.ttf", "C:/Windows/Fonts/calibrib.ttf"),
+        # macOS
+        ("/Library/Fonts/Arial.ttf", "/Library/Fonts/Arial Bold.ttf"),
+        ("/System/Library/Fonts/Supplemental/Arial.ttf",
+         "/System/Library/Fonts/Supplemental/Arial Bold.ttf"),
+    ]
+
+    for obican, bold in kandidati:
+        if not (os.path.exists(obican) and os.path.exists(bold)):
+            continue
+        try:
+            pdfmetrics.registerFont(TTFont("OPPSSFont", obican))
+            pdfmetrics.registerFont(TTFont("OPPSSFont-Bold", bold))
+            # Da <b> u Paragraph-u koristi podebljani rez.
+            pdfmetrics.registerFontFamily(
+                "OPPSSFont", normal="OPPSSFont",
+                bold="OPPSSFont-Bold", italic="OPPSSFont", boldItalic="OPPSSFont-Bold")
+            return "OPPSSFont", "OPPSSFont-Bold"
+        except Exception:
+            continue
+
+    logger.warning(
+        "Nijedan font sa ćirilicom nije nađen — PDF izveštaj koristi Helvetica "
+        "i ćirilica će se prikazati kao kvadratići.")
+    return "Helvetica", "Helvetica-Bold"
+
+
 def generisi_pdf_izvestaj(db: Database, godina: str, fajl: str) -> None:
     """Generiše pravi PDF izveštaj koristeći ReportLab.
 
@@ -203,10 +266,16 @@ def generisi_pdf_izvestaj(db: Database, godina: str, fajl: str) -> None:
     ljudi = db.ucitaj_ljude()
     stat = db.statistika()
 
+    font_obican, font_bold = _registruj_font_za_cirilicu()
+
     doc = SimpleDocTemplate(fajl, pagesize=A4,
                             leftMargin=2*cm, rightMargin=2*cm,
                             topMargin=2*cm, bottomMargin=2*cm)
     styles = getSampleStyleSheet()
+    # ReportLab-ovi gotovi stilovi koriste Helvetica; prebaci ih na font sa
+    # ćirilicom, inače naslov/statistika ostaju kvadratići.
+    for naziv_stila in ("Title", "Normal"):
+        styles[naziv_stila].fontName = font_obican
     elements = []
 
     # Naslov
@@ -234,11 +303,12 @@ def generisi_pdf_izvestaj(db: Database, godina: str, fajl: str) -> None:
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (-1, 0), font_bold),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f2f2f2')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTNAME', (0, 1), (-1, -1), font_obican),
         ('FONTSIZE', (0, 1), (-1, -1), 9),
         ('TOPPADDING', (0, 1), (-1, -1), 4),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
