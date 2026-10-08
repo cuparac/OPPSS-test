@@ -76,6 +76,10 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   razmak, `+`, `-` i `/`), a pri snimanju se zadržavaju samo cifre. Unos bez
   cifara ili van opsega 6–15 cifara se odbija sa porukom. Isto važi i za formu
   podnosioca. Kursor ostaje na mestu gde je kucano, ne skače na kraj polja.
+  Normalizacija je ugrađena i u DB sloj (`dodaj_osobu`, `izmeni_osobu`,
+  `dodaj_podnosioca`, `sacuvaj_podnosioca`) i u CLI, jer CSV uvoz i CLI ne
+  prolaze kroz GUI polje — tako telefon bez cifara ne može da uđe u bazu ni
+  jednim putem.
 
 ---
 
