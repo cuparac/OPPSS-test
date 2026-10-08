@@ -21,6 +21,7 @@ from tkinter import messagebox, filedialog
 
 from model import Database, migriraj_json_u_sqlite
 from model import validan_jmbg, validan_ebs, konvertuj_datum
+from model import telefon_cifre, telefon_greska
 from model import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
 from view.dialogs import (ProzorFiltera, ProzorPodnosioca, ProzorPretrage,
                           ProzorStatistike, ProzorDuplikata)
@@ -279,6 +280,15 @@ class Controller:
             messagebox.showerror("Greska", "Iznos mora biti pozitivan ceo broj!", parent=parent)
             return "greska"
 
+        # Broj telefona: u bazu se upisuju samo cifre (razmak, plus i kosa
+        # crta se uklanjaju); provera duzine je u modelu.
+        telefon = entries["telefon"].get()
+        greska_telefon = telefon_greska(telefon)
+        if greska_telefon:
+            messagebox.showerror("Greska", greska_telefon, parent=parent)
+            return "greska"
+        telefon_cifre_vrednost = telefon_cifre(telefon)
+
         r = {
             "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
             "vrsta_identifikatora": vrste_id[tip],
@@ -287,7 +297,7 @@ class Controller:
             "opstina": entries["opstina"].get().strip(),
             "adresa": entries["adresa"].get().strip(),
             "email_osobe": entries["email_osobe"].get().strip(),
-            "telefon": entries["telefon"].get().strip(),
+            "telefon": telefon_cifre_vrednost,
             "broj_gazdinstva": entries["broj_gazdinstva"].get().strip(),
             "naziv_gazdinstva": entries["naziv_gazdinstva"].get().strip(),
             "datum": datum_iso,

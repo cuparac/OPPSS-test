@@ -8,7 +8,47 @@ from typing import Any, Optional
 import tkinter as tk
 from tkinter import ttk
 
-from model.validacije import konvertuj_datum
+from model.validacije import konvertuj_datum, TELEFON_DOZVOLJENI_ZNAKOVI
+
+
+def ocisti_telefon_unos(original: str) -> str:
+    """Uklanja nedozvoljene znakove iz sadržaja polja za telefon.
+
+    Ostavlja cifre, razmak, ``+``, ``-`` i ``/`` (radi lakšeg kucanja); sve
+    ostalo (slova, interpunkcija) se uklanja. Pri snimanju se od ovoga
+    zadržavaju samo cifre (vidi ``model.telefon_cifre``).
+
+    Args:
+        original: Trenutni sadržaj polja.
+
+    Returns:
+        Očišćen sadržaj polja.
+    """
+    return "".join(c for c in (original or "") if c in TELEFON_DOZVOLJENI_ZNAKOVI)
+
+
+def vezi_samo_cifre_telefon(polje: tk.Entry) -> None:
+    """Vezuje ``<KeyRelease>`` na polje telefona: uklanja nedozvoljene znakove.
+
+    Zadržava poziciju kursora (umanjenu za broj uklonjenih znakova ispred
+    njega), tako da kucanje usred broja ne skače na kraj polja.
+
+    Args:
+        polje: ``ttk.Entry`` widget za broj telefona.
+    """
+    def _ocisti(ev: Optional[tk.Event] = None) -> None:
+        original = polje.get()
+        ocisceno = ocisti_telefon_unos(original)
+        if ocisceno != original:
+            # Novi polozaj kursora = broj dozvoljenih znakova levo od njega,
+            # pa kucanje usred broja ne skace na kraj polja.
+            poz = polje.index("insert")
+            novo = len(ocisti_telefon_unos(original[:poz]))
+            polje.delete(0, "end")
+            polje.insert(0, ocisceno)
+            polje.icursor(novo)
+
+    polje.bind("<KeyRelease>", _ocisti, add="+")
 
 
 class DatumEntry(ttk.Entry):

@@ -14,8 +14,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from typing import Any, Dict, Optional
 
-from model import Database, validan_jmbg, validan_ebs
-from view.widgets import DatumEntry, Kalendar
+from model import (Database, validan_jmbg, validan_ebs)
+from view.widgets import DatumEntry, Kalendar, vezi_samo_cifre_telefon
 from view.dialogs import (ProzorFiltera, ProzorPodnosioca, ProzorPretrage,
                           ProzorStatistike, ProzorDuplikata)
 
@@ -826,12 +826,15 @@ class MainWindow(tk.Tk):
     # ------------------------------------------------------------------
     # Forma za unos/izmenu osobe (GUI + delegacija validacije/snimanja)
     # ------------------------------------------------------------------
-    def forma_osobe(self, podrazumevano: Optional[Dict[str, Any]] = None, indeks_izmene: Optional[int] = None) -> None:
+    def forma_osobe(self, podrazumevano: Optional[Dict[str, Any]] = None, indeks_izmene: Optional[int] = None) -> tk.Toplevel:
         """Otvara formu za unos/izmenu osobe.
 
         Args:
             podrazumevano: Podrazumevani podaci za izmenu.
             indeks_izmene: ID unosa koji se menja.
+
+        Returns:
+            Toplevel prozor forme (za testove i programsko zatvaranje).
         """
         win = tk.Toplevel(self)
         je_izmena = podrazumevano is not None
@@ -873,6 +876,11 @@ class MainWindow(tk.Tk):
                 e = ttk.Entry(okvir, width=40)
                 e.grid(row=row, column=1, padx=10, pady=4)
                 entries[key] = e
+
+        # Broj telefona: dozvoljeni su cifre, razmak, plus, minus i kosa crta
+        # (radi lakšeg kucanja); sve ostalo se uklanja odmah. Pri snimanju se
+        # zadržavaju samo cifre (vidi model.telefon_cifre).
+        vezi_samo_cifre_telefon(entries["telefon"])
 
         entries["datum_unos"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
         entries["datum_do"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
@@ -1076,3 +1084,4 @@ class MainWindow(tk.Tk):
         btn_sacuvaj.bind("<Return>", enter_sacuvaj)
         btn_sacuvaj.bind("<space>", enter_sacuvaj)
         entries["vrsta_tip"].focus_set()
+        return win

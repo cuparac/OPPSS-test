@@ -12,6 +12,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from model import Database, validan_jmbg
+from view.widgets import vezi_samo_cifre_telefon
 
 
 class ProzorFiltera(tk.Toplevel):
@@ -174,6 +175,7 @@ class ProzorPodnosioca(tk.Toplevel):
                 self.status_jmbg.config(text="%d/13" % len(v), foreground="gray")
 
         self.entries["jmbg"].bind("<KeyRelease>", proveri)
+        vezi_samo_cifre_telefon(self.entries["telefon"])
         proveri()
 
         dugmad = ttk.Frame(okvir)
