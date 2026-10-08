@@ -77,9 +77,17 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   ih je zadržavao, pa je bilo lako nenamerno snimiti pogrešan telefon ili JMBG
   od prethodnog podnosioca. Sada se sve unosi ispočetka; polja se ne popunjavaju
   ranijim vrednostima.
+- **CLI briše ekran pri svakom izboru** — ispis se više ne nagomilava u cmd
+  prozoru: pre glavnog menija i posle svakog izabranog koraka ekran se čisti
+  (`cls` na Windowsu, `clear` na Linuxu/macOS), pa svaki korak izgleda kao da se
+  otvara novi prozor. Pri vrhu stoji koji je korak izabran.
+- **CLI jasno ispisuje šta je koji broj** — umesto `Izaberite 0, 1 ili 5` sada
+  stoji spisak: `0 - PIB (9 cifara)`, `1 - JMBG (13 cifara)`, `5 - EBS (9
+  cifara)`, a posle izbora ispisuje se i `Izabrano: PIB`. Isto i za vrstu
+  prometa. Poruka o grešci kaže koje brojeve treba ukucati.
 
 ### Testovi
-- **Integracioni testovi** — 99 testova kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 107 testova kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 

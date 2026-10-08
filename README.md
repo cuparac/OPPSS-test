@@ -193,9 +193,10 @@ repozitorijumu. Pokreću se iz korena projekta:
 xvfb-run -a python tests/test_integration.py
 ```
 
-Rezultat: 99 prolazi (0 padova). Sva četiri nasleđena buga iz v15.9 su popravljena;
+Rezultat: 107 prolazi (0 padova). Sva četiri nasleđena buga iz v15.9 su popravljena;
 telefon prima samo cifre (GUI forme, DB sloj, CSV uvoz, CLI), PDF izveštaj
-prikazuje i ćirilicu, a CLI radi nad istom bazom koju koristi GUI.
+prikazuje i ćirilicu, a CLI radi nad istom bazom koju koristi GUI, briše ekran
+pri svakom izboru i jasno ispisuje šta je koji broj.
 
 ---
 

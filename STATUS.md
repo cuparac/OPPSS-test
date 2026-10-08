@@ -49,10 +49,14 @@
   automatsku migraciju starih baza
 - **CLI unos ne zadržava prethodne vrednosti** — nema više `[stara vrednost]` u
   zagradama; sve se unosi ispočetka
+- **CLI briše ekran pri svakom izboru** — `cls`/`clear` pre menija i posle svakog
+  koraka, pa se ispis ne nagomilava
+- **CLI ispisuje šta je koji broj** — `0 - PIB (9 cifara)`, `1 - JMBG (13 cifara)`,
+  `5 - EBS (9 cifara)` i `Izabrano: PIB` posle izbora
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 99 testova kroz ceo Model + View + Controller stack
-  - 99 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 107 testova kroz ceo Model + View + Controller stack
+  - 107 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`

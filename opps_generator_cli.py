@@ -526,15 +526,22 @@ def generisi_xml(db, godina):
     return izlaz
 
 
-def unesi_podatak(poruka, obavezno=True, default=""):
+def ocisti_ekran():
+    """Briše sadržaj konzole da svaki korak počne na čistom ekranu.
+
+    Na Windowsu (cmd) radi preko ``cls``, na Linuxu/macOS preko ``clear``; ako
+    oba padnu, ispisuje prazne redove.
+    """
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+def unesi_podatak(poruka, obavezno=True):
+    """Traži unos od korisnika. Nikad ne nudi prethodnu vrednost."""
     while True:
-        if default:
-            poruka_fmt = f"  {poruka} [{default}]: "
-        else:
-            poruka_fmt = f"  {poruka}: "
-        vrednost = input(poruka_fmt).strip()
-        if not vrednost and default:
-            return default
+        vrednost = input(f"  {poruka}: ").strip()
         if not vrednost and obavezno:
             print("  Ovo polje je obavezno.")
             continue
@@ -573,9 +580,10 @@ def main():
         br_unosa = len(db.ucitaj_ljude())
         ukupno = sum(o["iznos_prometa"] for o in db.ucitaj_ljude())
         podnosioc = db.ucitaj_podnosioca().get("pib_jmbg", "NIJE UNESEN")
+        # Glavni meni se uvek crta na cistom ekranu.
+        ocisti_ekran()
         print()
         print(f"  [{godina}] Podnosioc: {podnosioc} | Unosa: {br_unosa} | Ukupno: {ukupno} RSD")
-        
         print()
         print("=" * 60)
         print("  OPPSS GENERATOR v16.0 CLI STANDALONE")
@@ -596,12 +604,19 @@ def main():
             izbor = input("  Izaberite opciju: ").strip()
         except EOFError:
             break
-        
+
         if izbor == "0":
             print("  Hvala na koriscenju! Dovidjenja.")
             break
-        
-        elif izbor == "1":
+
+        # Svaki izbor pocinje na cistom ekranu, kao da se otvara novi prozor.
+        # "0" je iznad (izlaz ne treba brisati poruku).
+        ocisti_ekran()
+        print("  OPPSS GENERATOR v16.0 - izbor: %s" % izbor)
+        print("=" * 60)
+        print()
+
+        if izbor == "1":
             ljudi = db.ucitaj_ljude()
             if not ljudi:
                 print("  (Nema unosa)")
@@ -637,20 +652,27 @@ def main():
             print()
             print("  NOVI UNOS:")
             
-            print(f"  Vrsta prometa: 1={vrste_pr['1']}, 2={vrste_pr['2']}")
+            print()
+            print("  Vrsta prometa:")
+            print("    1 - Poljoprivredni proizvodi/usluge")
+            print("    2 - Sekundarne sirovine")
             while True:
-                vrsta = input("  Vrsta prometa: ").strip()
+                vrsta = input("  Izaberite vrstu prometa (1 ili 2): ").strip()
                 if vrsta in vrste_pr:
                     break
-                print("  Izaberite 1 ili 2.")
+                print("  Pogresan izbor. Ukucajte 1 ili 2.")
             
-            print(f"  Identifikator: 0=PIB (9 cifara), 1=JMBG (13 cifara), 5=EBS (9 cifara)")
-            print("  (Unesite vrednosti ispocetka - nista se ne zadrzava od ranije.)")
+            print()
+            print("  Vrsta identifikatora:")
+            print("    0 - PIB  (9 cifara)")
+            print("    1 - JMBG (13 cifara)")
+            print("    5 - EBS  (9 cifara)")
             while True:
-                id_tip = input("  Vrsta identifikatora: ").strip()
+                id_tip = input("  Izaberite vrstu identifikatora (0, 1 ili 5): ").strip()
                 if id_tip in vrste_id:
                     break
-                print("  Izaberite 0, 1 ili 5.")
+                print("  Pogresan izbor. Ukucajte 0, 1 ili 5.")
+            print("  Izabrano: %s" % vrste_id[id_tip])
             
             ocekivano = 13 if id_tip == "1" else 9
             while True:
