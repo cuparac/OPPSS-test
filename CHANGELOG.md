@@ -46,9 +46,15 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   gazdinstvo, vrste) prepisuju se iz poslednjeg unosa sa tim identifikatorom;
   **datumi i iznos se ne prepisuju** (unose se za novi period). Poruka:
   „↻ Podaci prepisani iz prethodnog unosa"
+- **Broj telefona prima samo cifre** — u polje telefona nije moglo da se ukuca
+  slovo, ali se sadržaj polja čuvao samo `strip`-ovan, pa je „060abc111" mogao da
+  uđe u bazu. Sada polje odbija slova odmah pri kucanju (dozvoljeni su cifre,
+  razmak, `+`, `-` i `/`), a pri snimanju se zadržavaju samo cifre. Unos bez
+  cifara ili van opsega 6–15 cifara se odbija sa porukom. Isto važi i za formu
+  podnosioca. Kursor ostaje na mestu gde je kucano, ne skače na kraj polja
 
 ### Testovi
-- **Integracioni testovi** — 63 testa kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 81 test kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 

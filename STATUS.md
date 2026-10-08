@@ -36,10 +36,14 @@
   ime/telefon u svojim unosima, prikazuje se upozorenje sa svim vrednostima
 - **Enter prelazi na sledeće polje** (kao Tab); snimanje je na dugmetu „Sačuvaj"
 - **Prozor za duplikat: Enter potvrđuje**, strelice/Tab pomeraju između opcija
+- **Broj telefona prima samo cifre** — polje odbija slova odmah pri kucanju
+  (dozvoljeni: cifre, razmak, `+`, `-`, `/`), pri snimanju se u bazu upisuju samo
+  cifre; unos bez cifara ili van opsega 6–15 cifara se odbija porukom. Isto i za
+  formu podnosioca
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 63 testa kroz ceo Model + View + Controller stack
-  - 63 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 81 test kroz ceo Model + View + Controller stack
+  - 81 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`
@@ -136,7 +140,8 @@ git checkout main       # povratak na trenutnu verziju
 3. **Audit log** - Evidencija ko je šta menjao i kada
 
 ### Poznati bugovi
-Nema — sva četiri nasleđena buga iz v15.9 su popravljena (statistika, pretraga, filter kolone, datum).
+Nema — sva četiri nasleđena buga iz v15.9 su popravljena (statistika, pretraga, filter kolone, datum),
+a telefon sada prima samo cifre (07.10.2026).
 
 ---
 
