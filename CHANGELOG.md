@@ -88,6 +88,18 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   Verdana / Calibri na Windowsu; Arial na macOS-u) i primenjuje na naslov,
   statistiku i tabelu. Ako font nije nađen, generisanje se ne prekida — ispisuje
   se upozorenje u log i koristi Helvetica.
+- **CLI više ne puca nad bazom koju je napravio GUI** — CLI je imao svoju kopiju
+  klase `Database` sa starom strukturom tabele `podnosioc` (kolona `godina` kao
+  ključ), dok GUI koristi novu (`id`, `naziv`, `aktivan`). Pošto obe verzije dele
+  isti fajl `baza_<godina>.db`, CLI je pucao sa
+  `sqlite3.OperationalError: no such column: godina` već pri pokretanju. Sada CLI
+  ima istu strukturu kao GUI i istu automatsku migraciju starih baza, pa radi u
+  oba smera (GUI→CLI i CLI→GUI), uključujući više podnosioca, aktivnog
+  podnosioca i ponovni upis bez duplikata.
+- **CLI unos ne zadržava prethodne vrednosti** — forma podnosioca nudila je stare
+  vrednosti u zagradama (`Telefon [0601112223]:`) i prazan Enter ih je zadržavao,
+  pa je bilo lako nenamerno snimiti pogrešan telefon ili JMBG od prethodnog
+  podnosioca. Sada se sve unosi ispočetka.
 
 ---
 
