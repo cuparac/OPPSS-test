@@ -39,11 +39,11 @@
 - **Broj telefona prima samo cifre** — polje odbija slova odmah pri kucanju
   (dozvoljeni: cifre, razmak, `+`, `-`, `/`), pri snimanju se u bazu upisuju samo
   cifre; unos bez cifara ili van opsega 6–15 cifara se odbija porukom. Isto i za
-  formu podnosioca
+  formu podnosioca, DB sloj i CLI (CSV uvoz ne prolazi kroz GUI)
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 81 test kroz ceo Model + View + Controller stack
-  - 81 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 85 testova kroz ceo Model + View + Controller stack
+  - 85 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`

@@ -51,10 +51,14 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   uđe u bazu. Sada polje odbija slova odmah pri kucanju (dozvoljeni su cifre,
   razmak, `+`, `-` i `/`), a pri snimanju se zadržavaju samo cifre. Unos bez
   cifara ili van opsega 6–15 cifara se odbija sa porukom. Isto važi i za formu
-  podnosioca. Kursor ostaje na mestu gde je kucano, ne skače na kraj polja
+  podnosioca. Kursor ostaje na mestu gde je kucano, ne skače na kraj polja.
+  Normalizacija je ugrađena i u DB sloj (`dodaj_osobu`, `izmeni_osobu`,
+  `dodaj_podnosioca`, `sacuvaj_podnosioca`) i u CLI, jer CSV uvoz i CLI ne
+  prolaze kroz GUI polje — tako telefon bez cifara ne može da uđe u bazu ni
+  jednim putem.
 
 ### Testovi
-- **Integracioni testovi** — 81 test kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 85 testova kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
