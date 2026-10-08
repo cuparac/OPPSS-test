@@ -181,6 +181,19 @@ def telefon_greska(telefon):
     return None
 
 
+def _telefon_u_cifre(podaci):
+    """Uklanja sve osim cifara iz polja ``telefon`` u rečniku podataka.
+
+    Mesto gde se invarijanta brani: unos ide pravo u bazu, pa se telefon
+    normalizuje i ovde (kao u GUI verziji).
+
+    Args:
+        podaci: Rečnik sa podacima (menja se na mestu).
+    """
+    if podaci.get("telefon") is not None:
+        podaci["telefon"] = telefon_cifre(str(podaci["telefon"]))
+
+
 def konvertuj_datum(t):
     try:
         return datetime.datetime.strptime(t.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
@@ -207,15 +220,38 @@ class Database:
     
     def kreiraj_tabele(self):
         cursor = self.conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS podnosioc (
-                godina TEXT PRIMARY KEY,
+        # Migracija stare tabele podnosioc (godina PK -> id PK), ista kao u GUI
+        # verziji: CLI i GUI dele isti fajl baze_<godina>.db, pa struktura mora
+        # da bude ista bez obzira koja verzija je prva otvori.
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='podnosioc'")
+        if cursor.fetchone():
+            cursor.execute("PRAGMA table_info(podnosioc)")
+            kolone = [red[1] for red in cursor.fetchall()]
+            if 'godina' in kolone and 'id' not in kolone:
+                cursor.execute("ALTER TABLE podnosioc RENAME TO podnosioc_stara")
+                cursor.execute('''CREATE TABLE podnosioc (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    naziv TEXT NOT NULL,
+                    pib_jmbg TEXT,
+                    email TEXT,
+                    telefon TEXT,
+                    jmbg TEXT,
+                    aktivan INTEGER DEFAULT 0
+                )''')
+                cursor.execute('''INSERT INTO podnosioc (naziv, pib_jmbg, email, telefon, jmbg, aktivan)
+                                 SELECT 'Podnosilac ' || godina, pib_jmbg, email, telefon, jmbg, 1
+                                 FROM podnosioc_stara''')
+                cursor.execute("DROP TABLE podnosioc_stara")
+        else:
+            cursor.execute('''CREATE TABLE IF NOT EXISTS podnosioc (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                naziv TEXT NOT NULL,
                 pib_jmbg TEXT,
                 email TEXT,
                 telefon TEXT,
-                jmbg TEXT
-            )
-        ''')
+                jmbg TEXT,
+                aktivan INTEGER DEFAULT 0
+            )''')
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS ljudi (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -239,18 +275,76 @@ class Database:
         self.conn.commit()
     
     def ucitaj_podnosioca(self):
+        """Vraća aktivnog podnosioca, ili {} ako nijedan nije unet.
+
+        Struktura je ista kao u GUI verziji (id PK, naziv, aktivan), da bi obe
+        verzije radile nad istim fajlom baze_<godina>.db.
+        """
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM podnosioc WHERE godina = ?", (self.godina,))
+        cursor.execute("SELECT * FROM podnosioc WHERE aktivan = 1 ORDER BY id LIMIT 1")
         row = cursor.fetchone()
         return dict(row) if row else {}
-    
-    def sacuvaj_podnosioca(self, podaci):
+
+    def ucitaj_sve_podnosioca(self):
+        """Vraća sve podnosioce (za izbor i listanje)."""
         cursor = self.conn.cursor()
-        cursor.execute('''
-            INSERT OR REPLACE INTO podnosioc (godina, pib_jmbg, email, telefon, jmbg)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (self.godina, podaci['pib_jmbg'], podaci['email'], 
-              podaci['telefon'], podaci['jmbg']))
+        cursor.execute("SELECT * FROM podnosioc ORDER BY id")
+        return [dict(row) for row in cursor.fetchall()]
+
+    def sacuvaj_podnosioca(self, podaci, id=None):
+        """Čuva podatke o podnosiocu.
+
+        Args:
+            podaci: Dict sa podacima (naziv, pib_jmbg, email, telefon, jmbg).
+            id: ID podnosioca. Ako None, ažurira aktivnog; ako nijedan nije
+                aktivan (ili baza nema podnosioca), kreira prvog i postavlja ga
+                kao aktivnog.
+        """
+        _telefon_u_cifre(podaci)
+        naziv = podaci.get("naziv") or "Podnosilac"
+        cursor = self.conn.cursor()
+        if id is None:
+            cursor.execute("SELECT id FROM podnosioc WHERE aktivan = 1 LIMIT 1")
+            red = cursor.fetchone()
+            id = red[0] if red else None
+        if id is not None:
+            cursor.execute('''UPDATE podnosioc SET naziv=?, pib_jmbg=?, email=?, telefon=?, jmbg=?
+                              WHERE id=?''',
+                           (naziv, podaci['pib_jmbg'], podaci['email'],
+                            podaci['telefon'], podaci['jmbg'], id))
+        else:
+            # Prvi podnosilac: upisuje se sa id = prvi slobodan broj i odmah je aktivan.
+            cursor.execute('''INSERT INTO podnosioc (id, naziv, pib_jmbg, email, telefon, jmbg, aktivan)
+                              VALUES ((SELECT COALESCE(MIN(k), 1) FROM (
+                                          SELECT 1 AS k WHERE NOT EXISTS
+                                              (SELECT 1 FROM podnosioc WHERE id = 1)
+                                          UNION ALL
+                                          SELECT id + 1 FROM podnosioc x WHERE NOT EXISTS
+                                              (SELECT 1 FROM podnosioc y WHERE y.id = x.id + 1)
+                                      )),
+                                      ?, ?, ?, ?, ?, 1)''',
+                           (naziv, podaci['pib_jmbg'], podaci['email'],
+                            podaci['telefon'], podaci['jmbg']))
+        self.conn.commit()
+
+    def postavi_aktivnog(self, id):
+        """Postavlja izabranog podnosioca kao aktivnog."""
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE podnosioc SET aktivan = 0")
+        cursor.execute("UPDATE podnosioc SET aktivan = 1 WHERE id = ?", (id,))
+        self.conn.commit()
+
+    def obrisi_podnosioca(self, id):
+        """Briše podnosioca; ako je bio aktivan, prvi preostali preuzima aktivnost."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT aktivan FROM podnosioc WHERE id = ?", (id,))
+        red = cursor.fetchone()
+        cursor.execute("DELETE FROM podnosioc WHERE id = ?", (id,))
+        if red is not None and red[0] == 1:
+            cursor.execute("SELECT MIN(id) FROM podnosioc")
+            novi = cursor.fetchone()[0]
+            if novi is not None:
+                cursor.execute("UPDATE podnosioc SET aktivan = 1 WHERE id = ?", (novi,))
         self.conn.commit()
     
     def ucitaj_ljude(self):
@@ -260,8 +354,7 @@ class Database:
     
     def dodaj_osobu(self, podaci):
         # Telefon u bazu ide samo sa ciframa (CSV/CLI ne prolaze kroz GUI polje).
-        if podaci.get("telefon") is not None:
-            podaci["telefon"] = telefon_cifre(str(podaci["telefon"]))
+        _telefon_u_cifre(podaci)
         cursor = self.conn.cursor()
         cursor.execute('''
             INSERT INTO ljudi (godina, vrsta_prometa, vrsta_identifikatora, 
@@ -552,6 +645,7 @@ def main():
                 print("  Izaberite 1 ili 2.")
             
             print(f"  Identifikator: 0=PIB (9 cifara), 1=JMBG (13 cifara), 5=EBS (9 cifara)")
+            print("  (Unesite vrednosti ispocetka - nista se ne zadrzava od ranije.)")
             while True:
                 id_tip = input("  Vrsta identifikatora: ").strip()
                 if id_tip in vrste_id:
@@ -642,38 +736,27 @@ def main():
             p = db.ucitaj_podnosioca()
             print()
             print("  PODACI O PODNOSIOCU:")
-            print("  (Pritisnite Enter da zadrzite postojecu vrednost)")
+            print("  (Unesite vrednosti ispocetka - nista se ne zadrzava od ranije.)")
             
             while True:
-                pib_jmbg = input(f"  PIB (9 cifara) ili JMBG (13 cifara) [{p.get('pib_jmbg', '')}]: ").strip()
-                if not pib_jmbg and p.get("pib_jmbg"):
-                    pib_jmbg = p["pib_jmbg"]
+                pib_jmbg = input("  PIB (9 cifara) ili JMBG (13 cifara): ").strip()
                 if len(pib_jmbg) in (9, 13) and pib_jmbg.isdigit():
                     break
                 print("  Mora imati TACNO 9 cifara (PIB) ili 13 cifara (JMBG).")
             
-            email = input(f"  E-posta [{p.get('email', '')}]: ").strip()
-            if not email and p.get("email"):
-                email = p["email"]
+            email = input("  E-posta: ").strip()
             
-            telefon = input(f"  Telefon [{p.get('telefon', '')}]: ").strip()
-            if not telefon and p.get("telefon"):
-                telefon = p["telefon"]
             while True:
+                telefon = input("  Telefon: ").strip()
                 greska_tel = telefon_greska(telefon)
                 if greska_tel:
                     print("  " + greska_tel.replace("\n", "\n  "))
-                    telefon = input(f"  Telefon [{p.get('telefon', '')}]: ").strip()
-                    if not telefon and p.get("telefon"):
-                        telefon = p["telefon"]
                     continue
                 break
             telefon = telefon_cifre(telefon)
             
             while True:
-                jmbg = input(f"  JMBG podnosioca (13 cifara) [{p.get('jmbg', '')}]: ").strip()
-                if not jmbg and p.get("jmbg"):
-                    jmbg = p["jmbg"]
+                jmbg = input("  JMBG podnosioca (13 cifara): ").strip()
                 if len(jmbg) == 13 and jmbg.isdigit():
                     if validan_jmbg(jmbg):
                         break
@@ -685,6 +768,7 @@ def main():
                     print("  Mora imati TACNO 13 cifara.")
             
             db.sacuvaj_podnosioca({
+                "naziv": p.get("naziv") or "Podnosilac",
                 "pib_jmbg": pib_jmbg,
                 "email": email,
                 "telefon": telefon,

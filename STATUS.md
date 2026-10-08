@@ -43,10 +43,16 @@
 - **PDF izveštaj prikazuje ćirilicu** — ugrađeni `Helvetica` nema ćirilične
   glifove (crni kvadratići); sada se koristi sistemski font sa ćirilicom
   (DejaVu / Liberation / Noto, Arial / Tahoma / Verdana / Calibri na Windowsu)
+- **CLI radi nad bazom koju koristi GUI** — CLI je imao staru strukturu tabele
+  `podnosioc` (kolona `godina`), pa je nad GUI bazom pucao sa
+  `no such column: godina`; sada je struktura ista (id PK, naziv, aktivan) uz
+  automatsku migraciju starih baza
+- **CLI unos ne zadržava prethodne vrednosti** — nema više `[stara vrednost]` u
+  zagradama; sve se unosi ispočetka
 
 ### Testovi (lokalno)
-- **Integracioni testovi** (`tests/test_integration.py`) — 91 test kroz ceo Model + View + Controller stack
-  - 91 prolazi
+- **Integracioni testovi** (`tests/test_integration.py`) — 99 testova kroz ceo Model + View + Controller stack
+  - 99 prolazi
   - 0 padova, 0 poznatih bugova
   - Testovi su **lokalni** — ne nalaze se u repozitorijumu (u `.gitignore`)
   - Pokretanje: `xvfb-run -a python tests/test_integration.py`

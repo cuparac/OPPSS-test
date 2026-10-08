@@ -64,9 +64,22 @@ Sve značajne izmene OPPSS Generatora su dokumentovane u ovom fajlu.
   Verdana / Calibri na Windowsu; Arial na macOS-u) i primenjuje na naslov,
   statistiku i tabelu. Ako font nije nađen, generisanje se ne prekida — ispisuje
   se upozorenje u log i koristi Helvetica.
+- **CLI više ne puca nad bazom koju je napravio GUI** — CLI je imao svoju kopiju
+  klase `Database` sa starom strukturom tabele `podnosioc` (kolona `godina` kao
+  ključ), dok GUI koristi novu (`id`, `naziv`, `aktivan`). Pošto obe verzije dele
+  isti fajl `baza_<godina>.db`, CLI je nad bazom koju je napravio GUI pucao sa
+  `sqlite3.OperationalError: no such column: godina` već pri pokretanju. Sada CLI
+  ima istu strukturu kao GUI i istu automatsku migraciju starih baza, pa radi u
+  oba smera (GUI→CLI i CLI→GUI), uključujući više podnosioca, aktivnog
+  podnosioca i ponovni upis bez duplikata.
+- **CLI unos ne zadržava prethodne vrednosti** — forma podnosioca i forma unosa
+  nudile su stare vrednosti u zagradama (`Telefon [0601112223]:`) i prazan Enter
+  ih je zadržavao, pa je bilo lako nenamerno snimiti pogrešan telefon ili JMBG
+  od prethodnog podnosioca. Sada se sve unosi ispočetka; polja se ne popunjavaju
+  ranijim vrednostima.
 
 ### Testovi
-- **Integracioni testovi** — 91 test kroz ceo Model + View + Controller stack:
+- **Integracioni testovi** — 99 testova kroz ceo Model + View + Controller stack:
   svi prolaze (0 padova); četiri nasleđena buga iz v15.9 popravljena.
   Testovi su lokalni — `tests/` je u `.gitignore`, ne ide u repozitorijum.
 
