@@ -142,6 +142,50 @@ def validan_ebs(ebs: str) -> bool:
     return len(ebs) == 9 and ebs.isdigit()
 
 
+# Dozvoljeni broj cifara u broju telefona (bez razmaka, +, - i /).
+TELEFON_MIN_CIFARA = 6
+TELEFON_MAX_CIFARA = 15
+
+# Znakovi koje korisnik sme da otkuca u polje telefona radi lakšeg unosa.
+# Pri snimanju se zadržavaju samo cifre.
+TELEFON_DOZVOLJENI_ZNAKOVI = "0123456789 +-/"
+
+
+def telefon_cifre(telefon: str) -> str:
+    """Vraća samo cifre iz unetog broja telefona.
+
+    Uklanja razmake, ``+``, ``-``, ``/`` i svaki drugi znak, tako da se u bazu
+    nikada ne upiše slovo ili separator.
+
+    Args:
+        telefon: Sirov sadržaj polja za telefon.
+
+    Returns:
+        String sa samo ASCII ciframa (može biti prazan).
+    """
+    return "".join(c for c in (telefon or "") if c in "0123456789")
+
+
+def telefon_greska(telefon: str) -> Optional[str]:
+    """Vraća poruku o grešci za broj telefona, ili None ako je ispravan.
+
+    Args:
+        telefon: Sirov sadržaj polja za telefon.
+
+    Returns:
+        Poruka o grešci ako telefon nema cifara ili ih ima izvan opsega
+        ``TELEFON_MIN_CIFARA``-``TELEFON_MAX_CIFARA``, inače None.
+    """
+    cifre = telefon_cifre(telefon)
+    if not cifre:
+        return "Broj telefona mora sadržati cifre!"
+    if len(cifre) < TELEFON_MIN_CIFARA or len(cifre) > TELEFON_MAX_CIFARA:
+        return ("Broj telefona mora imati između %d i %d cifara.\n"
+                "Uneto: %d cifara (%s)"
+                % (TELEFON_MIN_CIFARA, TELEFON_MAX_CIFARA, len(cifre), telefon))
+    return None
+
+
 def konvertuj_datum(t: str) -> str:
     """Konvertuje datum između ISO (YYYY-MM-DD) i display (DD/MM/YYYY) formata.
 

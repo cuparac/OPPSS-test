@@ -15,8 +15,47 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
 from database import Database, migriraj_json_u_sqlite
-from validacije import validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema
+from validacije import (validan_jmbg, validan_ebs, konvertuj_datum, get_xsd_schema,
+                        telefon_cifre, telefon_greska, TELEFON_DOZVOLJENI_ZNAKOVI)
 from xml_generator import generisi_xml, generisi_html_izvestaj, generisi_pdf_izvestaj
+
+
+def ocisti_telefon_unos(original: str) -> str:
+    """Uklanja nedozvoljene znakove iz sadržaja polja za telefon.
+
+    Ostavlja cifre, razmak, ``+``, ``-`` i ``/`` (radi lakšeg kucanja); sve
+    ostalo (slova, interpunkcija) se uklanja. Pri snimanju se od ovoga
+    zadržavaju samo cifre (vidi ``validacije.telefon_cifre``).
+
+    Args:
+        original: Trenutni sadržaj polja.
+
+    Returns:
+        Očišćen sadržaj polja.
+    """
+    return "".join(c for c in (original or "") if c in TELEFON_DOZVOLJENI_ZNAKOVI)
+
+
+def vezi_samo_cifre_telefon(polje: tk.Entry) -> None:
+    """Vezuje ``<KeyRelease>`` na polje telefona: uklanja nedozvoljene znakove.
+
+    Zadržava poziciju kursora (broj dozvoljenih znakova levo od njega), tako da
+    kucanje usred broja ne skače na kraj polja.
+
+    Args:
+        polje: ``ttk.Entry`` widget za broj telefona.
+    """
+    def _ocisti(ev: Optional[tk.Event] = None) -> None:
+        original = polje.get()
+        ocisceno = ocisti_telefon_unos(original)
+        if ocisceno != original:
+            poz = polje.index("insert")
+            novo = len(ocisti_telefon_unos(original[:poz]))
+            polje.delete(0, "end")
+            polje.insert(0, ocisceno)
+            polje.icursor(novo)
+
+    polje.bind("<KeyRelease>", _ocisti, add="+")
 
 
 class UndoStack:
@@ -461,6 +500,7 @@ class ProzorPodnosioca(tk.Toplevel):
                 self.status_jmbg.config(text="%d/13" % len(v), foreground="gray")
 
         self.entries["jmbg"].bind("<KeyRelease>", proveri)
+        vezi_samo_cifre_telefon(self.entries["telefon"])
         proveri()
 
         dugmad = ttk.Frame(okvir)
@@ -570,6 +610,11 @@ class ProzorPodnosioca(tk.Toplevel):
         if not (len(broj) in (9, 13) and broj.isdigit()):
             messagebox.showerror("Greska", "Polje 'PIB ili JMBG' mora imati TACNO 9 cifara (PIB) ili TACNO 13 cifara (JMBG)!", parent=self)
             return
+        greska_telefon = telefon_greska(d["telefon"])
+        if greska_telefon:
+            messagebox.showerror("Greska", greska_telefon, parent=self)
+            return
+        d["telefon"] = telefon_cifre(d["telefon"])
         if novi:
             # Red se kreira tek posle svih provera, da ne ostane prazan zapis.
             self.trenutni_id = self.db.dodaj_podnosioca(d)
@@ -1965,12 +2010,15 @@ class App(tk.Tk):
             self.db.obrisi_osobu(id)
             self.osvezi_tabelu()
 
-    def forma_osobe(self, podrazumevano: Optional[Dict[str, Any]] = None, indeks_izmene: Optional[int] = None) -> None:
+    def forma_osobe(self, podrazumevano: Optional[Dict[str, Any]] = None, indeks_izmene: Optional[int] = None) -> tk.Toplevel:
         """Otvara formu za unos/izmenu osobe.
 
         Args:
             podrazumevano: Podrazumevani podaci za izmenu.
             indeks_izmene: ID unosa koji se menja.
+
+        Returns:
+            Toplevel prozor forme (za testove i programsko zatvaranje).
         """
         win = tk.Toplevel(self)
         je_izmena = podrazumevano is not None
@@ -2012,6 +2060,11 @@ class App(tk.Tk):
                 e = ttk.Entry(okvir, width=40)
                 e.grid(row=row, column=1, padx=10, pady=4)
                 entries[key] = e
+
+        # Broj telefona: dozvoljeni su cifre, razmak, plus, minus i kosa crta
+        # (radi lakšeg kucanja); sve ostalo se uklanja odmah. Pri snimanju se
+        # zadržavaju samo cifre (vidi validacije.telefon_cifre).
+        vezi_samo_cifre_telefon(entries["telefon"])
 
         entries["datum_unos"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
         entries["datum_do"].insert(0, datetime.date.today().strftime("%d/%m/%Y"))
@@ -2188,6 +2241,11 @@ class App(tk.Tk):
                         self.db.obrisi_osobu(duplikat['id'])
                     # "dodaj" = snimi bez brisanja, nastavi sa snimanjem
 
+            greska_telefon = telefon_greska(entries["telefon"].get())
+            if greska_telefon:
+                messagebox.showerror("Greska", greska_telefon, parent=win)
+                return
+
             r = {
                 "vrsta_prometa": vrste_pr[entries["vrsta_tip"].get()],
                 "vrsta_identifikatora": vrste_id[tip],
@@ -2196,7 +2254,7 @@ class App(tk.Tk):
                 "opstina": entries["opstina"].get().strip(),
                 "adresa": entries["adresa"].get().strip(),
                 "email_osobe": entries["email_osobe"].get().strip(),
-                "telefon": entries["telefon"].get().strip(),
+                "telefon": telefon_cifre(entries["telefon"].get()),
                 "broj_gazdinstva": entries["broj_gazdinstva"].get().strip(),
                 "naziv_gazdinstva": entries["naziv_gazdinstva"].get().strip(),
                 "datum": datum_iso,
@@ -2279,6 +2337,7 @@ class App(tk.Tk):
         btn_sacuvaj.bind("<Return>", enter_sacuvaj)
         btn_sacuvaj.bind("<space>", enter_sacuvaj)
         entries["vrsta_tip"].focus_set()
+        return win
 
     def generisi(self) -> None:
         """Generiše XML fajl iz baze podataka i čuva ga na disk."""
